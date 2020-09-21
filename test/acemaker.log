@@ -1,0 +1,294 @@
+=========================================
+ACEMAKER log file  2020/06/30 22:22:57:55
+=========================================
+Read filepaths will be used: 
+PREPRO   filepath: \ACEMAKER\exe\
+ACEMAKER filepath: \ACEMAKER\exe\
+ 
+Case:    1
+==========
+Title: ACEMAKER case title (all keywords)
+ 
+ENDF input tape: \fendl32\endf\fendlen.dat
+ 
+Minimum allowable cross section:  1.00000E-20
+Linearization tolerance:          5.00000E-03
+Maximum cosine interval:          1.00000E-02
+Probability tables 0/1 = no/yes:  1
+Monitor option 0/1 = no/yes:      0
+Keep PENDF tape 0/1 = no/yes:     0
+Keep all tapes 0/1 = no/yes:      0
+ACE-formatted file ID suffix:     .01
+ 
+Number of materials:      1
+====================
+  No.    MATERIAL
+   1        125
+ 
+Number of temperatures:   2
+=======================
+  No. TEMPERATURE [K]
+   1  2.93600E+02
+   2  4.00000E+02
+ 
+MAT=  125
+=========
+ 22:22:57:57 2020/06/30 \ACEMAKER\exe\merger
+ 22:22:57:60 2020/06/30 \ACEMAKER\exe\linear
+ 22:22:57:63 2020/06/30 \ACEMAKER\exe\recent
+ 22:22:57:66 2020/06/30 \ACEMAKER\exe\legend
+ 22:22:57:70 2020/06/30 \ACEMAKER\exe\spectra
+ 22:22:57:74 2020/06/30 \ACEMAKER\exe\sixlin
+MAT=  125 TEMP=  2.9360D+02
+ 22:23:01:07 2020/06/30 \ACEMAKER\exe\sigma1
+ 22:23:01:54 2020/06/30 \ACEMAKER\exe\fixup
+ 22:23:05:00 2020/06/30 \ACEMAKER\exe\groupie
+ ** Warning: No unresolved probability tables
+ 22:23:05:07 2020/06/30 \ACEMAKER\exe\dictin
+ 22:23:05:11 2020/06/30 \ACEMAKER\exe\doace
+ ACE-file: ZA001001.01c.acef saved for MAT=  125 TEMP=  2.9360D+02
+MAT=  125 TEMP=  4.0000D+02
+ 22:23:05:26 2020/06/30 \ACEMAKER\exe\sigma1
+ 22:23:05:76 2020/06/30 \ACEMAKER\exe\fixup
+ 22:23:07:78 2020/06/30 \ACEMAKER\exe\groupie
+ ** Warning: No unresolved probability tables
+ 22:23:07:86 2020/06/30 \ACEMAKER\exe\dictin
+ 22:23:07:89 2020/06/30 \ACEMAKER\exe\doace
+ ACE-file: ZA001001.02c.acef saved for MAT=  125 TEMP=  4.0000D+02
+ 
+Case:    2
+==========
+Title: MULTI-MATERIAL CASE FROM FENDL
+ 
+ENDF input tape: \fendl32\endf\fendlen.dat
+ 
+Minimum allowable cross section:  1.00000E-30
+Linearization tolerance:          1.00000E-03
+Maximum cosine interval:          1.00000E-03
+Probability tables 0/1 = no/yes:  1
+Monitor option 0/1 = no/yes:      0
+Keep PENDF tape 0/1 = no/yes:     0
+Keep all tapes 0/1 = no/yes:      0
+ACE-formatted file ID suffix:     .32
+ 
+Number of materials:      7
+====================
+  No.    MATERIAL
+   1        125
+   2        825
+   3       2631
+   4       4125
+   5       5728
+   6       9228
+   7       9237
+ 
+Number of temperatures:   1
+=======================
+  No. TEMPERATURE [K]
+   1  2.93600E+02
+ 
+MAT=  125
+=========
+ 22:23:07:97 2020/06/30 \ACEMAKER\exe\merger
+ 22:23:08:00 2020/06/30 \ACEMAKER\exe\linear
+ 22:23:08:03 2020/06/30 \ACEMAKER\exe\recent
+ 22:23:08:05 2020/06/30 \ACEMAKER\exe\legend
+ 22:23:08:10 2020/06/30 \ACEMAKER\exe\spectra
+ 22:23:08:11 2020/06/30 \ACEMAKER\exe\sixlin
+MAT=  125 TEMP=  2.9360D+02
+ 22:23:11:02 2020/06/30 \ACEMAKER\exe\sigma1
+ 22:23:15:56 2020/06/30 \ACEMAKER\exe\fixup
+ 22:23:16:79 2020/06/30 \ACEMAKER\exe\groupie
+ ** Warning: No unresolved probability tables
+ 22:23:16:87 2020/06/30 \ACEMAKER\exe\dictin
+ 22:23:16:92 2020/06/30 \ACEMAKER\exe\doace
+ ACE-file: ZA001001.32c.acef saved for MAT=  125 TEMP=  2.9360D+02
+ 
+MAT=  825
+=========
+ 22:23:16:98 2020/06/30 \ACEMAKER\exe\merger
+ 22:23:17:72 2020/06/30 \ACEMAKER\exe\linear
+ 22:23:18:01 2020/06/30 \ACEMAKER\exe\recent
+ 22:23:18:28 2020/06/30 \ACEMAKER\exe\legend
+ 22:23:18:95 2020/06/30 \ACEMAKER\exe\spectra
+ 22:23:19:36 2020/06/30 \ACEMAKER\exe\sixlin
+MAT=  825 TEMP=  2.9360D+02
+ 22:23:22:47 2020/06/30 \ACEMAKER\exe\sigma1
+ 22:23:26:41 2020/06/30 \ACEMAKER\exe\fixup
+ 22:24:35:46 2020/06/30 \ACEMAKER\exe\groupie
+ ** Warning: No unresolved probability tables
+ 22:24:36:05 2020/06/30 \ACEMAKER\exe\dictin
+ 22:24:36:57 2020/06/30 \ACEMAKER\exe\doace
+ ACE-file: ZA008016.32c.acef saved for MAT=  825 TEMP=  2.9360D+02
+ 
+MAT= 2631
+=========
+ 22:24:41:96 2020/06/30 \ACEMAKER\exe\merger
+ 22:24:46:58 2020/06/30 \ACEMAKER\exe\linear
+ 22:24:47:21 2020/06/30 \ACEMAKER\exe\recent
+ 22:24:48:72 2020/06/30 \ACEMAKER\exe\legend
+ 22:24:51:14 2020/06/30 \ACEMAKER\exe\spectra
+ 22:24:52:36 2020/06/30 \ACEMAKER\exe\sixlin
+MAT= 2631 TEMP=  2.9360D+02
+ 22:47:45:77 2020/06/30 \ACEMAKER\exe\sigma1
+ 22:48:35:16 2020/06/30 \ACEMAKER\exe\fixup
+ 22:51:47:36 2020/06/30 \ACEMAKER\exe\groupie
+ ** Warning: No unresolved probability tables
+ 22:52:36:16 2020/06/30 \ACEMAKER\exe\dictin
+ 22:53:33:77 2020/06/30 \ACEMAKER\exe\doace
+ ACE-file: ZA026056.32c.acef saved for MAT= 2631 TEMP=  2.9360D+02
+ 
+MAT= 4125
+=========
+ 22:59:02:26 2020/06/30 \ACEMAKER\exe\merger
+ 22:59:10:11 2020/06/30 \ACEMAKER\exe\linear
+ 22:59:10:31 2020/06/30 \ACEMAKER\exe\recent
+ 22:59:11:19 2020/06/30 \ACEMAKER\exe\legend
+ 22:59:11:58 2020/06/30 \ACEMAKER\exe\spectra
+ 22:59:11:95 2020/06/30 \ACEMAKER\exe\sixlin
+MAT= 4125 TEMP=  2.9360D+02
+ 22:59:14:48 2020/06/30 \ACEMAKER\exe\sigma1
+ 22:59:18:86 2020/06/30 \ACEMAKER\exe\fixup
+ 22:59:58:59 2020/06/30 \ACEMAKER\exe\groupie
+ 22:59:59:12 2020/06/30 \ACEMAKER\exe\merger
+ 22:59:59:49 2020/06/30 \ACEMAKER\exe\dictin
+ 22:59:59:91 2020/06/30 \ACEMAKER\exe\doace
+ ACE-file: ZA041093.32c.acef saved for MAT= 4125 TEMP=  2.9360D+02
+ 
+MAT= 5728
+=========
+ 23:00:08:41 2020/06/30 \ACEMAKER\exe\merger
+ 23:00:13:89 2020/06/30 \ACEMAKER\exe\linear
+ 23:00:14:17 2020/06/30 \ACEMAKER\exe\recent
+ 23:00:15:66 2020/06/30 \ACEMAKER\exe\legend
+ 23:00:16:48 2020/06/30 \ACEMAKER\exe\spectra
+ 23:00:17:04 2020/06/30 \ACEMAKER\exe\sixlin
+MAT= 5728 TEMP=  2.9360D+02
+ 23:00:18:87 2020/06/30 \ACEMAKER\exe\sigma1
+ 23:00:25:81 2020/06/30 \ACEMAKER\exe\fixup
+ 23:02:37:61 2020/06/30 \ACEMAKER\exe\groupie
+ 23:02:39:11 2020/06/30 \ACEMAKER\exe\merger
+ 23:02:39:96 2020/06/30 \ACEMAKER\exe\dictin
+ 23:02:40:96 2020/06/30 \ACEMAKER\exe\doace
+ ACE-file: ZA057139.32c.acef saved for MAT= 5728 TEMP=  2.9360D+02
+ 
+MAT= 9228
+=========
+ 23:04:17:02 2020/06/30 \ACEMAKER\exe\merger
+ 23:04:30:47 2020/06/30 \ACEMAKER\exe\linear
+ 23:04:32:43 2020/06/30 \ACEMAKER\exe\recent
+ 23:05:27:79 2020/06/30 \ACEMAKER\exe\legend
+ 23:05:31:11 2020/06/30 \ACEMAKER\exe\spectra
+ 23:05:34:25 2020/06/30 \ACEMAKER\exe\sixlin
+MAT= 9228 TEMP=  2.9360D+02
+ 23:05:42:24 2020/06/30 \ACEMAKER\exe\sigma1
+ 23:06:16:47 2020/06/30 \ACEMAKER\exe\fixup
+ 23:07:24:16 2020/06/30 \ACEMAKER\exe\groupie
+ 23:07:27:17 2020/06/30 \ACEMAKER\exe\merger
+ 23:07:29:71 2020/06/30 \ACEMAKER\exe\dictin
+ 23:07:32:67 2020/06/30 \ACEMAKER\exe\doace
+ ACE-file: ZA092235.32c.acef saved for MAT= 9228 TEMP=  2.9360D+02
+ 
+MAT= 9237
+=========
+ 23:09:06:30 2020/06/30 \ACEMAKER\exe\merger
+ 23:09:14:47 2020/06/30 \ACEMAKER\exe\linear
+ 23:09:15:81 2020/06/30 \ACEMAKER\exe\recent
+ 23:11:00:53 2020/06/30 \ACEMAKER\exe\legend
+ 23:11:05:49 2020/06/30 \ACEMAKER\exe\spectra
+ 23:11:10:25 2020/06/30 \ACEMAKER\exe\sixlin
+MAT= 9237 TEMP=  2.9360D+02
+ 23:11:19:10 2020/06/30 \ACEMAKER\exe\sigma1
+ 23:13:06:44 2020/06/30 \ACEMAKER\exe\fixup
+ 23:14:18:11 2020/06/30 \ACEMAKER\exe\groupie
+ 23:14:21:74 2020/06/30 \ACEMAKER\exe\merger
+ 23:14:24:35 2020/06/30 \ACEMAKER\exe\dictin
+ 23:14:27:37 2020/06/30 \ACEMAKER\exe\doace
+ ACE-file: ZA092238.32c.acef saved for MAT= 9237 TEMP=  2.9360D+02
+ 
+Case:    3
+==========
+Title: U-235 from ENDF/B-VIII.0
+ 
+ENDF input tape: \ACEMAKER2020\endf\U235VIII.endf
+ 
+Minimum allowable cross section:  1.00000E-30
+Linearization tolerance:          1.00000E-03
+Maximum cosine interval:          1.00000E-03
+Probability tables 0/1 = no/yes:  1
+Monitor option 0/1 = no/yes:      0
+Keep PENDF tape 0/1 = no/yes:     0
+Keep all tapes 0/1 = no/yes:      0
+ACE-formatted file ID suffix:     .80
+ 
+Number of materials:      1
+====================
+  No.    MATERIAL
+   1       9228
+ 
+Number of temperatures:   1
+=======================
+  No. TEMPERATURE [K]
+   1  2.93600E+02
+ 
+MAT= 9228
+=========
+ 23:17:57:59 2020/06/30 \ACEMAKER\exe\merger
+ 23:17:58:94 2020/06/30 \ACEMAKER\exe\linear
+ 23:18:00:06 2020/06/30 \ACEMAKER\exe\recent
+ 23:18:52:31 2020/06/30 \ACEMAKER\exe\legend
+ 23:18:54:68 2020/06/30 \ACEMAKER\exe\spectra
+ 23:18:56:96 2020/06/30 \ACEMAKER\exe\sixlin
+MAT= 9228 TEMP=  2.9360D+02
+ 23:44:33:58 2020/06/30 \ACEMAKER\exe\sigma1
+ 23:45:49:86 2020/06/30 \ACEMAKER\exe\fixup
+ 23:48:48:48 2020/06/30 \ACEMAKER\exe\groupie
+ 23:49:30:05 2020/06/30 \ACEMAKER\exe\merger
+ 23:50:09:35 2020/06/30 \ACEMAKER\exe\dictin
+ 23:50:54:76 2020/06/30 \ACEMAKER\exe\doace
+ ACE-file: ZA092235.80c.acef saved for MAT= 9228 TEMP=  2.9360D+02
+ 
+Case:    4
+==========
+Title: U-238 from ENDF/B-VIII.0
+ 
+ENDF input tape: \ACEMAKER2020\endf\U238VIII.endf
+ 
+Minimum allowable cross section:  1.00000E-30
+Linearization tolerance:          1.00000E-03
+Maximum cosine interval:          1.00000E-03
+Probability tables 0/1 = no/yes:  1
+Monitor option 0/1 = no/yes:      0
+Keep PENDF tape 0/1 = no/yes:     0
+Keep all tapes 0/1 = no/yes:      0
+ACE-formatted file ID suffix:     .80
+ 
+Number of materials:      1
+====================
+  No.    MATERIAL
+   1       9237
+ 
+Number of temperatures:   1
+=======================
+  No. TEMPERATURE [K]
+   1  2.93600E+02
+ 
+MAT= 9237
+=========
+ 00:03:30:19 2020/07/01 \ACEMAKER\exe\merger
+ 00:03:30:69 2020/07/01 \ACEMAKER\exe\linear
+ 00:03:31:15 2020/07/01 \ACEMAKER\exe\recent
+ 00:06:13:67 2020/07/01 \ACEMAKER\exe\legend
+ 00:06:18:16 2020/07/01 \ACEMAKER\exe\spectra
+ 00:06:22:15 2020/07/01 \ACEMAKER\exe\sixlin
+MAT= 9237 TEMP=  2.9360D+02
+ 00:35:03:33 2020/07/01 \ACEMAKER\exe\sigma1
+ 00:37:26:44 2020/07/01 \ACEMAKER\exe\fixup
+ 00:39:37:83 2020/07/01 \ACEMAKER\exe\groupie
+ 00:40:17:84 2020/07/01 \ACEMAKER\exe\merger
+ 00:40:58:53 2020/07/01 \ACEMAKER\exe\dictin
+ 00:41:45:31 2020/07/01 \ACEMAKER\exe\doace
+ ACE-file: ZA092238.80c.acef saved for MAT= 9237 TEMP=  2.9360D+02
+===============================================
+End of ACEMAKER log file 2020/07/01 00:51:21:52
+===============================================

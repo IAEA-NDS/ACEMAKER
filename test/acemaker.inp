@@ -1,0 +1,36 @@
+ACEMAKER case title (all keywords)
+ENDF  \fendl32\endf\fendlen.dat
+MAT   1
+ 125
+TEMP  2
+ 293.6
+ 400.0
+TOL   0.005
+YMIN  1.0D-20
+DXMU  0.01
+SUFF  .01
+PTAB  1
+PNDF  0
+MON   0
+KEEP  0
+END
+MULTI-MATERIAL CASE FROM FENDL
+endf  \fendl32\endf\fendlen.dat
+suff  .32
+mat   7
+ 125
+ 825
+2631
+4125
+5728
+9228
+9237
+end
+U-235 from ENDF/B-VIII.0
+endf  \ACEMAKER2020\endf\U235VIII.endf
+suff  .80
+end
+U-238 from ENDF/B-VIII.0
+endf  \ACEMAKER2020\endf\U238VIII.endf
+suff  .80
+end

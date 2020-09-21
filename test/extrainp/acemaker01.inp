@@ -1,0 +1,16 @@
+Case title: all keywords 
+ENDF  \fendl32\endf\fendlen.dat
+MAT   1
+ 125
+TEMP  2
+ 293.6
+ 400.0
+TOL   0.005
+YMIN  1.0D-20
+DXMU  0.01
+SUFF  .01
+PTAB  1
+PNDF  1
+MON   0
+KEEP  0
+END

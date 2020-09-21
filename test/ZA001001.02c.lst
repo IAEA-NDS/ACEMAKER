@@ -1,0 +1,1094 @@
+ACEMAKER listing file
+=====================
+  Linearize ENDF/B Cross Sections (LINEAR 2019-1)
+  ------------------------------------------------------------------------------
+  Retrieval Criteria-----------        MAT
+  Monitor Mode-----------------        Off
+  Minimum Cross Section-------- 1.0000E-20
+  Keep Evaluated Data Points---        Yes
+  ------------------------------------------------------------------------------
+  ENDF/B Input and Output Data Filenames
+  endf6.endf
+  linear.pendf
+  ------------------------------------------------------------------------------
+  Requested Ranges
+  ------------------------------------------------------------------------------
+       Minimum       Maximum
+     MAT MF  MT    MAT MF  MT
+  ------------------------------------------------------------------------------
+     125  1   1    125 99 999
+  ------------------------------------------------------------------------------
+  Allowable Uncertainty
+  ------------------------------------------------------------------------------
+      Energy Uncertainty   per-cent
+  ------------------------------------------------------------------------------
+  0.0         .002500000     0.2500
+  1.00000000  .002500000     0.2500
+  2.00000000  .005000000     0.5000
+  1.00000E+9  .005000000     0.5000
+  ------------------------------------------------------------------------------
+  ENDF/B Tape Label
+  ------------------------------------------------------------------------------
+  ENDF tape for MAT=  125                                           7000
+  ------------------------------------------------------------------------------
+    Material  MAT  MF  MT  ENDF/B      Kelvin     Q-Value   Points   Points
+                           Format                      eV       In      Out
+  ------------------------------------------------------------------------------
+    1-H -1    125   3   1   VI     0.0         0.0             147      164
+    1-H -1    125   3   2   VI     0.0         0.0             147      148
+    1-H -1    125   3 102   VI     0.0         2224631.00      142      268
+  ------------------------------------------------------------------------------
+                                               MAT Totals      436      580
+  ------------------------------------------------------------------------------
+ ------------------------------------------------------------------------------
+ All Cross Sections Read. Maximum Tabulated Energy =  150000000. eV
+ ------------------------------------------------------------------------------
+ ===============================================================================
+      MAT Total Execution Time                0.00 Seconds
+ ===============================================================================
+  ------------------------------------------------------------------------------
+                                              Tape Totals      436      580
+  ------------------------------------------------------------------------------
+ ===============================================================================
+ LINEAR   Total Execution Time                0.00 Seconds
+ ===============================================================================
+
+ Calculate Cross Sections from Resonance Parameters (RECENT 2019-1)
+ ==============================================================================
+ Retrieval Criteria-----------        MAT
+ File 2 Mimimum Cross Section- 1.0000E-20
+ Reactions with No Background-     Output (Resonance Contribution)
+ Calculate/Edit Mode----------  Calculate. List Resonance Parameters.
+ Negative Cross Sections------   Make = 0 (No Negative Output)
+ Monitor Mode-----------------        Off
+ ==============================================================================
+ ENDF/B Input and Output Data Filenames
+ linear.pendf
+ recent.pendf
+ ==============================================================================
+ Requested MAT Ranges
+ ==============================================================================
+    Mimimum    Maximum
+ ==============================================================================
+        125        125
+ ==============================================================================
+ Allowable Uncertainty
+ ==============================================================================
+      Energy Uncertainty   per-cent
+ ==============================================================================
+  0.0         .002500000      0.250
+  1.00000000  .002500000      0.250
+  2.00000000  .005000000      0.500
+  1.00000E+9  .005000000      0.500
+ ==============================================================================
+ ENDF/B Tape Label
+ ==============================================================================
+ ENDF tape for MAT=  125                                           7000
+ ******************************************************************************
+ Processing   1-H -1   MAT=  125
+ ******************************************************************************
+ Based on the Format and Contents of MF/MT=1/451
+ (1) ENDF/B-VI Format.
+ (2) Material is NOT Fissile (LFI=0).
+ (3) No Resonance Parameters Given (LRP=0). MAT Copied.
+ (4) Projectile ZA =      1 (Neutron).
+ (5) Background Temperaure  0.0        Kelvin.
+ ******************************************************************************
+ End of ENDF/B Input Data
+ ******************************************************************************
+ Core Allocation and Requirements
+ ==============================================================================
+         Sections   Nodes Parameter
+                            Storage
+ ==============================================================================
+ Allocated    100  100000    100000
+ Required       0       0         0
+ ==============================================================================
+ End of Run
+ ==============================================================================
+ ===============================================================================
+ RECENT   Total Execution Time                0.00 Seconds
+ ===============================================================================
+
+ Linearized ENDF/B Angular Distributions (LEGEND 2019-1)
+ ------------------------------------------------------------------------------
+ Allowable Accuracy---------- .005000000 (   0.5000 per-cent)
+ Maximum Number of Cosines---    3000000
+ Tabulated Data--------------Linearize/Thin - Output Tables
+ Legendre Data---------------Tabulate       - Output Tables
+ Negative Data Correction----Force to be Positive
+ Coefficient Tests-----------Off
+ ------------------------------------------------------------------------------
+ ENDF/B Input and Output Data Filenames
+ recent.pendf
+ legend.pendf
+ ------------------------------------------------------------------------------
+ Minimum Allowable Cross Section and Maximum Allowable Coefficient Change
+ ------------------------------------------------------------------------------
+  MAT1 MF1  MT1  MAT2 MF2  MT2         E1         E2  Sigma-Low   Delta-Fl
+                                      (eV)       (eV)     (b/mu)
+ ------------------------------------------------------------------------------
+   125   1    1   125  99  999 0.0        1.00000E+9 1.0000E-10    0.01000
+ ------------------------------------------------------------------------------
+ Tape Label
+ ------------------------------------------------------------------------------
+ ENDF tape for MAT=  125                                              0
+ ------------------------------------------------------------------------------
+     ZA  MAT  MT  Energy-eV   Legendre     Points     Points
+                               Order           In        Out   Integral Messages
+                            Read (Used)
+ ------------------------------------------------------------------------------
+   1001  125   2 1.00000E-5    6                          25   1.000000
+   1001  125   2 2.00000E-5    6                          25   1.000000
+   1001  125   2 5.00000E-5    6                          25   1.000000
+   1001  125   2 1.00000E-4    6                          25   1.000000
+   1001  125   2 2.00000E-4    6                          25   1.000000
+   1001  125   2 5.00000E-4    6                          25   1.000000
+   1001  125   2 .001000000    6                          25   1.000000
+   1001  125   2 .002000000    6                          25   1.000000
+   1001  125   2 .005000000    6                          25   1.000000
+   1001  125   2 .010000000    6                          25   1.000000
+   1001  125   2 .025300000    6                          25   1.000000
+   1001  125   2 .050000000    6                          25   1.000000
+   1001  125   2 .100000000    6                          25   1.000000
+   1001  125   2 .200000000    6                          25   1.000000
+   1001  125   2 .500000000    6                          25   1.000000
+   1001  125   2 1.00000000    6                          25   1.000000
+   1001  125   2 2.00000000    6                          25   1.000000
+   1001  125   2 5.00000000    6                          25   1.000000
+   1001  125   2 10.0000000    6                          25   1.000000
+   1001  125   2 20.0000000    6                          25   1.000000
+   1001  125   2 50.0000000    6                          25   1.000000
+   1001  125   2 100.000000    6                          25   1.000000
+   1001  125   2 200.000000    6                          25   1.000000
+   1001  125   2 500.000000    6                          25   1.000000
+   1001  125   2 1000.00000    6                          25   1.000000
+   1001  125   2 2000.00000    6                          25   1.000000
+   1001  125   2 4000.00000    6                          25   1.000000
+   1001  125   2 6000.00000    6                          25   1.000000
+   1001  125   2 8000.00000    6                          25   1.000000
+   1001  125   2 10000.0000    6                          25   1.000000
+   1001  125   2 15000.0000    6                          25   1.000000
+   1001  125   2 20000.0000    6                          25   1.000000
+   1001  125   2 40000.0000    6                          25   1.000000
+   1001  125   2 60000.0000    6                          25   1.000000
+   1001  125   2 80000.0000    6                          25   1.000000
+   1001  125   2 100000.000    6                          25   1.000000
+   1001  125   2 150000.000    6                          25   1.000000
+   1001  125   2 200000.000    6                          25   1.000000
+   1001  125   2 300000.000    6                          25   1.000000
+   1001  125   2 400000.000    6                          25   1.000000
+   1001  125   2 500000.000    6                          25   1.000000
+   1001  125   2 600000.000    6                          25   1.000000
+   1001  125   2 700000.000    6                          25   1.000000
+   1001  125   2 800000.000    6                          25   1.000000
+   1001  125   2 900000.000    6                          25   1.000000
+   1001  125   2 1000000.00    6                          25   1.000000
+   1001  125   2 1200000.00    6                          25   1.000000
+   1001  125   2 1400000.00    6                          25   1.000000
+   1001  125   2 1600000.00    6                          25   0.999999
+   1001  125   2 1800000.00    6                          25   0.999999
+   1001  125   2 2000000.00    6                          25   0.999999
+   1001  125   2 2200000.00    6                          25   0.999999
+   1001  125   2 2400000.00    6                          25   0.999999
+   1001  125   2 2600000.00    6                          25   0.999999
+   1001  125   2 2800000.00    6                          25   0.999999
+   1001  125   2 3000000.00    6                          25   0.999998
+   1001  125   2 3200000.00    6                          25   0.999998
+   1001  125   2 3400000.00    6                          25   0.999998
+   1001  125   2 3600000.00    6                          25   0.999998
+   1001  125   2 3800000.00    6                          25   0.999998
+   1001  125   2 4000000.00    6                          25   0.999998
+   1001  125   2 4200000.00    6                          25   0.999997
+   1001  125   2 4400000.00    6                          25   0.999997
+   1001  125   2 4600000.00    6                          25   0.999997
+   1001  125   2 4800000.00    6                          25   0.999997
+   1001  125   2 5000000.00    6                          25   0.999997
+   1001  125   2 5500000.00    6                          25   0.999997
+   1001  125   2 6000000.00    6                          25   0.999997
+   1001  125   2 6500000.00    6                          25   0.999997
+   1001  125   2 7000000.00    6                          25   0.999997
+   1001  125   2 7500000.00    6                          25   0.999998
+   1001  125   2 8000000.00    6                          25   0.999998
+   1001  125   2 8500000.00    6                          25   0.999999
+   1001  125   2 9000000.00    6                          25   1.000001
+   1001  125   2 9500000.00    6                          25   1.000002
+   1001  125   2 10000000.0    6                          25   1.000004
+   1001  125   2 10500000.0    6                          25   1.000006
+   1001  125   2 11000000.0    6                          25   1.000008
+   1001  125   2 11500000.0    6                          25   1.000011
+   1001  125   2 12000000.0    6                          25   1.000014
+   1001  125   2 12500000.0    6                          25   1.000017
+   1001  125   2 13000000.0    6                          25   1.000021
+   1001  125   2 13500000.0    6                          25   1.000025
+   1001  125   2 14000000.0    6                          25   1.000030
+   1001  125   2 14500000.0    6                          25   1.000035
+   1001  125   2 15000000.0    6                          25   1.000040
+   1001  125   2 15500000.0    6                          25   1.000046
+   1001  125   2 16000000.0    6                          25   1.000052
+   1001  125   2 16500000.0    6                          25   1.000058
+   1001  125   2 17000000.0    6                          26   1.000063
+   1001  125   2 17500000.0    6                          25   1.000072
+   1001  125   2 18000000.0    6                          25   1.000080
+   1001  125   2 18500000.0    6                          26   1.000086
+   1001  125   2 19000000.0    6                          25   1.000097
+   1001  125   2 19500000.0    6                          26   1.000103
+   1001  125   2 20000000.0    6                          25   1.000114
+   1001  125   2 20000000.0   12                          50   1.000046
+ ------------------------------------------------------------------------------
+ WARNING - Energy is NOT in Ascending Order
+ Last E = 20000000.0 eV, Current E = 20000000.0 eV
+   1001  125   2 25000000.0   12                          50   1.000080
+   1001  125   2 30000000.0   12                          50   1.000121
+   1001  125   2 35000000.0   12                          50   1.000170
+   1001  125   2 40000000.0   12                          49   1.000229
+   1001  125   2 45000000.0   12                          49   1.000295
+   1001  125   2 50000000.0   12                          49   1.000369
+   1001  125   2 55000000.0   12                          49   1.000452
+   1001  125   2 60000000.0   12                          50   1.000466
+   1001  125   2 65000000.0   12                          51   1.000470
+   1001  125   2 70000000.0   12                          53   1.000467
+   1001  125   2 75000000.0   12                          53   1.000531
+   1001  125   2 80000000.0   12                          54   1.000517
+   1001  125   2 85000000.0   12                          54   1.000577
+   1001  125   2 90000000.0   12                          54   1.000569
+   1001  125   2 95000000.0   12                          54   1.000622
+   1001  125   2 100000000.   12                          54   1.000676
+   1001  125   2 110000000.   12                          56   1.000681
+   1001  125   2 120000000.   12                          56   1.000716
+   1001  125   2 130000000.   12                          56   1.000793
+   1001  125   2 140000000.   12                          57   1.000854
+   1001  125   2 150000000.   12                          58   1.000853
+ ------------------------------------------------------------------------------
+ All Cross Sections Read. Maximum Tabulated Energy =  150000000. eV
+ ------------------------------------------------------------------------------
+ ===============================================================================
+      MAT Total Execution Time                0.02 Seconds
+ ===============================================================================
+ ------------------------------------------------------------------------------
+ Summary of Data as Read
+ ------------------------------------------------------------------------------
+ Isotropic Sections----------------------       0
+ Energies with Legendre Coefficients-----     118
+ Energies with Tabulations---------------       0
+ Energies with Combined------------------       0
+ Energies with NEGATIVE distributions----       0
+ Repeated Energies-----------------------       1
+ ===============================================================================
+ LEGEND   Total Execution Time                0.02 Seconds
+ ===============================================================================
+
+  Linearize ENDF/B Spectra (SPECTRA 2019-1)
+  ------------------------------------------------------------------------------
+  Retrieval Criteria-----------        MAT
+  Monitor Mode-----------------        Off
+  Minimum Spectra-------------- 1.0000E-20
+  Keep Evaluated Data Points---        Yes
+  ------------------------------------------------------------------------------
+  ENDF/B Input and Output Data Filenames
+  legend.pendf
+  spectra.pendf
+  ------------------------------------------------------------------------------
+  Requested Ranges
+  ------------------------------------------------------------------------------
+       Minimum       Maximum
+     MAT MF  MT    MAT MF  MT
+  ------------------------------------------------------------------------------
+     125  1   1    125 99 999
+  ------------------------------------------------------------------------------
+  Allowable Uncertainty
+  ------------------------------------------------------------------------------
+      Energy Uncertainty   per-cent
+  ------------------------------------------------------------------------------
+  0.0         .005000000     0.5000
+  ------------------------------------------------------------------------------
+  ENDF/B Tape Label
+  ------------------------------------------------------------------------------
+  ENDF tape for MAT=  125                                           7000
+  ------------------------------------------------------------------------------
+    Material  MAT  MF  MT  ENDF/B  Kelvin or  Q-Value     Points Points
+                           Format  Incident E (eV)            In    Out
+  ------------------------------------------------------------------------------
+    1-H -1    125   6 102   WARNING - MF=6 NOT YET IMPLEMENTED - Section Copied
+  ------------------------------------------------------------------------------
+                                              Tape Totals      0      0
+  ------------------------------------------------------------------------------
+ ===============================================================================
+ SPECTRA  Total Execution Time                0.02 Seconds
+ ===============================================================================
+
+  PROGRAM SIXLIN: Process and linearize File 6 data
+  =================================================
+
+  Input parameters
+  ================
+  MAT/ZA selection = 0
+  Printing option  = 0
+  Minimum Y-value  =1.00000E-20
+  Input file name  =spectra.pendf
+  Output file name =sixlin.pendf
+  Selection range  = 125  to  125
+  Tolerance [%]    =5.00000E-01
+  Cosine interval  =1.00000E-02
+
+  === MAT= 125  ZA= 1001  AWR= 0.9991673000000000  ZAI= 1 ===
+  MF1 to MF5 copied to ouput tape
+  Processing MF6/MT= 102  LCT= 2  NK= 2
+  ============================================
+  Particle  1  ZAP= 0.000000000000000E+00  AWP= 2223300.000000000
+  LAW= 2
+  LANG=0 converted to LANG=12
+  Common cosine grid for mt= 102  at E= 1.000000000000000E-05  nmu= 2
+  LANG=0 converted to LANG=12
+  Common cosine grid for mt= 102  at E= 2.000000000000000E-05  nmu= 2
+  LANG=0 converted to LANG=12
+  Common cosine grid for mt= 102  at E= 5.000000000000000E-05  nmu= 2
+  LANG=0 converted to LANG=12
+  Common cosine grid for mt= 102  at E= 1.000000000000000E-04  nmu= 2
+  LANG=0 converted to LANG=12
+  Common cosine grid for mt= 102  at E= 2.000000000000000E-04  nmu= 2
+  LANG=0 converted to LANG=12
+  Common cosine grid for mt= 102  at E= 5.000000000000000E-04  nmu= 2
+  LANG=0 converted to LANG=12
+  Common cosine grid for mt= 102  at E= 1.000000000000000E-03  nmu= 2
+  LANG=0 converted to LANG=12
+  Common cosine grid for mt= 102  at E= 2.000000000000000E-03  nmu= 2
+  LANG=0 converted to LANG=12
+  Common cosine grid for mt= 102  at E= 5.000000000000000E-03  nmu= 2
+  LANG=0 converted to LANG=12
+  Common cosine grid for mt= 102  at E= 1.000000000000000E-02  nmu= 2
+  LANG=0 converted to LANG=12
+  Common cosine grid for mt= 102  at E= 2.530000000000000E-02  nmu= 2
+  LANG=0 converted to LANG=12
+  Common cosine grid for mt= 102  at E= 5.000000000000000E-02  nmu= 2
+  LANG=0 converted to LANG=12
+  Common cosine grid for mt= 102  at E= 0.1000000000000000  nmu= 2
+  LANG=0 converted to LANG=12
+  Common cosine grid for mt= 102  at E= 0.2000000000000000  nmu= 2
+  LANG=0 converted to LANG=12
+  Common cosine grid for mt= 102  at E= 0.5000000000000000  nmu= 2
+  LANG=0 converted to LANG=12
+  Common cosine grid for mt= 102  at E= 1.000000000000000  nmu= 2
+  LANG=0 converted to LANG=12
+  Common cosine grid for mt= 102  at E= 2.000000000000000  nmu= 2
+  LANG=0 converted to LANG=12
+  Common cosine grid for mt= 102  at E= 5.000000000000000  nmu= 2
+  LANG=0 converted to LANG=12
+  Common cosine grid for mt= 102  at E= 10.00000000000000  nmu= 2
+  LANG=0 converted to LANG=12
+  Common cosine grid for mt= 102  at E= 20.00000000000000  nmu= 2
+  LANG=0 converted to LANG=12
+  Common cosine grid for mt= 102  at E= 50.00000000000000  nmu= 2
+  LANG=0 converted to LANG=12
+  Common cosine grid for mt= 102  at E= 100.0000000000000  nmu= 2
+  LANG=0 converted to LANG=12
+  Common cosine grid for mt= 102  at E= 200.0000000000000  nmu= 2
+  LANG=0 converted to LANG=12
+  Common cosine grid for mt= 102  at E= 500.0000000000000  nmu= 2
+  LANG=0 converted to LANG=12
+  Common cosine grid for mt= 102  at E= 1000.000000000000  nmu= 2
+  LANG=0 converted to LANG=12
+  Common cosine grid for mt= 102  at E= 2000.000000000000  nmu= 2
+  LANG=0 converted to LANG=12
+  Common cosine grid for mt= 102  at E= 4000.000000000000  nmu= 4
+  LANG=0 converted to LANG=12
+  Common cosine grid for mt= 102  at E= 6000.000000000000  nmu= 4
+  LANG=0 converted to LANG=12
+  Common cosine grid for mt= 102  at E= 8000.000000000000  nmu= 4
+  LANG=0 converted to LANG=12
+  Common cosine grid for mt= 102  at E= 10000.00000000000  nmu= 4
+  LANG=0 converted to LANG=12
+  Common cosine grid for mt= 102  at E= 15000.00000000000  nmu= 5
+  LANG=0 converted to LANG=12
+  Common cosine grid for mt= 102  at E= 20000.00000000000  nmu= 5
+  LANG=0 converted to LANG=12
+  Common cosine grid for mt= 102  at E= 40000.00000000000  nmu= 6
+  LANG=0 converted to LANG=12
+  Common cosine grid for mt= 102  at E= 60000.00000000000  nmu= 7
+  LANG=0 converted to LANG=12
+  Common cosine grid for mt= 102  at E= 80000.00000000000  nmu= 8
+  LANG=0 converted to LANG=12
+  Common cosine grid for mt= 102  at E= 100000.0000000000  nmu= 9
+  LANG=0 converted to LANG=12
+  Common cosine grid for mt= 102  at E= 150000.0000000000  nmu= 11
+  LANG=0 converted to LANG=12
+  Common cosine grid for mt= 102  at E= 200000.0000000000  nmu= 13
+  LANG=0 converted to LANG=12
+  Common cosine grid for mt= 102  at E= 300000.0000000000  nmu= 17
+  LANG=0 converted to LANG=12
+  Common cosine grid for mt= 102  at E= 400000.0000000000  nmu= 20
+  LANG=0 converted to LANG=12
+  Common cosine grid for mt= 102  at E= 500000.0000000000  nmu= 26
+  LANG=0 converted to LANG=12
+  Common cosine grid for mt= 102  at E= 600000.0000000000  nmu= 30
+  LANG=0 converted to LANG=12
+  Common cosine grid for mt= 102  at E= 700000.0000000000  nmu= 31
+  LANG=0 converted to LANG=12
+  Common cosine grid for mt= 102  at E= 800000.0000000000  nmu= 32
+  LANG=0 converted to LANG=12
+  Common cosine grid for mt= 102  at E= 900000.0000000000  nmu= 33
+  LANG=0 converted to LANG=12
+  Common cosine grid for mt= 102  at E= 1000000.000000000  nmu= 33
+  LANG=0 converted to LANG=12
+  Common cosine grid for mt= 102  at E= 1200000.000000000  nmu= 33
+  LANG=0 converted to LANG=12
+  Common cosine grid for mt= 102  at E= 1400000.000000000  nmu= 34
+  LANG=0 converted to LANG=12
+  Common cosine grid for mt= 102  at E= 1600000.000000000  nmu= 34
+  LANG=0 converted to LANG=12
+  Common cosine grid for mt= 102  at E= 1800000.000000000  nmu= 34
+  LANG=0 converted to LANG=12
+  Common cosine grid for mt= 102  at E= 2000000.000000000  nmu= 35
+  LANG=0 converted to LANG=12
+  Common cosine grid for mt= 102  at E= 2200000.000000000  nmu= 34
+  LANG=0 converted to LANG=12
+  Common cosine grid for mt= 102  at E= 2400000.000000000  nmu= 34
+  LANG=0 converted to LANG=12
+  Common cosine grid for mt= 102  at E= 2600000.000000000  nmu= 34
+  LANG=0 converted to LANG=12
+  Common cosine grid for mt= 102  at E= 2800000.000000000  nmu= 35
+  LANG=0 converted to LANG=12
+  Common cosine grid for mt= 102  at E= 3000000.000000000  nmu= 34
+  LANG=0 converted to LANG=12
+  Common cosine grid for mt= 102  at E= 3200000.000000000  nmu= 34
+  LANG=0 converted to LANG=12
+  Common cosine grid for mt= 102  at E= 3400000.000000000  nmu= 34
+  LANG=0 converted to LANG=12
+  Common cosine grid for mt= 102  at E= 3600000.000000000  nmu= 35
+  LANG=0 converted to LANG=12
+  Common cosine grid for mt= 102  at E= 3800000.000000000  nmu= 35
+  LANG=0 converted to LANG=12
+  Common cosine grid for mt= 102  at E= 4000000.000000000  nmu= 35
+  LANG=0 converted to LANG=12
+  Common cosine grid for mt= 102  at E= 4200000.000000000  nmu= 34
+  LANG=0 converted to LANG=12
+  Common cosine grid for mt= 102  at E= 4400000.000000000  nmu= 35
+  LANG=0 converted to LANG=12
+  Common cosine grid for mt= 102  at E= 4600000.000000000  nmu= 35
+  LANG=0 converted to LANG=12
+  Common cosine grid for mt= 102  at E= 4800000.000000000  nmu= 35
+  LANG=0 converted to LANG=12
+  Common cosine grid for mt= 102  at E= 5000000.000000000  nmu= 35
+  LANG=0 converted to LANG=12
+  Common cosine grid for mt= 102  at E= 5500000.000000000  nmu= 35
+  LANG=0 converted to LANG=12
+  Common cosine grid for mt= 102  at E= 6000000.000000000  nmu= 34
+  LANG=0 converted to LANG=12
+  Common cosine grid for mt= 102  at E= 6500000.000000000  nmu= 35
+  LANG=0 converted to LANG=12
+  Common cosine grid for mt= 102  at E= 7000000.000000000  nmu= 34
+  LANG=0 converted to LANG=12
+  Common cosine grid for mt= 102  at E= 7500000.000000000  nmu= 35
+  LANG=0 converted to LANG=12
+  Common cosine grid for mt= 102  at E= 8000000.000000000  nmu= 35
+  LANG=0 converted to LANG=12
+  Common cosine grid for mt= 102  at E= 8500000.000000000  nmu= 35
+  LANG=0 converted to LANG=12
+  Common cosine grid for mt= 102  at E= 9000000.000000000  nmu= 34
+  LANG=0 converted to LANG=12
+  Common cosine grid for mt= 102  at E= 9500000.000000000  nmu= 34
+  LANG=0 converted to LANG=12
+  Common cosine grid for mt= 102  at E= 10000000.00000000  nmu= 35
+  LANG=0 converted to LANG=12
+  Common cosine grid for mt= 102  at E= 10500000.00000000  nmu= 35
+  LANG=0 converted to LANG=12
+  Common cosine grid for mt= 102  at E= 11000000.00000000  nmu= 35
+  LANG=0 converted to LANG=12
+  Common cosine grid for mt= 102  at E= 11500000.00000000  nmu= 35
+  LANG=0 converted to LANG=12
+  Common cosine grid for mt= 102  at E= 12000000.00000000  nmu= 35
+  LANG=0 converted to LANG=12
+  Common cosine grid for mt= 102  at E= 12500000.00000000  nmu= 34
+  LANG=0 converted to LANG=12
+  Common cosine grid for mt= 102  at E= 13000000.00000000  nmu= 34
+  LANG=0 converted to LANG=12
+  Common cosine grid for mt= 102  at E= 13500000.00000000  nmu= 35
+  LANG=0 converted to LANG=12
+  Common cosine grid for mt= 102  at E= 14000000.00000000  nmu= 35
+  LANG=0 converted to LANG=12
+  Common cosine grid for mt= 102  at E= 14500000.00000000  nmu= 34
+  LANG=0 converted to LANG=12
+  Common cosine grid for mt= 102  at E= 15000000.00000000  nmu= 35
+  LANG=0 converted to LANG=12
+  Common cosine grid for mt= 102  at E= 15500000.00000000  nmu= 35
+  LANG=0 converted to LANG=12
+  Common cosine grid for mt= 102  at E= 16000000.00000000  nmu= 35
+  LANG=0 converted to LANG=12
+  Common cosine grid for mt= 102  at E= 16500000.00000000  nmu= 34
+  LANG=0 converted to LANG=12
+  Common cosine grid for mt= 102  at E= 17000000.00000000  nmu= 34
+  LANG=0 converted to LANG=12
+  Common cosine grid for mt= 102  at E= 17500000.00000000  nmu= 35
+  LANG=0 converted to LANG=12
+  Common cosine grid for mt= 102  at E= 18000000.00000000  nmu= 34
+  LANG=0 converted to LANG=12
+  Common cosine grid for mt= 102  at E= 18500000.00000000  nmu= 34
+  LANG=0 converted to LANG=12
+  Common cosine grid for mt= 102  at E= 19000000.00000000  nmu= 35
+  LANG=0 converted to LANG=12
+  Common cosine grid for mt= 102  at E= 19500000.00000000  nmu= 35
+  LANG=0 converted to LANG=12
+  Common cosine grid for mt= 102  at E= 20000000.00000000  nmu= 35
+  LANG=0 converted to LANG=12
+  Common cosine grid for mt= 102  at E= 150000000.0000000  nmu= 35
+  Particle  2  ZAP= 1002.000000000000  AWP= 1.996256000000000
+  LAW= 4
+  zap= 1002.000000000000  awp= 1.996256000000000  lip= 0  law= 4  data copied
+  MF7 to MF40 copied to output tape
+
+ 
+ Doppler Broaden ENDF/B Cross Sections (SIGMA1 2019-1)
+ -------------------------------------------------------------------------------
+ Retrieval Criteria-----------        MAT
+ Monitor Mode-----------------        Off
+ Temperature------------------ 400.000000 KELVIN
+ Mimimum Cross Section-------- 1.0000E-20
+ Negative Cross Section------- Make = 0 (No Negative Outout)
+ Unresolved Resonances Region- Copy (No Broadening)
+ -------------------------------------------------------------------------------
+ ENDF/B Input and Output Data Filenames
+ -------------------------------------------------------------------------------
+ sixlin.pendf
+ sigma1.pendf
+ -------------------------------------------------------------------------------
+ Requested MAT Ranges
+ -------------------------------------------------------------------------------
+     Mimimum    Maximum
+ -------------------------------------------------------------------------------
+         125        125
+ -------------------------------------------------------------------------------
+ Allowable Uncertainty
+ -------------------------------------------------------------------------------
+      Energy Uncertainty   per-cent
+ -------------------------------------------------------------------------------
+  0.0         .002500000     0.2500
+  1.00000000  .002500000     0.2500
+  2.00000000  .005000000     0.5000
+  1.00000E+9  .005000000     0.5000
+ -------------------------------------------------------------------------------
+ ENDF/B Tape Label
+ -------------------------------------------------------------------------------
+ ENDF tape for MAT=  125                                           7000
+ -------------------------------------------------------------------------------
+ Projectile      MAT  MT ENDF/B     Kelvin     Q-Value   Points   Points
+       Material          Format         In          eV       In      Out
+ -------------------------------------------------------------------------------
+ n     1-H -1    125   1  VI    0.0         0.0             164      318
+ n     1-H -1    125   2  VI    0.0         0.0             148      317
+ n     1-H -1    125 102  VI    0.0         2224631.00      268      364
+ -------------------------------------------------------------------------------
+ No Unresolved Region                       MAT Totals      580      999
+ -------------------------------------------------------------------------------
+ ===============================================================================
+      MAT Total Execution Time                0.48 Seconds
+ ===============================================================================
+ ------------------------------------------------------------------------------
+ All Cross Sections Read. Maximum Tabulated Energy =  150000000. eV
+ ------------------------------------------------------------------------------
+ -------------------------------------------------------------------------------
+                                           Tape Totals      580      999
+ -------------------------------------------------------------------------------
+ ===============================================================================
+ SIGMA1   Total Execution Time                0.48 Seconds
+ ===============================================================================
+ 
+ Test and Correct Data in the ENDF FORMAT (FIXUP 2019-1)
+ ------------------------------------------------------------------------------
+ Interpretation of Input Test/Correction Options
+ ------------------------------------------------------------------------------
+ Correct ZA/AWR in All Sections----------  Yes
+ Correct Thresholds----------------------   No (No Longer Allowed)
+ Extend Cross Section to 20 MeV----------   No (No Longer Allowed)
+ Allow Cross Section Deletion------------   No
+ Allow Cross Section Reconstruction------  Yes (Use Built-in Table)
+ Make All Cross Sections Non-Negative----  Yes
+ Delete Energies Not in Ascending Order--  Yes
+ Delete Duplicate Points-----------------  Yes
+ Check for Ascending MAT/MF/MT Order-----  Yes
+ Check for Legal MF/MT Numbers-----------   No
+ Allow Creation of Missing Sections------   No
+ Allow Insertion of Energy Points--------   No
+ Uniform Energy Grid for ALL MT----------  Yes
+ Delete Section if Cross Section =0------  Yes
+ ------------------------------------------------------------------------------
+ ENDF Input and Output Data FilenameS
+ sigma1.pendf
+ fixup.pendf
+ ------------------------------------------------------------------------------
+ Built-in Summation/Deletion/Threshold Exclusion Rules
+ ------------------------------------------------------------------------------
+  MT = MT Ranges and Messages
+ ------------------------------------------------------------------------------
+ ------------------------------------------------------------------------------
+ Neutrons - ENDF-5 and Earlier Versions of ENDF
+ ------------------------------------------------------------------------------
+   4 =+( 51, 91)
+ 103 =+(700,718)
+ 104 =+(720,738)
+ 105 =+(740,758)
+ 106 =+(760,778)
+ 107 =+(780,798)
+  16 =+(875,891)
+ 101 =+(102,114)
+  18 =+( 19, 19)+( 20, 21)+( 38, 38)
+  27 =+( 18, 18)+(101,101)
+   3 =+(  4,  5)+(  6,  9)+( 16, 17)+( 22, 37)
+  19 =+( 18, 18)-( 20, 21)-( 38, 38)
+   1 =+(  2,  3)
+ ------------------------------------------------------------------------------
+ Neutrons - ENDF-6
+ ------------------------------------------------------------------------------
+   4 =+( 50, 91)
+ 103 =+(600,649)
+ 104 =+(650,699)
+ 105 =+(700,749)
+ 106 =+(750,799)
+ 107 =+(800,849)
+  16 =+(875,891)
+ 101 =+(102,117)+(155,155)+(182,182)+(191,193)+(197,197)
+  18 =+( 19, 21)+( 38, 38)
+  27 =+( 18, 18)+(101,101)
+   3 =+(  4,  5)+( 11, 11)+( 16, 17)+( 22, 37)+( 41, 45)+(152,154)+(156,181)
+    +(183,190)+(194,196)+(198,200)
+  19 =+( 18, 18)-( 20, 21)-( 38, 38)
+   1 =+(  2,  3)
+ ------------------------------------------------------------------------------
+ Photons, Electrons and Positrons - ENDF-6
+ ------------------------------------------------------------------------------
+ 516 =+(515,515)+(517,517)
+ 522 =+(534,572)
+ 501 =+(502,502)+(504,504)+(516,516)+(522,522)+(526,528)
+ ------------------------------------------------------------------------------
+ ------------------------------------------------------------------------------
+ ------------------------------------------------------------------------------
+ Reading   1-H -1   MAT=  125 AWRE= .999167300 ENDF-6 FORMAT
+ ------------------------------------------------------------------------------
+ MF  MT  Points      Kelvin     Q-Value Message
+ ------------------------------------------------------------------------------
+  3   1     318  400.000000  0.0
+  3   2     317  400.000000  0.0
+  3 102     364  400.000000  2224631.00
+ ------------------------------------------------------------------------------
+ All Cross Sections Read. Maximum Tabulated Energy =  150000000. eV
+ ------------------------------------------------------------------------------
+ ------------------------------------------------------------------------------
+ Creating Uniform Energy Grid
+ ------------------------------------------------------------------------------
+ MF  MT Original  Uniform
+          Points   Points
+ ------------------------------------------------------------------------------
+  3   1      318      479
+  3   2      317      479
+  3 102      364      479
+ ------------------------------------------------------------------------------
+ MT= 101 Reconstructed Using the Following MT Numbers
+ ------------------------------------------------------------------------------
+ MF  MT   POINTS   POINTS
+           ADDED      SUM
+ ------------------------------------------------------------------------------
+  3 102      479      479
+ ------------------------------------------------------------------------------
+  3 101               479 Summation
+ ------------------------------------------------------------------------------
+ ------------------------------------------------------------------------------
+ MT=  27 Reconstructed Using the Following MT Numbers
+ ------------------------------------------------------------------------------
+ MF  MT   POINTS   POINTS
+           ADDED      SUM
+ ------------------------------------------------------------------------------
+  3 101      479      479 Reconstructed
+ ------------------------------------------------------------------------------
+  3  27               479 Summation
+ ------------------------------------------------------------------------------
+ ------------------------------------------------------------------------------
+ MT=   3 Reconstructed Using the Following MT Numbers
+ ------------------------------------------------------------------------------
+ MF  MT   POINTS   POINTS
+           ADDED      SUM
+ ------------------------------------------------------------------------------
+  3  27      479      479 Reconstructed
+ ------------------------------------------------------------------------------
+  3   3               479 Summation
+ ------------------------------------------------------------------------------
+ ------------------------------------------------------------------------------
+ MT=   1 Reconstructed Using the Following MT Numbers
+ ------------------------------------------------------------------------------
+ MF  MT   POINTS   POINTS
+           ADDED      SUM
+ ------------------------------------------------------------------------------
+  3   2      479      479
+  3   3      479      479 Reconstructed
+ ------------------------------------------------------------------------------
+  3   1               479 Summation
+ ------------------------------------------------------------------------------
+ ------------------------------------------------------------------------------
+ Description of Output Cross Sections
+ ------------------------------------------------------------------------------
+ MF  MT  Points      Kelvin     Q-Value Messages
+ ------------------------------------------------------------------------------
+  3   1     479  400.000000  0.0        Reconstructed
+  3   2     479  400.000000  0.0
+  3 102     479  400.000000  2224631.00
+ ------------------------------------------------------------------------------
+ All Cross Sections Output
+ ------------------------------------------------------------------------------
+ ===============================================================================
+ FIXUP    Total Execution Time                1.08 Seconds
+ ===============================================================================
+ ------------------------------------------------------------------------------
+ End of Run
+ ------------------------------------------------------------------------------
+ ===============================================================================
+ FIXUP    Total Execution Time                1.08 Seconds
+ ===============================================================================
+ 
+ Multi-Group and Multi-Band Parameters from ENDF/B Data (GROUPIE 2019-1)
+ ------------------------------------------------------------------------------
+ ENDF/B Input and Output Data Filenames
+ fixup.pendf
+ groupie.endf
+ ------------------------------------------------------------------------------
+ Retrieval Criteria------------        MAT
+ Number of Energy Groups-------        616 (TART)
+ Maximum Number of Bands/Group-          2 Conserve 1/[Total+<Total>]
+ Points in Weighting Spectrum--          2 (Flat Weighted)
+ Band Selection Criteria------- .001000000 (No Longer Used)
+ Sigma-0 Definition------------ Multiple of Unshielded Total in Each Group
+ High E Cross Section Extension = Zero (ENDF Standard Definition)
+ ------------------------------------------------------------------------------
+ Self-Shielded Listing---------        Yes (Cross Sections)
+ Multi-Band Listing------------        Yes
+ Multi-Band Library File-------        Yes
+ Unshielded Averages in ENDF/B-        Yes (Histogram)
+ Unshielded Averages Listing---        Yes (Cross Sections)
+ ------------------------------------------------------------------------------
+ Multi-Band Library Identification (no longer used)
+ ------------------------------------------------------------------------------
+ GROUPIE 2-BANDS MAT=  125 TEMP= 4.0000D+02
+ ------------------------------------------------------------------------------
+ MAT/MF/MT Ranges
+ ------------------------------------------------------------------------------
+    Minimum       Maximum
+    MAT MF  MT    MAT MF  MT
+ ------------------------------------------------------------------------------
+    125  1   1    125 99 999
+ ------------------------------------------------------------------------------
+ ENDF/B Tape Label
+ ------------------------------------------------------------------------------
+ ENDF tape for MAT=  125                                           7000
+ ------------------------------------------------------------------------------
+ Isotope    MAT MF Fmt Kelvin      Total Elastic Capture Fission   Other
+                                  Points  Points  Points  Points  Points
+ ------------------------------------------------------------------------------
+ ------------------------------------------------------------------------------
+ Resonance Region for   1-H -1
+ Resolved Resonance Region..... NONE
+ Unresolved Resonance Region... NONE
+ WARNING - NO Unresolved Self-Shielding
+ ------------------------------------------------------------------------------
+ ------------------------------------------------------------------------------
+  1-H -1    125  3  6 400.000000     479     479     479       0       0
+ ------------------------------------------------------------------------------
+ All Cross Sections Read. Maximum Tabulated Energy =  150000000. eV
+ ------------------------------------------------------------------------------
+ ------------------------------------------------------------------------------
+ All Cross Sections Read. Maximum Tabulated Energy =  150000000. eV
+ ------------------------------------------------------------------------------
+ ------------------------------------------------------------------------------
+                         Totals      479     479     479       0       0
+
+
+
+        Maximum per-cent Error During Sigma-0 INTERPOLATION
+ ------------------------------------------------------------------------------
+    ZA *    1 Band  *  2 Bands  *  3 Bands  *  4 Bands  *  5 Bands
+ ------------------------------------------------------------------------------
+  1001 *      0.02  *     0.00  *           *           *
+
+
+
+        Maximum per-cent Error vs. Sigma-0 for Entire FILE
+ ------------------------------------------------------------------------------
+ Index *    1 Band  *  2 Bands  *  3 Bands  *  4 Bands  *  5 Bands
+ ------------------------------------------------------------------------------
+     1 *      0.00  *     0.00  *
+     2 *      0.00  *     0.00  *
+     3 *      0.00  *     0.00  *
+     4 *      0.00  *     0.00  *
+     5 *      0.00  *     0.00  *
+     6 *      0.00  *     0.00  *
+     7 *      0.00  *     0.00  *
+     8 *      0.00  *     0.00  *
+     9 *      0.00  *     0.00  *
+    10 *      0.00  *     0.00  *
+    11 *      0.01  *     0.00  *
+    12 *      0.01  *     0.00  *
+    13 *      0.01  *     0.00  *
+    14 *      0.01  *     0.00  *
+    15 *      0.02  *     0.00  *
+    16 *      0.02  *     0.00  *
+    17 *      0.02  *     0.00  *
+    18 *      0.02  *     0.00  *
+    19 *      0.02  *     0.00  *
+    20 *      0.02  *     0.00  *
+    21 *      0.02  *     0.00  *
+    22 *      0.02  *     0.00  *
+    23 *      0.02  *     0.00  *
+    24 *      0.04  *     0.00  *
+    25 *      0.06  *     0.00  *
+ ------------------------------------------------------------------------------
+ Summary of Multi-Band Results
+ ------------------------------------------------------------------------------
+ No Self-Shielding (Conserve 1 Moment)..........        304
+ Little Self-Shielding (Conserve 2 Moments).....        286
+ General Self-Shielding (Conserve 3 Moments)....         26
+ Strict Convergence.............................          0
+ Not Strict Convergence.........................          0
+ Soft Convergence...............................          0
+ Very Soft Convergence..........................          0
+ No Convergence.................................          0
+ Sum............................................        616
+ Check (Evaluations x Groups)...................        616
+ ------------------------------------------------------------------------------
+ Other Points = Points Other Than Total, Elastic, Capture or Fission.
+ This Will Always be Zero Unless Unshielded Output is Requested.
+ ------------------------------------------------------------------------------
+ ===============================================================================
+ GROUPIE  Total Execution Time                0.06 Seconds
+ ===============================================================================
+ 
+ 
+ Create New Section Index (DICTIN 2019-1)
+ ------------------------------------------------------------
+ ENDF/B Input and Output Data Filenames
+ ------------------------------------------------------------
+ fixup.pendf
+ endf6.pendf
+ ------------------------------------------------------------
+ First Pass. Reading ENDF/B Data
+ ------------------------------------------------------------
+  MAT   Messages
+ ------------------------------------------------------------
+  125
+ ------------------------------------------------------------
+ Second Pass. Creating New Index
+ ------------------------------------------------------------
+ ENDF/B  MAT MF  MT  Lines  Mod
+ Format
+ ------------------------------------------------------------
+  VI     125  1 451     84    5
+         125  2 151      4    5
+         125  3   1    163    5
+         125  3   2    163    5
+         125  3 102    163    5
+         125  4   2   1496    5
+         125  6 102    851    5
+         125 33   1      5    5
+         125 33   2     21    5
+         125 33 102     21    5
+ ------------------------------------------------------------
+ Original Line Count   2989
+ Final Line Count      2990
+ ------------------------------------------------------------
+ ===============================================================================
+ DICTIN   Total Execution Time                0.02 Seconds
+ ===============================================================================
+ 
+  PROGRAM DOACE: Prepare continuous energy ACE files
+================================================================================
+
+  Input parameters
+================================================================================
+  MAT/ZA selection  = 0
+  Printing option   = 0
+  Input file name   =endf6.pendf
+  Output file name  =ZA001001.02c.acef
+  Selected material = 125
+  Suffix            =.02
+  Material= 125  ZA= 1001  AWR= 0.9991673000000000
+  SYM=  1-H -  1  LFI= 0  ZAI= 1  AWI= 1.000000000000000
+  EMAX= 150000000.0000000  Temperature= 400.0000000000000  K =  3.446936800000000E-08  MeV
+  probability tables not found in the URR
+   3  sections found on MF3
+   1  sections found on MF4
+  MF5 not found
+   1  sections found on MF6
+  lfi   = 0
+  mt452 = 0
+  mt455 = 0
+  mt456 = 0
+  mt5455= 0
+  mt153 = 0
+  mtinel= 0
+  mtabso= 0
+  mt16  = 0
+  mt18  = 0
+  mt05  = 0
+  mt103 = 0
+  mt104 = 0
+  mt105 = 0
+  mt106 = 0
+  mt107 = 0
+================================================================================
+  MTR array nmtrt= 1  nmtr= 0
+     102
+================================================================================
+  discontinuity at x=20000000.00 set to  19999999.99000000   20000000.01000000
+   1  discontinuities found and removed
+  Processing ESZ block locators
+  ESZ block locators prepared
+================================================================================
+  Processing NU block
+  LNU= 0
+  NU block prepared
+================================================================================
+  Processing MTR, LQR, TYR1, LSIG & SIG blocks
+  Processing reactions producing incident particle
+  Reactions not producing incident particle
+  Processing reaction MF3/MT= 102
+   mt=  102  contributes to capture and total
+   ne1= 479  ie= 1  ne= 479  qi= 2224631.000000000
+   tyr1= 0  lsig= 1
+   x(ie)= 1.000000000000000E-05  y(ie)= 16.70007010000000
+   x(ne)= 150000000.0000000  y(ne)= 1.062100000000000E-05
+--------------------------------------------------------------------------------
+  MTR BLOCK: kmtr= 2396
+            102.
+  QR BLOCK: kqr= 2397
+   2.2246310E+00
+  TYR1 BLOCK: ktyr= 2398
+   0.0000000E+00
+  LSIG BLOCK: klsig= 2399
+   1.0000000E+00
+  ksig= 2400  kfis= 0  lxs= 2881
+  MTR, LQR, TYR1, LSIG & SIG blocks prepared
+================================================================================
+  Processing LAND & AND blocks
+  mti= 2  MF4 LTT=2 LI=0
+  Incident energy j= 1  E= 1.000000000000000E-11  MeV
+  Incident energy j= 2  E= 2.000000000000000E-11  MeV
+  Incident energy j= 3  E= 5.000000000000000E-11  MeV
+  Incident energy j= 4  E= 1.000000000000000E-10  MeV
+  Incident energy j= 5  E= 2.000000000000000E-10  MeV
+  Incident energy j= 6  E= 5.000000000000000E-10  MeV
+  Incident energy j= 7  E= 1.000000000000000E-09  MeV
+  Incident energy j= 8  E= 2.000000000000000E-09  MeV
+  Incident energy j= 9  E= 5.000000000000000E-09  MeV
+  Incident energy j= 10  E= 1.000000000000000E-08  MeV
+  Incident energy j= 11  E= 2.530000000000000E-08  MeV
+  Incident energy j= 12  E= 5.000000000000000E-08  MeV
+  Incident energy j= 13  E= 1.000000000000000E-07  MeV
+  Incident energy j= 14  E= 2.000000000000000E-07  MeV
+  Incident energy j= 15  E= 5.000000000000000E-07  MeV
+  Incident energy j= 16  E= 1.000000000000000E-06  MeV
+  Incident energy j= 17  E= 2.000000000000000E-06  MeV
+  Incident energy j= 18  E= 5.000000000000000E-06  MeV
+  Incident energy j= 19  E= 9.999999999999999E-06  MeV
+  Incident energy j= 20  E= 2.000000000000000E-05  MeV
+  Incident energy j= 21  E= 5.000000000000000E-05  MeV
+  Incident energy j= 22  E= 9.999999999999999E-05  MeV
+  Incident energy j= 23  E= 2.000000000000000E-04  MeV
+  Incident energy j= 24  E= 5.000000000000000E-04  MeV
+  Incident energy j= 25  E= 1.000000000000000E-03  MeV
+  Incident energy j= 26  E= 2.000000000000000E-03  MeV
+  Incident energy j= 27  E= 4.000000000000000E-03  MeV
+  Incident energy j= 28  E= 6.000000000000000E-03  MeV
+  Incident energy j= 29  E= 8.000000000000000E-03  MeV
+  Incident energy j= 30  E= 1.000000000000000E-02  MeV
+  Incident energy j= 31  E= 1.500000000000000E-02  MeV
+  Incident energy j= 32  E= 2.000000000000000E-02  MeV
+  Incident energy j= 33  E= 4.000000000000000E-02  MeV
+  Incident energy j= 34  E= 6.000000000000000E-02  MeV
+  Incident energy j= 35  E= 8.000000000000000E-02  MeV
+  Incident energy j= 36  E= 9.999999999999999E-02  MeV
+  Incident energy j= 37  E= 0.1500000000000000  MeV
+  Incident energy j= 38  E= 0.2000000000000000  MeV
+  Incident energy j= 39  E= 0.3000000000000000  MeV
+  Incident energy j= 40  E= 0.4000000000000000  MeV
+  Incident energy j= 41  E= 0.5000000000000000  MeV
+  Incident energy j= 42  E= 0.6000000000000000  MeV
+  Incident energy j= 43  E= 0.7000000000000000  MeV
+  Incident energy j= 44  E= 0.7999999999999999  MeV
+  Incident energy j= 45  E= 0.8999999999999999  MeV
+  Incident energy j= 46  E= 1.000000000000000  MeV
+  Incident energy j= 47  E= 1.200000000000000  MeV
+  Incident energy j= 48  E= 1.400000000000000  MeV
+  Incident energy j= 49  E= 1.600000000000000  MeV
+  Incident energy j= 50  E= 1.800000000000000  MeV
+  Incident energy j= 51  E= 2.000000000000000  MeV
+  Incident energy j= 52  E= 2.200000000000000  MeV
+  Incident energy j= 53  E= 2.400000000000000  MeV
+  Incident energy j= 54  E= 2.600000000000000  MeV
+  Incident energy j= 55  E= 2.800000000000000  MeV
+  Incident energy j= 56  E= 3.000000000000000  MeV
+  Incident energy j= 57  E= 3.200000000000000  MeV
+  Incident energy j= 58  E= 3.400000000000000  MeV
+  Incident energy j= 59  E= 3.600000000000000  MeV
+  Incident energy j= 60  E= 3.800000000000000  MeV
+  Incident energy j= 61  E= 4.000000000000000  MeV
+  Incident energy j= 62  E= 4.200000000000000  MeV
+  Incident energy j= 63  E= 4.399999999999999  MeV
+  Incident energy j= 64  E= 4.600000000000000  MeV
+  Incident energy j= 65  E= 4.800000000000000  MeV
+  Incident energy j= 66  E= 5.000000000000000  MeV
+  Incident energy j= 67  E= 5.500000000000000  MeV
+  Incident energy j= 68  E= 6.000000000000000  MeV
+  Incident energy j= 69  E= 6.500000000000000  MeV
+  Incident energy j= 70  E= 7.000000000000000  MeV
+  Incident energy j= 71  E= 7.500000000000000  MeV
+  Incident energy j= 72  E= 8.000000000000000  MeV
+  Incident energy j= 73  E= 8.500000000000000  MeV
+  Incident energy j= 74  E= 9.000000000000000  MeV
+  Incident energy j= 75  E= 9.500000000000000  MeV
+  Incident energy j= 76  E= 10.00000000000000  MeV
+  Incident energy j= 77  E= 10.50000000000000  MeV
+  Incident energy j= 78  E= 11.00000000000000  MeV
+  Incident energy j= 79  E= 11.50000000000000  MeV
+  Incident energy j= 80  E= 12.00000000000000  MeV
+  Incident energy j= 81  E= 12.50000000000000  MeV
+  Incident energy j= 82  E= 13.00000000000000  MeV
+  Incident energy j= 83  E= 13.50000000000000  MeV
+  Incident energy j= 84  E= 14.00000000000000  MeV
+  Incident energy j= 85  E= 14.50000000000000  MeV
+  Incident energy j= 86  E= 15.00000000000000  MeV
+  Incident energy j= 87  E= 15.50000000000000  MeV
+  Incident energy j= 88  E= 16.00000000000000  MeV
+  Incident energy j= 89  E= 16.50000000000000  MeV
+  Incident energy j= 90  E= 17.00000000000000  MeV
+  Incident energy j= 91  E= 17.50000000000000  MeV
+  Incident energy j= 92  E= 18.00000000000000  MeV
+  Incident energy j= 93  E= 18.50000000000000  MeV
+  Incident energy j= 94  E= 19.00000000000000  MeV
+  Incident energy j= 95  E= 19.50000000000000  MeV
+  Incident energy j= 96  E= 20.00000000000000  MeV
+  Incident energy j= 97  E= 20.00000000000000  MeV
+  Incident energy j= 98  E= 25.00000000000000  MeV
+  Incident energy j= 99  E= 30.00000000000000  MeV
+  Incident energy j= 100  E= 35.00000000000000  MeV
+  Incident energy j= 101  E= 40.00000000000000  MeV
+  Incident energy j= 102  E= 45.00000000000000  MeV
+  Incident energy j= 103  E= 50.00000000000000  MeV
+  Incident energy j= 104  E= 55.00000000000000  MeV
+  Incident energy j= 105  E= 60.00000000000000  MeV
+  Incident energy j= 106  E= 65.00000000000000  MeV
+  Incident energy j= 107  E= 70.00000000000000  MeV
+  Incident energy j= 108  E= 75.00000000000000  MeV
+  Incident energy j= 109  E= 80.00000000000000  MeV
+  Incident energy j= 110  E= 85.00000000000000  MeV
+  Incident energy j= 111  E= 90.00000000000000  MeV
+  Incident energy j= 112  E= 95.00000000000000  MeV
+  Incident energy j= 113  E= 100.0000000000000  MeV
+  Incident energy j= 114  E= 110.0000000000000  MeV
+  Incident energy j= 115  E= 120.0000000000000  MeV
+  Incident energy j= 116  E= 130.0000000000000  MeV
+  Incident energy j= 117  E= 140.0000000000000  MeV
+  Incident energy j= 118  E= 150.0000000000000  MeV
+  LAND & AND blocks prepared
+================================================================================
+  Processing LDLW & DLW blocks
+  LDLW & DLW blocks prepared
+  end= 14031
+  DOACE ENDED
+ 
+End of ACEMAKER listing file
+============================
