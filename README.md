@@ -1,5 +1,7 @@
 # ACEMAKER
 
+![https://github.com/IAEA-NDS/ACEMAKER/blob/master/LICENSE](https://img.shields.io/github/license/IAEA-NDS/ACEMAKER) 
+
 A code package to produce ACE-formatted files for MCNP calculations.
 
 The provided batch files and executables are only for Windows OS. We may release a Linux version in the future, but additional testing is needed.
