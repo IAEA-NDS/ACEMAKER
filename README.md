@@ -8,7 +8,7 @@ The provided batch files and executables are only for Windows OS. We may release
 
 ## Authors
 
-* **Daniel López Aldama** - Agency of Nuclear Energy and Advanced Technologies Havana, Cuba
+* **Daniel López Aldama** - Consultant, International Atomic Energy Agency, IAEA/NDS, Vienna, Austria
 * **Dermott E. Cullen** - 1466 Hudson Way, Livermore, CA 94550, U.S.A.
 * **Andrej Trkov** - International Atomic Energy Agency, IAEA/NDS, Vienna, Austria
 
@@ -20,7 +20,7 @@ You can download the latest released (stable) version of ACEMAKER, either as `zi
 [https://github.com/IAEA-NDS/ACEMAKER/releases/latest](https://github.com/IAEA-NDS/ACEMAKER/releases/latest)
 
 
-Aditioanlly, you can clone this repository with git, from the command line:
+Additionally, you can clone this repository with git, from the command line:
 ```
 git clone https://github.com/IAEA-NDS/ACEMAKER.git
 ```
