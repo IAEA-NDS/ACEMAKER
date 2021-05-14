@@ -4,7 +4,7 @@
 
 A code package to produce ACE-formatted files for MCNP calculations.
 
-The provided batch files and executables are only for Windows OS. We may release a Linux version in the future, but additional testing is needed.
+The provided batch files and executables are only for Windows OS. The user can prepare a Linux version from the FORTRAN source files. We may release a Linux version in the future, but additional testing could be needed.
 
 ## Authors
 
