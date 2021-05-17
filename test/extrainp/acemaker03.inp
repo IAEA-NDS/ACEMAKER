@@ -1,8 +1,9 @@
 2-MATERIAL CASE FROM FENDL
 endf  \fendl32\endf\fendlen.dat
+ace   0
 suff  .32
 mat   2
-9228
-9237
+ 9228
+ 9237
 pndf  1
 end

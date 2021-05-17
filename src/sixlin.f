@@ -1,5 +1,5 @@
       program sixlin
-c     version 1.0
+c     version 2.0
 c
 c     Process and linearize MF6 data
 c
@@ -16,7 +16,7 @@ c     energy ACE-formatted file for Monte Carlo calculations
 c
 c     INPUT data:
 c
-c     Input data options should be entered on the sixlin.inp text file.
+c     Input data options should be entered on the SIXLIN.INP text file.
 c
 c     line 1:       isel       imon       ymin     (2i11,e11.0)
 c     line 2:       input  ENDF filename           (a72)
@@ -37,7 +37,7 @@ c             (Default = 0.01)
 c       dxmu: Maximum cosine interval for linearization/reconstruction
 c             (Default = 0.001)
 c
-c     Example of sixlin.inp:
+c     Example of SIXLIN.INP:
 c
 c               0          0    1.0D-20
 c     \PENDF\U235.PENDF
@@ -53,7 +53,7 @@ c     a maximum cosine interval of 0.005.
 c
 c     Output files:
 c      Output ENDF formatted file
-c      sixlin.lst listing file
+c      SIXLIN.LST listing file
 c
       implicit real*8(a-h, o-z)
       parameter (npmax=500000, nbmax=2000000, npmumax=5001)
@@ -1172,14 +1172,21 @@ c
 C======================================================================
       subroutine terp1m(x1,y1,x2,y2,x,y,i)
 c
-c      interpolate one point (borrowed from NJOY)
+c      interpolate one point using ENDF-6 interpolation laws
+c      (borrowed and modified from NJOY)
 c      (x1,y1) and (x2,y2) are the end points
 c      (x,y) is the interpolated point
-c      i is the interpolation law (1-6)
+c      i is the interpolation law (1-5)
 c
 c     *****************************************************************
       implicit real*8 (a-h,o-z)
-      zero=0.0d0
+      parameter (zero=0.0d0)
+c
+c     *** x1=x2
+      if (x2.eq.x1) then
+        y=y1
+        return
+      endif
 c
 c     ***y is constant
       if (i.eq.1.or.y2.eq.y1.or.x.eq.x1) then
@@ -1218,8 +1225,9 @@ c
 c      Linearize x,y data
 c
       implicit real*8(a-h, o-z)
+      parameter (ns=32)
       dimension nbt(*),ibt(*),x(*),y(*)
-      dimension xt(npmax),yt(npmax)
+      dimension xt(npmax),yt(npmax),xs(ns),ys(ns)
 c
 c     Check interpolation law
 c
@@ -1251,10 +1259,7 @@ c
         if (j.gt.1) then
           ilow=nbt(j-1)+1
         else
-          call inc(ii,npmax)
-          xt(ii)=x(1)
-          yt(ii)=y(1)
-          ilow=2
+          ilow=1
         endif
         if(ilaw.eq.2) then
 c
@@ -1267,11 +1272,14 @@ c
           enddo
         elseif (ilaw.eq.1) then
 c
-c         histogram interpaolation
+c         histogram interpolation
 c         constant interpolation law, convert to linear by
 c         given linear interpolation with zero slope
 c
-          do i=ilow,iup
+          call inc(ii,npmax)
+          xt(ii)=x(ilow)
+          yt(ii)=y(ilow)
+          do i=ilow+1,iup
             call inc(ii,npmax)
             xt(ii)=x(i)
             yt(ii)=y(i-1)
@@ -1283,46 +1291,55 @@ c
 c
 c         lin-log, log-lin, log-log
 c
-          do i=ilow,iup
-            x0=x(i-1)
-            y0=y(i-1)
+          call inc(ii,npmax)
+          x0=x(ilow)
+          y0=y(ilow)
+          call inc(ii,npmax)
+          xt(ii)=x0
+          yt(ii)=y0
+          do i=ilow+1,iup
             x1=x(i)
             y1=y(i)
-            ieqe=iecmpr(x0,x1)
-            if (ieqe.eq.0) then
-              call inc(ii,npmax)
-              xt(ii)=x1
-              yt(ii)=y1
-            else
-              xx0=x0
-              yy0=y0
-              xx1=x1
-              yy1=y1
-              do while (ieqe.ne.0)
-                if (ilaw.eq.4) then
-                  xm=0.5d0*(xx0+xx1)
+            dymax=0.1d0*max(dabs(y0),dabs(y1))
+            k=0
+            nostop=1
+            do while (nostop.eq.1)
+              if (ilaw.eq.4) then
+                xm=0.5d0*(x0+x1)
+              else
+                xm=dsqrt(x0*x1)
+              endif
+              ymlin=0.5d0*(y0+y1)
+              call terp1m(x0,y0,x1,y1,xm,ymlaw,ilaw)
+              dy=dabs(ymlaw-ymlin)
+              ymabs=dabs(ymlaw)
+              ylabs=dabs(ymlin)
+              dx=dabs(xm-x0)
+              h0=dabs(edelta(x0,1.0d0)-x0)
+              if ((dy.le.epy*ymabs.and.dabs(y1-y0).le.(ylabs+dymax)).or.
+     &            ymabs.le.ymin.or.dx.le.h0.or.k.eq.ns) then
+                call inc(ii,npmax)
+                xt(ii)=x1
+                yt(ii)=y1
+                if (k.eq.0) then
+                  nostop=0
                 else
-                  xm=dsqrt(xx0*xx1)
+                  x0=x1
+                  y0=y1
+                  x1=xs(k)
+                  y1=ys(k)
+                  k=k-1
                 endif
-                call terp1m(x0,y0,x1,y1,xm,ymlaw,ilaw)
-                call terp1m(xx0,yy0,xx1,yy1,xm,ymlin,2)
-                dy=dabs(ymlaw-ymlin)
-                if (ymlaw.ne.0.0d0) dy=dy/dabs(ymlaw)
-                if (dy.le.epy.or.ymlaw.le.ymin) then
-                  call inc(ii,npmax)
-                  xt(ii)=xx1
-                  yt(ii)=yy1
-                  xx0=xx1
-                  yy0=yy1
-                  xx1=x1
-                  yy1=y1
-                else
-                  xx1=xm
-                  yy1=ymlaw
-                endif
-                ieqe=iecmpr(xx0,x1)
-              enddo
-            endif
+              else
+                k=k+1
+                xs(k)=x1
+                ys(k)=y1
+                x1=xm
+                y1=ymlaw
+              endif
+            enddo
+            x0=x1
+            y0=y1
           enddo
         endif
       enddo
@@ -2461,20 +2478,6 @@ c
       return
       end
 C======================================================================
-      function iecmpr(e1,e2)
-c
-c     compare two energy values as strings
-c     if e1=e2 return 1, otherwise 0
-c
-      implicit real*8 (a-h,o-z)
-      character*11 s1,s2
-      iecmpr=0
-      call chendf(e1,s1)
-      call chendf(e2,s2)
-      if (s1.eq.s2) iecmpr=1
-      return
-      end
-C======================================================================
       subroutine chendf(ffin,str11)
       implicit real*8 (a-h,o-z)
 c
@@ -2531,6 +2534,102 @@ c
         else
           str11=' 9.99999+99'
         endif
+      endif
+      return
+      end
+C======================================================================
+      real*8 function edelta(ffin,fdig)
+      implicit real*8 (a-h,o-z)
+      character*16 str16
+      afdig=dabs(fdig)
+      if (afdig.le.0.99999999999d0) then
+        edelta=ffin
+      else
+        if (afdig.gt.9.0d0) fdig=sign(1.0d0,fdig)*9.0d0
+        write(str16,'(1pe16.9)')ffin
+        read(str16,'(e16.0)')ff
+        write(str16,'(1pe16.9)')ff
+        read(str16,'(13x,i3)')iex
+        select case (iex)
+          case (-9,-8,-7,-6,-5,-4)
+            if (ff.gt.0.0d0) then
+              edelta=ff+(10.0d0**iex)*1.0d-7*fdig
+            else
+              edelta=ff+(10.0d0**iex)*1.0d-6*fdig
+            endif
+          case (-3,-2,-1)
+            if (ff.gt.0.0d0) then
+              edelta=ff+1.0d-10*fdig
+            else
+              edelta=ff+1.0d-9*fdig
+            endif
+          case (0)
+            if (ff.gt.0.0d0) then
+              edelta=ff+1.0d-9*fdig
+            else
+              edelta=ff+1.0d-8*fdig
+            endif
+          case (1)
+            if (ff.gt.0.0d0) then
+              edelta=ff+1.0d-8*fdig
+            else
+              edelta=ff+1.0d-7*fdig
+            endif
+          case (2)
+            if (ff.gt.0.0d0) then
+              edelta=ff+1.0d-7*fdig
+            else
+              edelta=ff+1.0d-6*fdig
+            endif
+          case (3)
+            if (ff.gt.0.0d0) then
+              edelta=ff+1.0d-6*fdig
+            else
+              edelta=ff+1.0d-5*fdig
+            endif
+          case (4)
+            if (ff.gt.0.0d0) then
+              edelta=ff+1.0d-5*fdig
+            else
+              edelta=ff+1.0d-4*fdig
+            endif
+          case (5)
+            if (ff.gt.0.0d0) then
+              edelta=ff+1.0d-4*fdig
+            else
+              edelta=ff+1.0d-3*fdig
+            endif
+          case (6)
+            if (ff.gt.0.0d0) then
+              edelta=ff+1.0d-3*fdig
+            else
+              edelta=ff+1.0d-2*fdig
+            endif
+          case (7)
+            if (ff.gt.0.0d0) then
+              edelta=ff+1.0d-2*fdig
+            else
+              edelta=ff+1.0d-1*fdig
+            endif
+          case (8)
+            if (ff.gt.0.0d0) then
+              edelta=ff+1.0d-1*fdig
+            else
+              edelta=ff+fdig
+            endif
+          case (9)
+            if (ff.gt.0.0d0) then
+              edelta=ff+fdig
+            else
+              edelta=ff+(10.0d0**iex)*1.0d-6*fdig
+            endif
+          case default
+            if (ff.gt.0.0d0) then
+              edelta=ff+(10.0d0**iex)*1.0d-6*fdig
+            else
+              edelta=ff+(10.0d0**iex)*1.0d-5*fdig
+            endif
+        end select
       endif
       return
       end

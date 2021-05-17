@@ -1,0 +1,40 @@
+H bound in LiH
+ACE    1
+ENDF   \ENDF-B-VIII.0\tsl\tsl-HinLiH.endf
+MAT    1
+ 133
+TEMP   1
+ 293.6
+MON    2
+NBIN   64
+ETHM   4.0
+TOL    0.001
+EPS    0.003
+THDAT  1
+ H_LiH 1 3
+ 1000
+ 1001
+ 1002
+SUFF   .00
+MCNP   0 
+END
+Li bound in LiH
+ACE    1
+ENDF   \ENDF-B-VIII.0\tsl\tsl-LiinLiH.endf
+MAT    1
+ 132
+TEMP   1
+ 293.6
+MON    2
+NBIN   64
+ETHM   4.0
+TOL    0.001
+EPS    0.003
+THDAT   1
+ Li_LiH 1 3
+ 3000
+ 3006
+ 3007
+SUFF   .00
+MCNP   0
+END
