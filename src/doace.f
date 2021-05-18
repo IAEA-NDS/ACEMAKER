@@ -1,5 +1,5 @@
       program doace
-c     version 1.0
+c     version 2.0
 c
 c     prepare a continuous energy ace formatted file for MCNP
 c
@@ -9,23 +9,25 @@ c     be used to produce the input PENDF
 c
 c     INPUT data:
 c
-c     Input data options should be entered on the doace.inp text file.
+c     Input data options should be entered on the DOACE.INP text file.
 c
-c     line 1:       isel       imon                (2i11)
+c     line 1:       isel       imon     mcnpx      (3i11)
 c     line 2:       input PENDF filename           (a72)
 c     line 3:       output ACE-formatted filename  (a72)
 c     line 4:       imat                           (i11)
-c     line 5:       suff                           (a3)
+c     line 5:       suff                           (a4)
 c
 c     where
 c       isel: selection criterium      (0/1) = ZA/MAT   Default = 0
 c       imon: Monitor printing trigger (0/1) = min/max  Default = 0
+c      mcnpx: MCNP trigger (0/1) = MCNP/MCNPX  Default=0
 c       imat: Selected material number
-c       suff: ZAID suffix for ACE-formatted file (Examples: .00,.32,.80)
+c       suff: ZAID suffix for ACE-formatted file
+c             (Examples: .00, .32, .80, .067, the dot '.' is required)
 c
-c     Example of doace.inp:
+c     Example of DOACE.INP:
 c
-c               0          0
+c               0          0          0
 c     \PENDF\U235.PENDF
 c     \MC\U235.ACEF
 c            9228
@@ -34,14 +36,15 @@ c
 c     Retrieve material 9228 (U-235) from PENDF tape \PENDF\U235.PENDF
 c     and generate ACE-formatted file U235.ACEF on \MC\ sub-directory.
 c     ZAID for U235 should be 92235.00c and minimum printout will be
-c     produced during DOACE processing. The dot '.' is required in suff.
+c     produced during DOACE processing.
 c
       implicit real*8 (a-h, o-z)
-      parameter (nnxc=300,npmax=500000,nbmax=2000000,nxsmax=50000000)
+      parameter (nnxc=300,npmax=500000,nbmax=2000000,nxsmax=200000000)
       character*1 line1(80),line2(80)
-      character*3 suff
-      character*10 hz,hd,hm
+      character*4 suff
+      character*10 hd,hm
       character*11 zsymam,str11
+      character*13 hz
       character*66 line
       character*70 hk
       character*72 fin1,fout
@@ -56,7 +59,7 @@ c
       dimension y(npmax),y1(npmax),y2(npmax)
       dimension b(nbmax)
       data ev2mev/1.0d-6/,s2shak/1.0d-8/
-      data line1/80*'='/,line2/80*'-'/
+      data line1/80*'='/,line2/80*'-'/,suff/'    '/
       data in1/2/,nin/3/,iou/11/,nou/12/
 c
 c      open input file DOACE.INP and list file DOACE.LST
@@ -74,14 +77,16 @@ c      read input data from DOACE.INP
 c
       isel=0
       imon=0
-      read(in1,'(2i11)')isel,imon
+      mcnpx=0
+      read(in1,'(3i11)')isel,imon,mcnpx
       if (isel.ne.1) isel=0
       if (imon.ne.1) imon=0
+      if (mcnpx.ne.1)mcnpx=0
       read(in1,'(a72)')fin1
       read(in1,'(a72)')fout
       read(in1,'(i11)')nsel
-      if (nsel.lt.0) nsel=0
-      read(in1,'(a3)')suff
+      if (nsel.ne.1) nsel=0
+      read(in1,'(a)')suff
       close(in1)
 c
 c      Printing input data
@@ -91,6 +96,7 @@ c
       write(iou,'(80a1)')line1
       write(iou,*)' MAT/ZA selection  =',isel
       write(iou,*)' Printing option   =',imon
+      write(iou,*)' MCNP trigger      =',mcnpx
       write(iou,*)' Input file name   =',fin1
       write(iou,*)' Output file name  =',fout
       if (nsel.eq.0) then
@@ -98,7 +104,7 @@ c
       else
         write(iou,*)' Selected material =',nsel
       endif
-      write(iou,'(a21,a3)')'  Suffix            =',suff
+      write(iou,'(a21,a)')'  Suffix            =',suff
 c
 c      Initialize pointers arrays
 c
@@ -109,6 +115,9 @@ c
       enddo
       do i=1,32
         jxs(i)=0
+      enddo
+      do i=1,70
+        hk(i:i)=' '
       enddo
       nxss=nxsmax
 c
@@ -149,18 +158,38 @@ c
       zsymam=line(1:11)
       call readtext(nin,line,mat,mf,mt,nsi)
       call getdtime(hd,str11)
-      str11=''
+      str11=' '
       call readtext(nin,line,mat,mf,mt,nsi)
       hk(1:11)=zsymam
-      hk(12:12)=' '
-      hk(13:70)=line(1:58)
-      write(hz,'(i6,a3,a1)')matza,suff,'c'
+      hk(12:15)='  T='
+      if (temp.lt.1.0d6) then
+        write(str11,'(f11.2)')temp
+      else
+        write(str11,'(1pe11.4)')temp
+      endif
+      i=index(str11,' ',.true.)
+      if (i.eq.0) i=1
+      k=11-i
+      hk(16:16+k)=str11(i:11)
+      hk(17+k:24+k)=' K from '
+      hk(25+k:42+k)=line(5:22)
+      hk(43+k:53+k)=' (ACEMAKER)'
+      str11=' '
+      if (mcnpx.eq.1) then
+        write(hz,'(i6,a4,a3)')matza,suff(1:4),'nc '
+      else
+        write(hz,'(i6,a3,a4)')matza,suff(1:3),'c   '
+      endif
       write(hm,'(a6,i4)')'   mat',mat0
       tz=8.617342d-11*temp
-      write(*,*)' Material=',mat0,' processed'
-      write(iou,*)' Material=',mat0,' ZA=',matza,' AWR=',awr0
-      write(iou,*)' SYM=',zsymam,' LFI=',lfi,' ZAI=',izai,' AWI=',awi
-      write(iou,*)' EMAX=', emax,' Temperature=',temp,' K = ',tz,' MeV'
+      write(*,*)' Material=',mat0,' read'
+      write(iou,*)
+      write(iou,'(a,i5,a,i7,a,1pe15.8)')' Material=',mat0,' ZA=',matza,
+     &  ' AWR=',awr0
+      write(iou,'(a,a,a,i4,a,i7,a,1pe15.8)')' SYM=',zsymam,' LFI=',lfi,
+     &  ' ZAI=',izai,' AWI=',awi
+      write(iou,'(a,1p,e15.8,a,e13.6,a,e13.6,a)')' EMAX=', emax,
+     &  ' Temperature=',temp,' K = ',tz,' MeV'
       nxs(2)=matza
 c
 c      Explore endf-6 formatted input file
@@ -193,10 +222,10 @@ c
       call findmt(nin,mat0,2,153,icod)
       if (icod.eq.0) then
         mt153=1
-        write(iou,*)' probability tables found in the URR'
+        write(iou,*)' probability tables are available in the URR'
       else
         mt153=0
-        write(iou,*)' probability tables not found in the URR'
+        write(iou,*)' probability tables are not available in the URR'
       endif
       nmf3=0
       call findmf(nin,mat0,3,icod)
@@ -1521,9 +1550,9 @@ c
         call readlist(nin,tempz,c2,lssf,icomp,nw,nunr,b)
         mtabso=icomp/1000
         mtinel=icomp-mtabso*1000
-        write(*,*)' PTABLE nbin=',nbin,' int=',iintt,' lssf=',lssf
+        write(*,*)' PTABLE nbin=',nbin,' intunr=',iintt,' lssf=',lssf
         write(*,*)' mtinel=',mtinel,' mtabso=',mtabso,' temp=',tempz
-        write(iou,*)' PTABLE nbin=',nbin,' int=',iintt,' lssf=',lssf
+        write(iou,*)' PTABLE nbin=',nbin,' intunr=',iintt,' lssf=',lssf
         write(iou,*)' mtinel=',mtinel,' mtabso=',mtabso,' temp=',tempz
         if (mtinel.ne.0) then
           ilf=mtinel
@@ -1535,39 +1564,17 @@ c
         else
           ioa=-1
         endif
-        if (iintt.ne.2.and.iintt.ne.5) iintt=2
+        if (iintt.ne.2) then
+          iintt=2
+          write(*,*)' Interpolation law (intunr) changed to 2'
+          write(iou,*)' Interpolation law (intunr) changed to 2'
+        endif
         nbin2=nbin+nbin
         nbin3=nbin2+nbin
         nbin4=nbin3+nbin
         nbin5=nbin4+nbin
         nbin6=nbin5+nbin
         nrec=1+nbin6
-        if (lssf.eq.0) then
-          lssf=1
-          write(*,*)' lssf set to 1 = shielding factors'
-          do ie=1,nunr
-            ik=(ie-1)*nrec+1
-            probt=0.0d0
-            do ib=1,nbin
-              probt=b(ik+ib)+probt
-              write(*,*)' Cumulative prob.=',probt
-            enddo
-            do ix=1,5
-              ixx=ik+ix*nbin
-              xinf=0.0d0
-              do ib=1,nbin
-                xinf=b(ik+ib)*b(ixx+ib)+xinf
-              enddo
-              if (probt.ne.0.0d0)xinf=xinf/probt
-              do ib=1,nbin
-                if (xinf.ne.0.0d0) then
-                  b(ixx+ib)=b(ixx+ib)/xinf
-                endif
-                write(*,*)' F=',b(ixx+ib),' for ie,ix,ib=',ie,ix,ib,xinf
-              enddo
-            enddo
-          enddo
-        endif
         xss(lxs)=nunr
         xss(lxs+1)=nbin
         xss(lxs+2)=iintt
@@ -1744,7 +1751,7 @@ c      write the ace file
 c
       close(nin)
       open (nou,file=fout)
-      call change(nou)
+      call change(nou,mcnpx)
       close(nou)
 c
 c      write *.xsd file for xsdir
@@ -1759,11 +1766,21 @@ c
       fin1=trim(fin1)
       open(nou,file=fin1)
       if (klunr.gt.0) then
-        write(nou,'(a10,f12.6,a1,a,a7,i9,a4,1pe11.4,a7)')
-     &  hz,awr0,' ',trim(fout),' 0 1 1 ',kend,' 0 0',tz,' ptable'
+        if (mcnpx.eq.1) then
+          write(nou,'(a13,f12.6,a,a,a7,i9,a4,1pe11.4,a,/,a12)')hz(1:13),
+     &    awr0,' ',trim(fout),' 0 1 1 ',kend,' 0 0',tz,'  +','ptable'
+        else
+          write(nou,'(a10,f12.6,a,a,a7,i9,a4,1pe11.4,a7)')hz(1:10),
+     &    awr0,' ',trim(fout),' 0 1 1 ',kend,' 0 0',tz,' ptable'
+        endif
       else
-        write(nou,'(a10,f12.6,a1,a,a7,i9,a4,1pe11.4)')
-     &  hz,awr0,' ',trim(fout),' 0 1 1 ',kend,' 0 0',tz
+        if (mcnpx.eq.1) then
+          write(nou,'(a13,f12.6,a,a,a7,i9,a4,1pe11.4)')hz(1:13),
+     &    awr0,' ',trim(fout),' 0 1 1 ',kend,' 0 0',tz
+        else
+          write(nou,'(a10,f12.6,a,a,a7,i9,a4,1pe11.4)')hz(1:10),
+     &    awr0,' ',trim(fout),' 0 1 1 ',kend,' 0 0',tz
+        endif
       endif
       close(nou)
       write(*,*)' DOACE ENDED'
@@ -2051,7 +2068,7 @@ C======================================================================
       character*16 str16
       afdig=dabs(fdig)
       if (afdig.eq.0.0d0) then
-        edelta=ff
+        edelta=ffin
       else
         if (afdig.gt.9.0d0) fdig=fdig/afdig*9.0d0
         write(str16,'(1pe16.9)')ffin
@@ -2217,9 +2234,8 @@ C======================================================================
 C======================================================================
       real*8 function fvalue(nr,nbt,ibt,np,x,y,x0)
 c
-c      Return f(x0), value of function f evaluated at x0.
-c      Function f is given by np tabulated points (x,y) and
-c      nr interpolation intervals (arrays nbt & ibt)
+c      Return f(x0): function value at x0.
+c      Function f is given by an ENDF-6/TAB1 record
 c
         implicit real*8 (a-h, o-z)
         dimension nbt(*),ibt(*),x(*),y(*)
@@ -2271,14 +2287,21 @@ c
 C======================================================================
       subroutine terp1m(x1,y1,x2,y2,x,y,i)
 c
-c      interpolate one point (borrowed from NJOY)
+c      interpolate one point using ENDF-6 interpolation laws
+c      (borrowed and modified from NJOY)
 c      (x1,y1) and (x2,y2) are the end points
 c      (x,y) is the interpolated point
-c      i is the interpolation law (1-6)
+c      i is the interpolation law (1-5)
 c
 c     *****************************************************************
       implicit real*8 (a-h,o-z)
-      zero=0.0d0
+      parameter (zero=0.0d0)
+c
+c     *** x1=x2
+      if (x2.eq.x1) then
+        y=y1
+        return
+      endif
 c
 c     ***y is constant
       if (i.eq.1.or.y2.eq.y1.or.x.eq.x1) then
@@ -3011,10 +3034,10 @@ c
       return
       end
 C======================================================================
-C      Subroutines for writing ace-formated files
+C      Subroutines for writing fast ace-formated files
 C      (Borrowed from NJOY)
 C======================================================================
-      subroutine change(nout)
+      subroutine change(nout,mcnpx)
 c     ******************************************************************
 c     change ace data fields from integer to real or vice versa.
 c     if nout.gt.1, the results are written in type 1 format
@@ -3027,7 +3050,8 @@ c     ******************************************************************
       implicit real*8 (a-h,o-z)
       integer esz,sig,and,tyr,dlw,gpd,fis,sigp,andp,dlwp,yp,end
       integer dndat,dnd,ptype,ploct
-      character*10 hz,hd,hm
+      character*10 hd,hm
+      character*13 hz
       character*70 hk
       common/acetxt/hz,hd,hm,hk
       common/acecte/awr0,tz,awn(16),izn(16)
@@ -3043,7 +3067,11 @@ c     ******************************************************************
       equivalence (xss(1),iss(1))
       external typen
       if (nout.gt.1) then
-       write(nout,'(a10,f12.6,1pe12.4,1x,a10)')hz,awr0,tz,hd
+       if (mcnpx.eq.1) then
+         write(nout,'(a13,f12.6,1pe12.4,1x,a10)')hz(1:13),awr0,tz,hd
+       else
+         write(nout,'(a10,f12.6,1pe12.4,1x,a10)')hz(1:10),awr0,tz,hd
+       endif
        write(nout,'(a70,a10)')hk,hm
        write(nout,'(4(i7,f11.0))')(izn(i),awn(i),i=1,16)
        write(nout,'(8i9)')(nxs(i),i=1,16)

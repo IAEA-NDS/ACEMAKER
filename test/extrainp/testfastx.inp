@@ -1,0 +1,18 @@
+ACEMAKER case title
+ENDF  \fendl32\endf\fendlen.dat
+MAT   2
+ 125
+ 9228
+TEMP  2
+ 293.6
+ 400.0
+TOL   0.005
+YMIN  1.0e-20
+DXMU  0.01
+SUFF  .00
+PTAB  1
+PNDF  0
+MON   0
+KEEP  0
+MCNP  1
+END

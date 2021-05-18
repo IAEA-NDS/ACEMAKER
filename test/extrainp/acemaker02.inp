@@ -1,12 +1,12 @@
-H-1 test case
+H-1 test case (defaults)
 endf  \ENDF-B-VIII.0\neutrons\n-001_H_001.endf
 end
-Al-27  test case
+Al-27  test case (defaults)
 endf  \ENDF-B-VIII.0\neutrons\n-013_Al_027.endf
 end
-O-16  test case
+O-16  test case (defaults)
 endf  \ENDF-B-VIII.0\neutrons\n-008_O_016.endf
 end
-N-14  test case
+N-14  test case (defaults)
 endf  \ENDF-B-VIII.0\neutrons\n-007_N_014.endf
 end

@@ -1,0 +1,94 @@
+para-H
+ACE    1
+ENDF   \ENDF-B-VIII.0\tsl\tsl-para-H.endf
+MAT    1
+ 2
+TEMP   1
+ 20.0
+MON    2
+NBIN   64
+ETHM   4.0
+TOL    0.001
+EPS    0.003
+THDAT  1
+ paraH 1 1
+ 1001
+SUFF   .00
+MCNP   0
+END
+Graphite 10% porosity
+ACE    1
+ENDF   \ENDF-B-VIII.0\tsl\tsl-reactor-graphite-10P.endf
+MAT    1
+ 31
+TEMP   1
+ 296.0 
+MON    2
+NBIN   64
+ETHM   4.0
+TOL    0.001
+EPS    0.003
+THDAT  1
+ grph10 1 3
+ 6000
+ 6012
+ 6013
+SUFF   .00
+MCNP   0
+END
+Graphite 30% porosity
+ACE    1
+ENDF   \ENDF-B-VIII.0\tsl\tsl-reactor-graphite-30P.endf
+MAT    1
+ 32
+TEMP   1
+ 296.0 
+MON    2
+NBIN   64
+ETHM   4.0
+TOL    0.001
+EPS    0.003
+THDAT  1
+ grph30 1 3
+ 6000
+ 6012
+ 6013 
+SUFF   .00
+MCNP   0
+END
+Be-metal
+ACE    1
+ENDF   \ENDF-B-VIII.0\tsl\tsl-Be-metal.endf
+MAT    1
+ 26
+TEMP   1
+ 296.0 
+MON    2
+NBIN   64
+ETHM   4.0
+TOL    0.001
+EPS    0.003
+THDAT  1
+ Be_met 1 1
+ 4009
+SUFF   .00
+MCNP   0
+END
+Al-27
+ACE    1
+ENDF   \ENDF-B-VIII.0\tsl\tsl-013_Al_027.endf
+MAT    1
+ 53
+TEMP   1
+ 293.6 
+MON    2
+NBIN   64
+ETHM   4.0
+TOL    0.001
+EPS    0.003
+THDAT  1
+ al27 1 1
+ 13027
+SUFF   .00
+MCNP   0
+END

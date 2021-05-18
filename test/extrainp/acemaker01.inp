@@ -1,5 +1,6 @@
-Case title: all keywords 
+Case title: all fast keywords 
 ENDF  \fendl32\endf\fendlen.dat
+ACE   0
 MAT   1
  125
 TEMP  2
@@ -9,6 +10,7 @@ TOL   0.005
 YMIN  1.0D-20
 DXMU  0.01
 SUFF  .01
+MCNP  0
 PTAB  1
 PNDF  1
 MON   0

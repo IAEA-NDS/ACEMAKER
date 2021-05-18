@@ -1,0 +1,19 @@
+H bound in H2O
+ACE    1
+ENDF   \ENDF-B-VIII.0\tsl\tsl-HinH2O.endf
+MAT    1
+ 1
+TEMP   2
+ 293.6
+ 400.0
+MON    2
+NBIN   64
+ETHM   4.0
+TOL    0.001
+EPS    0.003
+THDAT  1
+ H_H2O 1 1
+ 1001
+SUFF   .00
+MCNP   0
+END
