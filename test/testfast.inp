@@ -1,6 +1,6 @@
 ACEMAKER case title
 ENDF  \fendl32\endf\fendlen.dat
-ACE 0
+ACE   0
 MAT   1
  125
 TEMP  2
