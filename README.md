@@ -27,7 +27,7 @@ git clone https://github.com/IAEA-NDS/ACEMAKER.git
 
 ## References
 
-* ACEMAKER-2019: A code package to produce ACE-formatted files for MCNP calculations ([IAEA-NDS-0223](https://nds.iaea.org/publications/iaea-nds/iaea-nds-223.pdf))
+* ACEMAKER: A code package to produce ACE-formatted files for MCNP calculations ([IAEA-NDS-0223](https://nds.iaea.org/publications/iaea-nds/iaea-nds-223.pdf))
 
 ## Disclaimer
 
