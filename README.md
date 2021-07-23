@@ -2,7 +2,9 @@
 
 ![https://github.com/IAEA-NDS/ACEMAKER/blob/master/LICENSE](https://img.shields.io/github/license/IAEA-NDS/ACEMAKER) 
 
-A code package to produce ACE-formatted files for MCNP calculations.
+A code package to produce ACE-formatted files for MCNP calculations. This updated version allows preparing fast, dosimetry, and thermal data for Monte Carlo simulations.
+
+The user should be aware that the comment lines within the source codes should always be considered as the most recent documentation and may supersede any earlier published report.
 
 The provided batch files and executables are only for Windows OS. The user can prepare a Linux version from the FORTRAN source files. We may release a Linux version in the future, but additional testing could be needed.
 
