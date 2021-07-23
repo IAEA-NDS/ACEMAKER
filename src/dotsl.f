@@ -68,11 +68,14 @@ c
 c     Output files:
 c       1. Output ACE-formatted file (full filename: input line 2)
 c       2. DOTSL.LST listing file (fix name)
+c      if imon=2
+c       3. DOTSL.PLT PLOTTAB option file
+c       4. DOTSL.CUR PLOTTAB curve file
 c
       implicit real*8(a-h, o-z)
       parameter (bk=8.6173303d-5,ev2mev=1.0d-6)
-      parameter (nemax=300, ethmin=1.0d-5, ethmaxd=4.0d0, tempd=296.0d0)
-      parameter (nbind=16, told=0.001d0, toled=0.003d0)
+      parameter (nemax=500, ethmin=1.0d-5, ethmaxd=4.0d0, tempd=296.0d0)
+      parameter (nbind=16, told=0.001d0, toled=0.001d0)
       character*1  lin130(130)
       character*3  tht
       character*4  suff
@@ -266,6 +269,7 @@ c
       call readtext(in2,line,mat,mf,mt,nsi)
       hk(25+k:42+k)=line(5:22)
       hk(43+k:53+k)=' (ACEMAKER)'
+      hk(67:69)='TSL'
       str11=' '
       call getdtime(hd,str11)
       if (mcnpx.eq.1) then
@@ -283,12 +287,12 @@ c
 c
 c     Thermal inelastic scattering (always present)
 c
-      call sigine(in2,lst,matsl,temp,nmix,nbin,ethmax,tol,imon,ei,nei,
-     &  xnatom)
+      call sigine(in2,lst,matsl,temp,nmix,nbin,ethmax,tol,tole,ei,nei,
+     &  xnatom,imon)
 c
 c     Thermal elastic scattering
 c
-      call sigela(in2,lst,matsl,temp,nmix,nbin,imon,ei,nei,xnatom)
+      call sigela(in2,lst,matsl,temp,nmix,nbin,tole,ei,nei,xnatom,imon)
 c
 c     Writing ACE-formatted file and its xsdir information
 c
@@ -324,45 +328,65 @@ c
       stop
       end
 C======================================================================
-      subroutine egrid(e,n,ethmax,ethmin,tole)
+      subroutine egrid(e,n,ethmax,ethmin,tolin)
 c
 c      Generate an incident energy grid which garantees the
 c      recontruction of an 1/E varying cross section within a
-c      relative tolerance of tole. Some extra points are added.
+c      relative tolerance of tolk.
+c        tole=min(tolin,tolmax=0.001)
+c        tolk=2*tole    ethmin - 1.0e-4 eV
+c        tolk=tole      1.0e-4 - 1.0e-3 eV
+c        tolk=0.5*tole  1.0e-3 - 2.0e+0 eV
+c        tolk=tole      2.0e+0 - ethmax eV
 c
       implicit real*8(a-h, o-z)
-      parameter (nex=20)
+      parameter (nlim=3, tolmax=1.0d-3)
       dimension e(*)
-      dimension extra(nex)
-      data extra/1.00d-3,1.00d-2,2.53d-2,1.00d-1,2.00d-1,
-     &           3.00d-1,4.00d-1,5.00d-1,6.25d-1,1.00d+0,
-     &           2.00d+0,3.00d+0,3.50d+0,3.75d+0,4.90d+0,
-     &           5.75d+0,7.00d+0,7.75d+0,8.75d+0,10.00d0/
-      emin=max(ethmin,1.0d-5)
-      iex=nex
-      do i=1,nex-1
-        if (ethmax.lt.extra(i+1)) then
-          iex=i
-          exit
+      dimension elim(nlim)
+      dimension tolf(nlim)
+      data elim/1.0d-4,1.0d-3,2.0d0/
+      data tolf/2.0d0,1.0d0,0.5d0/
+      if (tolin.lt.tolmax) then
+        tole=tolin
+      else
+        tole=tolmax
+      endif
+      elow=max(ethmin,1.0d-5)
+      e(1)=elow
+      n0=1
+      do k=1,nlim
+        ehigh=elim(k)
+        if (ehigh.gt.elow.and.ehigh.le.ethmax) then
+          tolk=tolf(k)*tole
+          r=(1.0d0+2.0d0*tolk)+sqrt(4.0d0*tolk*(tolk+1.0d0))
+          nn=nint(log(ehigh/elow)/log(r))+1
+          r=exp(log(ehigh/elow)/dble(nn))
+          nf=n0+nn
+          n0=n0+1
+          do i=n0,nf
+            e(i)=e(i-1)*r
+          enddo
+          n0=nf
+          elow=ehigh
         endif
       enddo
-      emax=extra(iex)
-      r=(1.0d0+2.0d0*tole)+sqrt(4.0d0*tole*(tole+1.0d0))
-      nn=min(max(log(ethmax/emin)/log(r),100.0d0),dble(n-iex-2))+2
-      r=exp(log(ethmax/emin)/dble(nn-1))
-      e(1)=emin
-      do i=2,nn
-       e(i)=e(i-1)*r
-      enddo
-      do i=1,iex
-        if (extra(i).gt.emin) then
-          nn=nn+1
-          e(nn)=extra(i)
+      elow=e(nf)
+      if (elow.lt.ethmax) then
+        if (ethmax.lt.elim(nlim)) then
+          tolk=tolf(nlim)*tole
+        else
+          tolk=tole
         endif
-      enddo
-      tole2=max(0.1d0*(r-1.0d0)/r,1.0d-7)
-      call orderx(e,nn,tole2,1)
-      n=nn
+        r=(1.0d0+2.0d0*tolk)+sqrt(4.0d0*tolk*(tolk+1.0d0))
+        nn=nint(log(ethmax/elow)/log(r))+1
+        r=exp(log(ethmax/elow)/dble(nn))
+        nf=n0+nn
+        n0=n0+1
+        do i=n0,nf
+          e(i)=e(i-1)*r
+        enddo
+      endif
+      n=nf
       if (e(n).ne.ethmax) e(n)=ethmax
       do i=1,n
         e(i)=fix8dig(e(i),0)
@@ -370,33 +394,35 @@ c
       return
       end
 C======================================================================
-      subroutine sigine(in2,lst,matsl,temp,nmix,nbin,ethmax,tol,imon,
-     &  ei,nei,xnatom)
+      subroutine sigine(in2,lst,matsl,temp,nmix,nbin,ethmax,tol,tole,
+     &  ei,nei,xnatom,imon)
 c
-c      Full processing of inelastic thermal scattering
+c      processing of inelastic thermal scattering
 c
       implicit real*8(a-h, o-z)
-      parameter (nmax=8000)
+      parameter (nmax=6000)
       parameter (slgmin=-228.0d0)
       parameter (epmin=0.0d0)
-      parameter (cdfstp=1.0d-6, ustp=0.0075d0, epstp=2.5d-7)
-      parameter (tzref=0.0253d0, bk=8.6173303d-5, ev2mev=1.0d-6)
+      parameter (tzref=0.0253d0, bk=8.6173303d-5)
       dimension ei(*)
       common/acecte/awrth,tmev,awm(16),izam(16)
       common/acepnt/nxs(16),jxs(32)
       common/acexss/xss(50000000),nxss
-      dimension x(nmax),y(nmax)
       dimension nbt(20),ibt(20)
       character*1 lin130(130)
       allocatable sigb(:),xat(:),aws(:),isl(:),teff(:)
       allocatable alpha(:),beta(:),sab(:,:)
-      allocatable w0(:),w1(:),ubar(:,:),cdf(:),icdf(:)
+      allocatable x(:),y(:),ubar(:,:)
+      allocatable xs2(:),ys2(:),us2(:,:)
+      allocatable w0(:),w1(:)
       data lin130/130*'='/
 c
 c     Inition (the order of smin is 1.0e-99)
 c
       smin=exp(slgmin)
-      allocate(w0(nbin),w1(nbin),ubar(nbin,nmax))
+      allocate(x(nmax),y(nmax),ubar(nbin,nmax))
+      allocate(xs2(nmax),ys2(nmax),us2(nbin,nmax))
+      allocate(w0(nbin),w1(nbin))
 c
 c     Read thermal inelastic scattering law from ENDF-6 file(MF7/MT4)
 c
@@ -700,38 +726,27 @@ c
         endif
       enddo
 c
-c      Inelastic scattering flags and pointers
+c      initial ACE pointers for inelastic scattering
 c
-      nxs(2)=3
-      nxs(3)=nbin+1
-      nxs(4)=nbin
-      nxs(7)=2
       itie=1
-      itix=1+itie+nei
-      itxe=itix+nei
-      itnep=itxe+nei
-      jxs(1)=itie
-      jxs(2)=itix
-      jxs(3)=itxe
-      ixss=itnep+nei-1
+      itix0=1+itie+nei
+      itxe0=itix0+nei
+      itnep0=itxe0+nei
+      ixss=itnep0+nei-1
 c
-c      Inelastic energy table
-c
-      xss(itie)=nei
-      do i=1,nei
-        xss(itie+i)=ei(i)*ev2mev
-      enddo
-c
-c     Loop over incident energies
+c     Loop over the denser incident-energy(Ein) grid
 c
       if (lasym.eq.1) then
         nbb=nb
       else
         nbb=2*nb-1
       endif
+      tolk=3.0d0*tole
+      rmax=(1.0d0+2.0d0*tolk)+sqrt(4.0d0*tolk*(tolk+1.0d0))
+      je=0
       do ie=1,nei
 c
-c       Eou energy grid adaptively reconstruction
+c       Secondary-energy(Eou) grid adaptively reconstruction
 c
         e=ei(ie)
         x1m=fix8dig(e,-1)
@@ -798,7 +813,7 @@ c
         enddo
         if (iep0.lt.nep) then
 c
-c       Removing trailing zeros, if any
+c         Removing trailing zeros, if any
 c
           knep=nep-1
           do i=knep,iep0,-1
@@ -808,175 +823,187 @@ c
             endif
           enddo
 c
-c         Printing control
+c         Calculating cross section and average cosine at Ein=e
 c
-c         write(lst,'(130a1)')lin130
-c         do i=iep0,nep
-c           call printine(lst,i,i,x(i),y(i),y(i),ubar,nbin)
-c         enddo
-c         write(lst,'(130a1)')lin130
-c
-c         Assigning equi-probable angles to null edges, if any
-c
-          if (y(iep0).le.0.0d0) then
-            iep1=iep0+1
-            do i=1,nbin
-              ubar(i,iep0)=ubar(i,iep1)
-            enddo
-          endif
-          if (y(nep).le.0.0d0) then
-            nep1=nep-1
-            do i=1,nbin
-              ubar(i,nep)=ubar(i,nep1)
-            enddo
-          endif
-c
-c         Calculating sig(Ein) and cdf(Ein,Eou)
-c
-          ncdf=nep-iep0+1
-          allocate(cdf(ncdf),icdf(ncdf))
-          j=1
           sigs=0.0d0
-          cdf(j)=0.0d0
+          uu=0.0d0
+          x0=x(iep0)
+          y0=y(iep0)
+          u0=avecos(ubar(1,iep0),nbin)
           i0=iep0+1
           do i=i0,nep
-            i1=i-1
-            sigs=0.5d0*(x(i)-x(i1))*(y(i)+y(i1))+sigs
-            j=j+1
-            cdf(j)=sigs
-          enddo
-          do i=iep0,nep
-            y(i)=y(i)/sigs
-          enddo
-          do i=1,ncdf
-            cdf(i)=cdf(i)/sigs
-          enddo
-          cdf(ncdf)=1.0d0
-          sigs=sigs/dble(nmix)
-c
-c         Thinning cdf(Ein,Eou)
-c
-          i0=3
-          do i=3,ncdf
-            if (cdf(i).gt.cdfstp) then
-              i0=i
-              exit
-            endif
-          enddo
-          icdf(1)=i0-2
-          icdf(2)=i0-1
-          icdf(3)=i0
-          ep0=x(i0)
-          cdf0=cdf(i0)
-          u0=avecos(ubar(1,i0),nbin)
-          i0=i0+1
-          j=3
-          ncdf1=ncdf-1
-          do i=i0,ncdf
-            ep1=x(i)
-            cdf1=cdf(i)
+            x1=x(i)
+            y1=y(i)
             u1=avecos(ubar(1,i),nbin)
-            if ((((cdf1-cdf0).ge.cdfstp.or.(abs(u1-u0).ge.ustp.and.
-     &      (ep1-ep0).gt.epstp*ep0)).and.i.lt.ncdf1).or.i.eq.ncdf) then
-              j=j+1
-              icdf(j)=i
-              ep0=ep1
-              cdf0=cdf1
-              u0=u1
-            endif
+            sigsi=0.5d0*(x1-x0)*(y1+y0)
+            sigs=sigsi+sigs
+            uu=0.5d0*(u0+u1)*sigsi+uu
+            x0=x1
+            y0=y1
+            u0=u1
           enddo
-          mcdf=j
-          nnep=mcdf-1
+          uu=uu/sigs
         else
-          write(lst,'(a,a)')' === Warning: Incident energy with null',
-     &      ' cross section '
-          mcdf=3
-          allocate(cdf(mcdf),icdf(mcdf))
-          nnep=2
-          iep0=1
-          icdf(1)=0
-          icdf(2)=1
-          icdf(3)=2
-          sigs=0.0d0
+c
+c         Null cross section at Ein
+c
           x(1)=0.0d0
           y(1)=0.0d0
-          cdf(1)=0.0d0
-          x(2)=fix8dig(e,-1)*ev2mev
+          x(2)=fix8dig(e,-1)
           y(2)=0.0d0
-          cdf(2)=0.0d0
-          x(3)=fix8dig(e,1)*ev2mev
-          y(3)=1.0d14
-          cdf(3)=1.0d0
-          do j=1,3
-            do l=1,nbin
-              ubar(l,j)=0.0d0
+          x(3)=fix8dig(e,1)
+          y(3)=1.0d0/(x(3)-x(2))
+          iep0=1
+          nep=3
+          do i=iep0,nep
+            do j=1,nbin
+              ubar(j,i)=0.0d0
             enddo
           enddo
+          sigs=0.0d0
+          uu=0.0d0
         endif
 c
-c         Loading the XSS array for energy Ein
+c       Printing control
 c
-        write(*,'(a,i5,a,1p,e15.8,a,e15.8)')' ie=',ie,
-     &    ' incident energy=',e,' inelastic scattering=',sigs
-        write(lst,*)
-        write(lst,'(a,i5,a,1p,e15.8,a,e15.8)')' ie=',ie,
-     &    ' incident energy=',e*ev2mev,' inelastic scattering=',sigs
-        write(lst,'(a,i5,a,i5,a)')
-     &    ' cumulative probability distribution (cdf) given at ',nnep,
-     &    ' points from ',nep,' initial outgoing energies'
-        if (imon.gt.0) then
-          write(lst,'(5a)')' iep ',' outgoing energy',
-     &      '      pdf      ','       cdf     ',
-     &      '   equi-probable cosines'
-          write(lst,'(130a1)')lin130
-        endif
-        xss(itix+ie-1)=sigs
-        xss(itxe+ie-1)=ixss
-        xss(itnep+ie-1)=nnep
-        jep0=iep0-1
-        do i=2,mcdf
-          j=icdf(i)
-          iep=jep0+j
-          epx=x(iep)*ev2mev
-          pdfx=y(iep)/ev2mev
-          cdfx=cdf(j)
-          xss(ixss+1)=epx
-          xss(ixss+2)=pdfx
-          xss(ixss+3)=cdfx
-          do l=1,nbin
-            xss(ixss+3+l)=ubar(l,iep)
+c        write(lst,'(130a1)')lin130
+c        do i=iep0,nep
+c          call printine(lst,i,i,x(i),y(i),y(i),ubar,nbin)
+c        enddo
+c        write(lst,'(130a1)')lin130
+c
+c       Checking if this incident energy point will be included/stacked
+c
+        if(ie.le.2) then
+          nep2=nep-iep0+1
+          iep0m=iep0-1
+          do i=1,nep2
+            xs2(i)=x(iep0m+i)
+            ys2(i)=y(iep0m+i)
+            do j=1,nbin
+              us2(j,i)=ubar(j,iep0m+i)
+            enddo
           enddo
-          ixss=ixss+3+nbin
-          if (imon.gt.0) then
-            call printine(lst,i-1,iep,epx,pdfx,cdfx,ubar,nbin)
+          if (ie.eq.1) then
+            es1=e
+            sigs1=sigs
+            uu1=uu
+            call thrload(lst,je,es1,sigs1,nep2,nbin,xs2,ys2,us2,nmix,
+     &        imon,itie,itix0,itxe0,itnep0,ixss)
+          else
+            es2=e
+            sigs2=sigs
+            uu2=uu
+            de21=es2-es1
+            slope2=(sigs2-sigs1)/de21
+            slopu2=(uu2-uu1)/de21          
           endif
-        enddo
-        if (ixss.gt.nxss) then
-          write(lst,'(a,a,i10,a,i10)')' === Fatal error:',
-     &      ' Not enough memory. Increase XSS array size in more than',
-     &      ixss-nxss,' units. Current size ',nxss
-          write(*,'(a,a,i10,a,i10)')' === Fatal error:',
-     &      ' Not enough memory. Increase XSS array size in more than',
-     &      ixss-nxss,' units. Current size ',nxss
-          close(in2)
-          close(lst)
-          stop
+        else
+          dee2=e-es2
+          efract=(es2-es1)/(e-es1)
+          sigsl=efract*(sigs-sigs1)+sigs1
+          slope=(sigs-sigs2)/dee2
+          uul=efract*(uu-uu1)+uu1
+          slopu=(uu-uu2)/dee2
+          if ((abs(sigsl-sigs2).gt.abs(tole*sigs2)).or.
+     &      ((slope*slope2).le.0.0d0).or.
+     &      (abs(uul-uu2).gt.abs(tole*uu2)).or.
+     &      ((slopu*slopu2).le.0.0d0).or.
+     &      (e.gt.(rmax*es1))) then
+            call thrload(lst,je,es2,sigs2,nep2,nbin,xs2,ys2,us2,nmix,
+     &        imon,itie,itix0,itxe0,itnep0,ixss)
+            es1=es2
+            sigs1=sigs2
+            uu1=uu2
+          endif
+          nep2=nep-iep0+1
+          iep0m=iep0-1
+          do i=1,nep2
+            xs2(i)=x(iep0m+i)
+            ys2(i)=y(iep0m+i)
+            do j=1,nbin
+              us2(j,i)=ubar(j,iep0m+i)
+            enddo
+          enddo
+          es2=e
+          sigs2=sigs
+          uu2=uu
+          de21=es2-es1
+          slope2=(sigs2-sigs1)/de21
+          slopu2=(uu2-uu1)/de21
         endif
 c
 c       Next enddo ends loop over incident energies
 c
-        deallocate(cdf,icdf)
       enddo
 c
-c      save lenght of inelastic data on the XSS array
+c      include last incident energy point
+c
+      if (es1.lt.ei(nei)) then
+        call thrload(lst,je,es2,sigs2,nep2,nbin,xs2,ys2,us2,nmix,
+     &    imon,itie,itix0,itxe0,itnep0,ixss)
+      endif
+c
+c       Check XSS dimension
+c
+      if (ixss.gt.nxss) then
+        write(lst,'(a,a,i10,a,i10)')' === Fatal error: Not',
+     &    ' enough memory. Increase XSS array size in more than',
+     &    ixss-nxss,' units. Current size ',nxss
+        write(*,'(a,a,i10,a,i10)')' === Fatal error: Not',
+     &    ' enough memory. Increase XSS array size in more than',
+     &    ixss-nxss,' units. Current size ',nxss
+        close(in2)
+        close(lst)
+        stop
+      endif
+c
+c      shrink XSS array and correct pointers
+c
+      if (je.ne.nei) then
+        itix=1+itie+je
+        itxe=itix+je
+        itnep=itxe+je
+        itxss=itnep+je-1
+        itxss0=itnep0+nei-1
+        nde=itxss0-itxss
+        nxss0=ixss-itxss0
+        do i=1,je
+          xss(itix+i-1)=xss(itix0+i-1)
+        enddo
+        do i=1,je
+          xss(itxe+i-1)=nint(xss(itxe0+i-1)+1.0d-6)-nde
+        enddo
+        do i=1,je
+          xss(itnep+i-1)=xss(itnep0+i-1)
+        enddo
+        do i=1,nxss0
+          xss(itxss+i)=xss(itxss0+i)
+        enddo
+        ixss=itxss+nxss0
+      else
+        itix=itix0
+        itxe=itxe0
+      endif
+c
+c     Assigning triggers and pointers for inelastic scattering
 c
       nxs(1)=ixss
+      nxs(2)=3
+      nxs(3)=nbin+1
+      nxs(4)=nbin
+      nxs(7)=2
+      jxs(1)=itie
+      jxs(2)=itix
+      jxs(3)=itxe
       write(lst,*)
       write(lst,'(a,2i10)')' Length of inelastic data and XSS array: ',
      &  ixss,ixss
       deallocate (beta,alpha,sab)
       deallocate (sigb,xat,aws,isl,teff)
-      deallocate (w0,w1,ubar)
+      deallocate(x,y,ubar)
+      deallocate(xs2,ys2,us2)
+      deallocate (w0,w1)
       return
       end
 C======================================================================
@@ -984,12 +1011,11 @@ C======================================================================
      &  tz,tz0,lasym,liq,na,alpha,nb,beta,sab,nsa,isl,sigb,aws,teff,
      &  arglim,tol)
       implicit real*8 (a-h, o-z)
-      parameter (ns=22, azero=5.0d-7, uzero=1.0d-5)
+      parameter (ns=22, azero=5.0d-7, uzero=1.0d-6)
       dimension alpha(*),beta(*),sab(na,*),isl(*),sigb(*),aws(*),teff(*)
       dimension w0(*),w1(*),x(*),y(*),ubar(nbin,*)
       dimension wm(nbin)
       dimension xs(ns),ys(ns),zs(nbin,ns)
-      tolint=1.5d0*tol
       k=0
       nostop=1
       do while (nostop.eq.1)
@@ -1018,7 +1044,7 @@ C======================================================================
               sumw=sumw+wmm
             enddo
             if (mflag.eq.0) then
-              if (abs(sumu-sumw).lt.(tolint*abs(sumw)+uzero)) iflag=2
+              if (abs(sumu-sumw).lt.(tol*abs(sumw)+uzero)) iflag=2
             endif
           endif
         endif
@@ -1067,7 +1093,7 @@ C======================================================================
       real*16 fbin,fbinlo,sf0,sf1,sf0i,sf1i,u1,v1,u2,v2,v0,du,dv,slope
       real*16 dsf0,p1,pm,sd,d2,one,one3
       parameter(nmumax=6000,nmu00=4,one=1.0d0,one3=1.0d0/3.0d0)
-      parameter(tolmu=1.0d-5, rtolmu=1.0d-8, d2min=5.0d-9)
+      parameter(tolmu=1.0d-5, rtolmu=1.0d-8, d2min=1.0d-9)
       parameter(vtol=1.0d-6, vtol2=vtol/(0.5d0+vtol))
       parameter(f0min=1.0d-32, tollow=0.999999999d0)
       dimension ubar(*)
@@ -1240,6 +1266,10 @@ c
                 if (sd.lt.0.0d0) then
                   sdm=abs(sd)
                   if (sdm.le.tolmu) then
+                    write(*,'(a,a,1pe18.10,a,i3)')
+     &                '   Warning: Small negative discriminant.',
+     &                ' Set to its absolute value ',sdm,
+     &                ' for cosine interval i=',imu+1                 
                     sd=sdm
                   else
                     write(*,'(a,i5,a)')' === Fatal error calculating',
@@ -1255,7 +1285,7 @@ c
                 if ((d2-du).lt.tolmu) then
                   write(*,'(a,a,i4,a,i3)')'   Warning: Solution',
      &              ' too close to u2, i=',imu+1,' icod=',icod
-                  d2=abs(du-d2min)
+                  d2=tollow*du
                 else
                   write(*,'(a,i5,a)')' === Fatal error calculating',
      &              nmu,' equiprobable cosines. Root out of range'
@@ -1267,7 +1297,7 @@ c
                 if (abs(d2).lt.tolmu) then
                   write(*,'(a,a,i4,a,i3)')'   Warning: Solution',
      &              ' too close to u1, i=',imu+1,' icod=',icod
-                  d2=d2min
+                  d2=d2min*u1
                 else
                   write(*,'(a,i5,a)')' === Fatal error calculating',
      &              nmu,' equiprobable cosines. Root out of range'
@@ -1280,7 +1310,7 @@ c
               v2=slope*d2+v1
               sf1i=d2*(slope*one3*(u2*u2+u1*u2+u1*u1)+0.5d0*v0*(u2+u1))
               sf1=sf1i+sf1
-              i=i-1
+              i=i-1         
             endif
             imu=imu+1
             ubar(imu)=sf1/fbin
@@ -1584,7 +1614,147 @@ C======================================================================
       return
       end
 C======================================================================
-      subroutine sigela(in2,lst,matsl,temp,nmix,nbin,imon,ei,nei,xnatom)
+      subroutine thrload(lst,je,es1,sigs1,nep1,nbin,xs1,ys1,us1,nmix,
+     &  imon,itie,itix,itxe,itnep,ixss)
+c
+c     load thermal XSS data for incident energy Ein=es1
+c
+      implicit real*8(a-h, o-z)
+      parameter (cdfstp=1.0d-6, ustp=0.00625d0, epstp=2.5d-7)
+      parameter (ev2mev=1.0d-6)
+      character*1 lin130(130)
+      allocatable cdf(:),icdf(:)
+      dimension xs1(*),ys1(*),us1(nbin,*)
+      common/acexss/xss(50000000),nxss
+      data lin130/130*'='/
+
+      allocate(cdf(nep1),icdf(nep1))
+      if (sigs1.gt.0.0d0) then
+c
+c       correcting angle distribution at edge energies
+c
+        if (ys1(1).le.0.0d0) then
+          do i=1,nbin
+            us1(i,1)=us1(i,2)
+          enddo
+        endif
+        if (ys1(nep1).le.0.0d0) then
+          nepm=nep1-1
+          do i=1,nbin
+            us1(i,nep1)=us1(i,nepm)
+          enddo
+        endif
+c
+c       renormalizing pdf(Ein,Eou) and calculating cdf(Ein,Eou)
+c
+        x0=xs1(1)
+        y0=ys1(1)/sigs1
+        ys1(1)=y0
+        cdf(1)=0.0d0
+        do i=2,nep1
+          x1=xs1(i)
+          y1=ys1(i)/sigs1
+          ys1(i)=y1
+          cdf(i)=0.5d0*(x1-x0)*(y1+y0)+cdf(i-1)
+          x0=x1
+          y0=y1
+        enddo
+        cdf(nep1)=1.0d0
+c
+c       thinning cdf(Ein,Eou)
+c
+        i0=3
+        do i=3,nep1
+          if (cdf(i).gt.cdfstp) then
+            i0=i
+            exit
+          endif
+        enddo
+        icdf(1)=i0-2
+        icdf(2)=i0-1
+        icdf(3)=i0
+        ep0=xs1(i0)
+        cdf0=cdf(i0)
+        u0=avecos(us1(1,i0),nbin)
+        i0=i0+1
+        j=3
+        ncdf1=nep1-1
+        do i=i0,nep1
+          ep1=xs1(i)
+          cdf1=cdf(i)
+          u1=avecos(us1(1,i),nbin)
+          if ((((cdf1-cdf0).ge.cdfstp.or.(abs(u1-u0).ge.ustp.and.
+     &       (ep1-ep0).gt.epstp*ep0)).and.i.lt.ncdf1).or.i.eq.nep1) then
+            j=j+1
+            icdf(j)=i
+            ep0=ep1
+            cdf0=cdf1
+            u0=u1
+          endif
+        enddo
+        mcdf=j
+      else
+        mcdf=3
+        icdf(1)=0
+        icdf(2)=2
+        icdf(3)=3
+        cdf(1)=0.0d0
+        cdf(2)=0.0d0
+        cdf(3)=1.0d0
+      endif
+      nnep=mcdf-1
+      je=je+1
+      sigs=sigs1/dble(nmix)
+c
+c     Loading the XSS array for energy Ein=es1
+c
+      write(*,'(a,i5,a,1p,e15.8,a,e15.8)')' ie=',je,
+     &  ' incident energy=',es1,' inelastic scattering=',sigs
+      write(lst,*)
+      write(lst,'(a,i5,a,1p,e15.8,a,e15.8)')' ie=',je,
+     &  ' incident energy=',es1*ev2mev,' inelastic scattering=',sigs
+      write(lst,'(a,i5,a,i5,a)')
+     &  ' cumulative probability distribution (cdf) given at ',nnep,
+     &  ' points from ',nep1,' initial outgoing energies'
+      if (imon.gt.0) then
+        write(lst,'(5a)')' iep ',' outgoing energy',
+     &    '      pdf      ','       cdf     ',
+     &    '   equi-probable cosines'
+        write(lst,'(130a1)')lin130
+      endif
+c
+c      Inelastic itie block (incident energy/cross section)
+c
+      xss(itie)=je
+      xss(itie+je)=es1*ev2mev
+      xss(itix+je-1)=sigs
+c
+c      Inelastic itxe block (energy/angle distribution)
+c
+      xss(itxe+je-1)=ixss
+      xss(itnep+je-1)=nnep
+      do i=2,mcdf
+        j=icdf(i)
+        epx=xs1(j)*ev2mev
+        pdfx=ys1(j)/ev2mev
+        cdfx=cdf(j)
+        xss(ixss+1)=epx
+        xss(ixss+2)=pdfx
+        xss(ixss+3)=cdfx
+        do l=1,nbin
+          xss(ixss+3+l)=us1(l,j)
+        enddo
+        ixss=ixss+3+nbin
+        if (imon.gt.0) then
+          call printine(lst,i-1,j,epx,pdfx,cdfx,us1,nbin)
+        endif
+      enddo
+      deallocate(cdf,icdf)
+      return
+      end
+C======================================================================
+      subroutine sigela(in2,lst,matsl,temp,nmix,nbin,tole,ei,nei,xnatom,
+     &  imon)
       implicit real*8 (a-h, o-z)
       parameter (ev2mev=1.0d-6, tolbrg=5.0d-7, tolwrt=1.0005d0)
       character*1 line115(115)
@@ -1593,6 +1763,7 @@ C======================================================================
       common/acexss/xss(50000000),nxss
       dimension nbt(20),ibt(20)
       allocatable eb(:),s(:),w(:),t(:)
+      allocatable ee(:),xse(:),ue(:,:),uei(:),ue2(:)
       data line115/115*'='/
 c
 c     Read elastic thermal scattering data
@@ -1729,6 +1900,105 @@ c
           write(lst,'(35a1)')line115(1:35)
         endif
 c
+c       computing cross section and angle distribution in a linearly
+c       interpolable incident energy grid from the original denser
+c       incident energy grid
+c
+        allocate(ee(nei),xse(nei),ue(nbin,nei),uei(nbin),ue2(nbin))
+        sb2=0.5d0*sb/(dnmix*xnatom)
+        w2=2.0d0*wp
+        dbin=dble(nbin)
+        tolk=5.0d0*tole
+        rmax=(1.0d0+2.0d0*tolk)+sqrt(4.0d0*tolk*(tolk+1.0d0))
+        j=0
+        do i=1,nei
+          e=ei(i)
+          c2=w2*e
+          c2inv=1.0d0/c2
+          xe=1.0d0-exp(-2.0d0*c2)
+          xeinv=1.0d0/xe
+          xsei=sb2*xe*c2inv
+          u0=-1.0d0
+          do k=1,nbin
+            xu=exp(-c2*(1.0d0-u0))
+            u1=1.0d0+c2inv*log(xe/dbin+xu)
+            uei(k)=dbin*c2inv*(exp(-c2*(1.0d0-u1))*(c2*u1-1.0d0)-
+     &        xu*(c2*u0-1))*xeinv
+            u0=u1
+          enddo
+          call chkcos(uei,nbin,ineg,ipos,uneg,upos)
+          if (ineg.gt.1.and.uneg.le.-tolwrt) then
+            write(*,'(a,1pe14.7,a,i4,a,0pf7.4,a)')'   Warning: ein=',e,
+     &        ' nn=',ineg,' umin=',uneg,' corrected'
+          endif
+          if (ipos.gt.1.and.upos.ge.tolwrt) then
+            write(*,'(a,1pe14.7,a,i4,a,0pf7.4,a)')'   Warning: ein=',e,
+     &        ' np=',ipos,' umax=',upos,' corrected'
+          endif
+          uui=avecos(uei,nbin)
+          if (i.eq.1) then
+            j=j+1
+            ee(j)=e
+            xse(j)=xsei
+            do k=1,nbin
+              ue(k,j)=uei(k)
+            enddo
+            ee1=e
+            xse1=xsei
+            uu1=uui
+          elseif (i.eq.2) then
+            ee2=e
+            xse2=xsei
+            do k=1,nbin
+              ue2(k)=uei(k)
+            enddo
+            uu2=uui
+            de21=ee2-ee1
+            slope2=(xse2-xse1)/de21
+            slopu2=(uu2-uu1)/de21          
+          else
+            dee2=e-ee2
+            efract=(ee2-ee1)/(e-ee1)
+            xsel=efract*(xsei-xse1)+xse1
+            slope=(xsei-xse2)/dee2
+            uul=efract*(uui-uu1)+uu1
+            slopu=(uui-uu2)/dee2
+            if ((abs(xsel-xse2).gt.abs(tole*xse2)).or.
+     &        ((slope2*slope).le.0.0d0).or.
+     &        (abs(uul-uu2).gt.abs(tole*uu2)).or.
+     &        ((slopu2*slopu).le.0.0d0).or.
+     &        (e.gt.(rmax*ee1))) then
+              j=j+1
+              ee(j)=ee2
+              xse(j)=xse2
+              do k=1,nbin
+                ue(k,j)=ue2(k)
+              enddo
+              ee1=ee2
+              xse1=xse2
+              uu1=uu2
+            endif
+            ee2=e
+            xse2=xsei
+            do k=1,nbin
+              ue2(k)=uei(k)
+            enddo
+            uu2=uui
+            de21=ee2-ee1
+            slope2=(xse2-xse1)/de21
+            slopu2=(uu2-uu1)/de21
+          endif
+        enddo
+        if (ee(j).lt.ei(nei)) then
+          j=j+1
+          ee(j)=ee2
+          xse(j)=xse2
+          do k=1,nbin
+            ue(k,j)=ue2(k)
+          enddo
+        endif
+        nee=j
+c
 c       Set flags and triggers for incoherent elastic scattering
 c
         if (lthr.eq.2) then
@@ -1738,68 +2008,37 @@ c
         endif
         nxs(6)=nbin-1
         itce=nxs(1)+1
-        itcx=itce+nei+1
-        itca=itcx+nei
+        itcx=itce+nee+1
+        itca=itcx+nee
         jxs(4)=itce
         jxs(5)=itcx
         jxs(6)=itca
 c
-c       Prepare energy block for incoherent elastic (itce)
+c       Prepare itce and itca block for incoherent elastic
 c
-        xss(itce)=nei
-        do i=1,nei
-          xss(itce+i)=ei(i)*ev2mev
-        enddo
-c
-c       Next cycles compute incoherent elastic cross section
-c       and equiprobable cosines (itcx & itca)
-c
-        sb2=0.5d0*sb/(dnmix*xnatom)
-        w2=2.0d0*wp
-        dbin=dble(nbin)
-        i0=itcx-1
-        j0=itca-1
-        do i=1,nei
-          e=ei(i)
-          c2=w2*e
-          c2inv=1.0d0/c2
-          xe=1.0d0-exp(-2.0d0*c2)
-          xeinv=1.0d0/xe
-          xss(i0+i)=sb2*xe*c2inv
-          ij0=j0+(i-1)*nbin
-          u0=-1.0d0
+        xss(itce)=nee
+        do i=1,nee
+          xss(itce+i)=ee(i)*ev2mev
+          xss(itcx+i-1)=xse(i)
+          ij0=itca+(i-1)*nbin-1
           do j=1,nbin
-            xu=exp(-c2*(1.0d0-u0))
-            u1=1.0d0+c2inv*log(xe/dbin+xu)
-            xss(ij0+j)=dbin*c2inv*(exp(-c2*(1.0d0-u1))*(c2*u1-1.0d0)-
-     &        xu*(c2*u0-1))*xeinv
-            u0=u1
+            xss(ij0+j)=ue(j,i)
           enddo
-c
-c         Checking equi-probable cosines
-c
-          call chkcos(xss(ij0+1),nbin,ineg,ipos,uneg,upos)
-          if (ineg.gt.1.and.uneg.le.-tolwrt) then
-            write(*,'(a,1pe14.7,a,i4,a,0pf7.4,a)')'   Warning: ein=',e,
-     &        ' nn=',ineg,' umin=',uneg,' corrected'
-          endif
-          if (ipos.gt.1.and.upos.ge.tolwrt) then
-            write(*,'(a,1pe14.7,a,i4,a,0pf7.4,a)')'   Warning: ein=',e,
-     &        ' np=',ipos,' umax=',upos,' corrected'
-          endif
           if (imon.gt.0) then
-            call printeli(lst,i,e*ev2mev,xss(i0+i),xss(ij0+1),nbin)
+            call printeli(lst,i,xss(itce+i),xss(itcx+i-1),
+     &        xss(ij0+1),nbin)
           else
-            write(lst,'(i5,1p2e15.8)')i,e*ev2mev,xss(i0+i)
+            write(lst,'(i5,1p2e15.8)')i,xss(itce+i),xss(itcx+i-1)
           endif
           write(*,'(a,i5,1p, 2(a,e15.8))')' ie=',i,' incident energy=',
-     &      e,' incoherent elastic xs=',xss(i0+i)
+     &      ee(i),' incoherent elastic xs=',xss(itcx+i-1)
         enddo
-        ixss=nei*(nbin+2)+1
+        ixss=nee*(nbin+2)+1
         nxs(1)=nxs(1)+ixss
         write(lst,*)
         write(lst,'(a,a,2i10)')' Length of incoherent elastic data and',
      &    ' XSS array: ',ixss,nxs(1)
+        deallocate (ee,xse,ue,uei,ue2)
       endif
       if (lthr.eq.1.or.lthr.eq.3) then
 c
@@ -2558,12 +2797,12 @@ c
       character*13 hz
       character*70 hk
       character*72 fout,fdir
-      parameter (r0=1.02d0, ncmax=15)
+      parameter (r0=1.02d0, ncmax=15, ncp=10)
       common/acetxt/hz,hd,hm,hk
       common/acecte/awrth,tmev,awm(16),izam(16)
       common/acepnt/nxs(16),jxs(32)
       common/acexss/xss(50000000),nxss
-      allocatable uave(:)
+      allocatable uave(:), eu1(:), eu2(:)
       data nplt/40/,ncur/41/
 c
 c     Open main plotting units with fix filenames
@@ -2662,39 +2901,59 @@ c
       endif
       if (nc.gt.1) then
         write(ncur,'(a)')'Total'
+        nu1=nei+ne
+        numax=nu1
+        allocate(eu1(numax))
+        if (ne.gt.0) then
+          call union(nei,xss(itie+1),ne,xss(itce+1),nu1,eu1,numax)
+        else
+          do i=1,nei
+            eu1(i)=xss(itie+i)
+          enddo
+        endif
+        nu2=nu1+nec
+        numax=nu2
+        allocate(eu2(numax))
+        if (nec.gt.0) then
+          call union(nu1,eu1,nec,xss(ktce+1),nu2,eu2,numax)
+        else
+          do i=1,nu1
+            eu2(i)=eu1(i)
+          enddo
+        endif
         j=1
-        e=xss(itie+1)
-        do while (e.le.emax)
-          xs=xsvalue(nei,xss(itie+1),xss(itix),e)
-          if (ne.gt.0) xs=xsvalue(ne,xss(itce+1),xss(itcx),e)+xs
-          if (nec.gt.0)xs=cohxs(nec,xss(ktce+1),xss(ktcx),e)+xs
-          call chendf(e,x)
-          call chendf(xs,y)
-          write(ncur,'(2a11)')x,y
-          e=e*r0
+        do i=1,nu2
+          e=eu2(i)
           if (nec.gt.0.and.e.ge.xss(ktce+j).and.j.le.nec) then
-            e=xss(ktce+j)
-            e0=e*0.999999999d0
+            e1=xss(ktce+j)
+            e0=e1*0.999999999d0
             xs=xsvalue(nei,xss(itie+1),xss(itix),e0)
             if (ne.gt.0) xs=xsvalue(ne,xss(itce+1),xss(itcx),e0)+xs
             if (nec.gt.0)xs=cohxs(nec,xss(ktce+1),xss(ktcx),e0)+xs
             call chendf(e0,x)
             call chendf(xs,y)
             write(ncur,'(2a11)')x,y
+            do while (e1.lt.e)
+              xs=xsvalue(nei,xss(itie+1),xss(itix),e1)
+              if (ne.gt.0) xs=xsvalue(ne,xss(itce+1),xss(itcx),e1)+xs
+              if (nec.gt.0)xs=cohxs(nec,xss(ktce+1),xss(ktcx),e1)+xs
+              call chendf(e1,x)
+              call chendf(xs,y)
+              write(ncur,'(2a11)')x,y
+              e1=e1*r0
+            enddo
             j=j+1
           endif
-        enddo
-        if (e/r0.lt.emax) then
-          e=emax
           xs=xsvalue(nei,xss(itie+1),xss(itix),e)
           if (ne.gt.0) xs=xsvalue(ne,xss(itce+1),xss(itcx),e)+xs
           if (nec.gt.0)xs=cohxs(nec,xss(ktce+1),xss(ktcx),e)+xs
           call chendf(e,x)
           call chendf(xs,y)
           write(ncur,'(2a11)')x,y
-        endif
+        enddo
         write(ncur,*)
         nc=nc+1
+        deallocate (eu1,eu2)
       endif
       write(nplt,'(1p,4e11.4,2i11,0p,f4.2)')0.0,13.5,0.0,10.0,1,1,1.5
       write(nplt,'(6i11,i4)')nc,0,1,0,0,0,0
@@ -2744,6 +3003,58 @@ c
       write(nplt,'(a)')'Thermal inelastic secondary energy distribution'
       write(nplt,'(1pe11.4,11x,4i11)')1.0d-7,0,2,0,0
       write(nplt,'(1pe11.4,11x,4i11)')1.0d-8,0,2,0,0
+c
+c     Inelastic equally cosines as a function of (Ein,Eout)
+c     ncmax incident energies and ncp outgoing energies are picked up
+c     and the cumulative discrite distribution is plotted 
+c
+      dcdf=1.0d0/dble(nbin) 
+      ic=0
+      kc=1
+      do ie=1,nei
+        if (ie.eq.kc) then
+          ei=xss(itie+ie)
+          ixss=nint(xss(itxe+ie-1)+1.0d-5)
+          nep=nint(xss(itnep+ie-1)+1.0d-5)
+          ep1=xss(ixss+1)
+          ep2=xss(ixss+(nep-2)*kxss+1)
+          rp=exp(log(ep2/ep1)/dble(ncp-1))
+          do iep=1,nep-1
+            ep=xss(ixss+1)
+            if (ep.ge.ep1) then
+              call chendf(ep,x)
+              write(ncur,'(a,a11)')'Eou=',x
+              cdf0=0.0d0
+              call chendf(cdf0,x)
+              do l=1,nbin
+                u1=xss(ixss+3+l)
+                call chendf(u1,y)
+                write(ncur,'(2a11)')x,y
+                cdf0=cdf0+dcdf
+                call chendf(cdf0,x)
+                write(ncur,'(2a11)')x,y
+              enddo
+              write(ncur,*)              
+              ep1=min(ep1*rp,ep2)  
+            endif
+            ixss=ixss+kxss
+          enddo
+          write(nplt,*)
+          write(nplt,'(1p,4e11.4,2i11,0p,f4.2)')
+     &      0.0,13.5,0.0,10.0,1,1,1.5
+          write(nplt,'(6i11,i4)')ncp,0,1,0,0,0,0
+          write(nplt,'(a)')'Unit interval for random sampling'
+          write(nplt,'(a)')'Equally probable discrete cosines'
+          write(nplt,'(a70)')hk
+          call chendf(ei,x)
+          write(nplt,'(a,a,a,i4,a,f9.6)')'Incident energy =',x,
+     &      ' MeV  NBIN=',nbin,'  PROB.=',dcdf
+          write(nplt,'(1p2e11.4,4i11)') 0.0d0,1.0d0,0,1,0,0
+          write(nplt,'(1p2e11.4,4i11)')-1.0d0,1.0d0,0,1,0,0          
+          ic=ic+1
+          kc=nint(slope*dble(ic))+1
+        endif
+      enddo      
 c
 c     Inelastic average cosine as a function of output energy (Eout)
 c     (ncmax incident energies are picked up) and calculation of
@@ -2941,6 +3252,44 @@ c
           str11=' 9.99999+99'
         endif
       endif
+      return
+      end
+C======================================================================
+      subroutine union(np1,x1,np2,x2,np3,x3,npmax)
+      implicit real*8 (a-h, o-z)
+c
+c     Prepare union grid x3 from x1 and x2
+c
+      dimension x1(*),x2(*),x3(*)
+      i=1
+      j=1
+      k=0
+      do while (i.le.np1.and.j.le.np2)
+        call inc(k,npmax)
+        if (x1(i).lt.x2(j)) then
+          x3(k)=x1(i)
+          i=i+1
+        elseif (x1(i).eq.x2(j)) then
+          x3(k)=x1(i)
+          i=i+1
+          j=j+1
+        else
+          x3(k)=x2(j)
+          j=j+1
+        endif
+      enddo
+      if (i.gt.np1) then
+        do i=j,np2
+          call inc(k,npmax)
+          x3(k)=x2(i)
+        enddo
+      elseif (j.gt.np2) then
+        do j=i,np1
+          call inc(k,npmax)
+          x3(k)=x1(j)
+        enddo
+      endif
+      np3=k
       return
       end
 C======================================================================

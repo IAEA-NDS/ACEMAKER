@@ -1,268 +1,220 @@
 DOTSL log file
 ==============
 PROGRAM DOTSL: Process Thermal Scattering Law
-Started at 20:02:05:43 on 2021/05/12
+Started at 14:07:13:88 on 2021/07/23
  Thermal inelastic scattering
-ie=    1 incident energy= 1.00000000E-05 inelastic scattering= 3.03707983E+01
-ie=    2 incident energy= 1.11551420E-05 inelastic scattering= 2.87577440E+01
-ie=    3 incident energy= 1.24437180E-05 inelastic scattering= 2.72305725E+01
-ie=    4 incident energy= 1.38811440E-05 inelastic scattering= 2.57848715E+01
-ie=    5 incident energy= 1.54846120E-05 inelastic scattering= 2.44164230E+01
-ie=    6 incident energy= 1.72733040E-05 inelastic scattering= 2.31208893E+01
-ie=    7 incident energy= 1.92686150E-05 inelastic scattering= 2.18942011E+01
-ie=    8 incident energy= 2.14944130E-05 inelastic scattering= 2.07330925E+01
-ie=    9 incident energy= 2.39773220E-05 inelastic scattering= 1.96339190E+01
-ie=   10 incident energy= 2.67470420E-05 inelastic scattering= 1.85934061E+01
-ie=   11 incident energy= 2.98367040E-05 inelastic scattering= 1.76084938E+01
-ie=   12 incident energy= 3.32832660E-05 inelastic scattering= 1.66760749E+01
-ie=   13 incident energy= 3.71279540E-05 inelastic scattering= 1.57936007E+01
-ie=   14 incident energy= 4.14167580E-05 inelastic scattering= 1.49582073E+01
-ie=   15 incident energy= 4.62009800E-05 inelastic scattering= 1.41676561E+01
-ie=   16 incident energy= 5.15378470E-05 inelastic scattering= 1.34194069E+01
-ie=   17 incident energy= 5.74911970E-05 inelastic scattering= 1.27112481E+01
-ie=   18 incident energy= 6.41322440E-05 inelastic scattering= 1.20411778E+01
-ie=   19 incident energy= 7.15404260E-05 inelastic scattering= 1.14069081E+01
-ie=   20 incident energy= 7.98043580E-05 inelastic scattering= 1.08067784E+01
-ie=   21 incident energy= 8.90228910E-05 inelastic scattering= 1.02389599E+01
-ie=   22 incident energy= 9.93062950E-05 inelastic scattering= 9.70161884E+00
-ie=   23 incident energy= 1.10777580E-04 inelastic scattering= 9.19332859E+00
-ie=   24 incident energy= 1.23573960E-04 inelastic scattering= 8.71244740E+00
-ie=   25 incident energy= 1.37848500E-04 inelastic scattering= 8.25772226E+00
-ie=   26 incident energy= 1.53771950E-04 inelastic scattering= 7.82773717E+00
-ie=   27 incident energy= 1.71534780E-04 inelastic scattering= 7.42109818E+00
-ie=   28 incident energy= 1.91349480E-04 inelastic scattering= 7.03665977E+00
-ie=   29 incident energy= 2.13453050E-04 inelastic scattering= 6.67317972E+00
-ie=   30 incident energy= 2.38109900E-04 inelastic scattering= 6.32975219E+00
-ie=   31 incident energy= 2.65614970E-04 inelastic scattering= 6.00518512E+00
-ie=   32 incident energy= 2.96297250E-04 inelastic scattering= 5.69862681E+00
-ie=   33 incident energy= 3.30523780E-04 inelastic scattering= 5.40911337E+00
-ie=   34 incident energy= 3.68703950E-04 inelastic scattering= 5.13579377E+00
-ie=   35 incident energy= 4.11294480E-04 inelastic scattering= 4.87789001E+00
-ie=   36 incident energy= 4.58804810E-04 inelastic scattering= 4.63458768E+00
-ie=   37 incident energy= 5.11803260E-04 inelastic scattering= 4.40519837E+00
-ie=   38 incident energy= 5.70923780E-04 inelastic scattering= 4.18906941E+00
-ie=   39 incident energy= 6.36873560E-04 inelastic scattering= 3.98550812E+00
-ie=   40 incident energy= 7.10441470E-04 inelastic scattering= 3.79395702E+00
-ie=   41 incident energy= 7.92507510E-04 inelastic scattering= 3.61378697E+00
-ie=   42 incident energy= 8.84053340E-04 inelastic scattering= 3.44464012E+00
-ie=   43 incident energy= 9.86174020E-04 inelastic scattering= 3.28591514E+00
-ie=   44 incident energy= 1.00000000E-03 inelastic scattering= 3.26643924E+00
-ie=   45 incident energy= 1.10009110E-03 inelastic scattering= 3.13711113E+00
-ie=   46 incident energy= 1.22716720E-03 inelastic scattering= 2.99793902E+00
-ie=   47 incident energy= 1.36892230E-03 inelastic scattering= 2.86795713E+00
-ie=   48 incident energy= 1.52705220E-03 inelastic scattering= 2.74686203E+00
-ie=   49 incident energy= 1.70344840E-03 inelastic scattering= 2.63435389E+00
-ie=   50 incident energy= 1.90022080E-03 inelastic scattering= 2.53009934E+00
-ie=   51 incident energy= 2.11972320E-03 inelastic scattering= 2.43389758E+00
-ie=   52 incident energy= 2.36458120E-03 inelastic scattering= 2.34571649E+00
-ie=   53 incident energy= 2.63772380E-03 inelastic scattering= 2.26550161E+00
-ie=   54 incident energy= 2.94241820E-03 inelastic scattering= 2.19286539E+00
-ie=   55 incident energy= 3.28230920E-03 inelastic scattering= 2.12782436E+00
-ie=   56 incident energy= 3.66146230E-03 inelastic scattering= 2.07026357E+00
-ie=   57 incident energy= 4.08441310E-03 inelastic scattering= 2.02032542E+00
-ie=   58 incident energy= 4.55622060E-03 inelastic scattering= 1.97811860E+00
-ie=   59 incident energy= 5.08252850E-03 inelastic scattering= 1.94384353E+00
-ie=   60 incident energy= 5.66963250E-03 inelastic scattering= 1.91777153E+00
-ie=   61 incident energy= 6.32455530E-03 inelastic scattering= 1.90028403E+00
-ie=   62 incident energy= 7.05513100E-03 inelastic scattering= 1.89183820E+00
-ie=   63 incident energy= 7.87009840E-03 inelastic scattering= 1.89310406E+00
-ie=   64 incident energy= 8.77920620E-03 inelastic scattering= 1.90481530E+00
-ie=   65 incident energy= 9.79332880E-03 inelastic scattering= 1.92781929E+00
-ie=   66 incident energy= 1.00000000E-02 inelastic scattering= 1.93359407E+00
-ie=   67 incident energy= 1.09245970E-02 inelastic scattering= 1.96337320E+00
-ie=   68 incident energy= 1.21865420E-02 inelastic scattering= 2.01329997E+00
-ie=   69 incident energy= 1.35942610E-02 inelastic scattering= 2.07884019E+00
-ie=   70 incident energy= 1.51645900E-02 inelastic scattering= 2.16294064E+00
-ie=   71 incident energy= 1.69163150E-02 inelastic scattering= 2.27293908E+00
-ie=   72 incident energy= 1.88703890E-02 inelastic scattering= 2.40896140E+00
-ie=   73 incident energy= 2.10501850E-02 inelastic scattering= 2.56671698E+00
-ie=   74 incident energy= 2.34817800E-02 inelastic scattering= 2.73421923E+00
-ie=   75 incident energy= 2.53000000E-02 inelastic scattering= 2.84908941E+00
-ie=   76 incident energy= 2.61942580E-02 inelastic scattering= 2.90194573E+00
-ie=   77 incident energy= 2.92200650E-02 inelastic scattering= 3.06834070E+00
-ie=   78 incident energy= 3.25953960E-02 inelastic scattering= 3.22629962E+00
-ie=   79 incident energy= 3.63606260E-02 inelastic scattering= 3.36963041E+00
-ie=   80 incident energy= 4.05607930E-02 inelastic scattering= 3.49501425E+00
-ie=   81 incident energy= 4.52461380E-02 inelastic scattering= 3.59786558E+00
-ie=   82 incident energy= 5.04727080E-02 inelastic scattering= 3.67365306E+00
-ie=   83 incident energy= 5.63030200E-02 inelastic scattering= 3.71812423E+00
-ie=   84 incident energy= 6.28068150E-02 inelastic scattering= 3.72804199E+00
-ie=   85 incident energy= 7.00618920E-02 inelastic scattering= 3.70126070E+00
-ie=   86 incident energy= 7.81550320E-02 inelastic scattering= 3.63709505E+00
-ie=   87 incident energy= 8.71830440E-02 inelastic scattering= 3.53652320E+00
-ie=   88 incident energy= 9.72539190E-02 inelastic scattering= 3.40361425E+00
-ie=   89 incident energy= 1.00000000E-01 inelastic scattering= 3.36600051E+00
-ie=   90 incident energy= 1.08488120E-01 inelastic scattering= 3.25670450E+00
-ie=   91 incident energy= 1.21020040E-01 inelastic scattering= 3.31442788E+00
-ie=   92 incident energy= 1.34999560E-01 inelastic scattering= 5.53291690E+00
-ie=   93 incident energy= 1.50593920E-01 inelastic scattering= 9.77337284E+00
-ie=   94 incident energy= 1.67989650E-01 inelastic scattering= 1.27643526E+01
-ie=   95 incident energy= 1.87394840E-01 inelastic scattering= 1.35980934E+01
-ie=   96 incident energy= 2.00000000E-01 inelastic scattering= 1.35896051E+01
-ie=   97 incident energy= 2.09041590E-01 inelastic scattering= 1.34464466E+01
-ie=   98 incident energy= 2.33188850E-01 inelastic scattering= 1.27882879E+01
-ie=   99 incident energy= 2.60125470E-01 inelastic scattering= 1.24106732E+01
-ie=  100 incident energy= 2.90173640E-01 inelastic scattering= 1.47619181E+01
-ie=  101 incident energy= 3.00000000E-01 inelastic scattering= 1.55347112E+01
-ie=  102 incident energy= 3.23692800E-01 inelastic scattering= 1.62563638E+01
-ie=  103 incident energy= 3.61083900E-01 inelastic scattering= 1.57493637E+01
-ie=  104 incident energy= 4.00000000E-01 inelastic scattering= 1.53062939E+01
-ie=  105 incident energy= 4.49322640E-01 inelastic scattering= 1.72482057E+01
-ie=  106 incident energy= 5.00000000E-01 inelastic scattering= 1.69717734E+01
-ie=  107 incident energy= 5.59124430E-01 inelastic scattering= 1.72014785E+01
-ie=  108 incident energy= 6.23711210E-01 inelastic scattering= 1.78753050E+01
-ie=  109 incident energy= 6.95758690E-01 inelastic scattering= 1.78209259E+01
-ie=  110 incident energy= 7.76128660E-01 inelastic scattering= 1.81785918E+01
-ie=  111 incident energy= 8.65782510E-01 inelastic scattering= 1.86584193E+01
-ie=  112 incident energy= 9.65792640E-01 inelastic scattering= 1.85273945E+01
-ie=  113 incident energy= 1.00000000E+00 inelastic scattering= 1.88578954E+01
-ie=  114 incident energy= 1.07735540E+00 inelastic scattering= 1.86740548E+01
-ie=  115 incident energy= 1.20180510E+00 inelastic scattering= 1.89083718E+01
-ie=  116 incident energy= 1.34063070E+00 inelastic scattering= 1.90285506E+01
-ie=  117 incident energy= 1.49549250E+00 inelastic scattering= 1.91473364E+01
-ie=  118 incident energy= 1.66824300E+00 inelastic scattering= 1.93411744E+01
-ie=  119 incident energy= 1.86094870E+00 inelastic scattering= 1.94797929E+01
-ie=  120 incident energy= 2.00000000E+00 inelastic scattering= 1.95649051E+01
-ie=  121 incident energy= 2.07591460E+00 inelastic scattering= 1.96065272E+01
-ie=  122 incident energy= 2.31571210E+00 inelastic scattering= 1.96950421E+01
-ie=  123 incident energy= 2.58320960E+00 inelastic scattering= 1.97725102E+01
-ie=  124 incident energy= 2.88160690E+00 inelastic scattering= 1.98413502E+01
-ie=  125 incident energy= 3.00000000E+00 inelastic scattering= 1.98647496E+01
-ie=  126 incident energy= 3.21447330E+00 inelastic scattering= 1.99028474E+01
-ie=  127 incident energy= 3.50000000E+00 inelastic scattering= 1.99464066E+01
-ie=  128 incident energy= 3.58579050E+00 inelastic scattering= 1.99580612E+01
-ie=  129 incident energy= 3.75000000E+00 inelastic scattering= 1.99789955E+01
-ie=  130 incident energy= 4.00000000E+00 inelastic scattering= 2.00074794E+01
+ie=    1 incident energy= 1.00000000E-05 inelastic scattering= 3.03703743E+01
+ie=    2 incident energy= 1.18597100E-05 inelastic scattering= 2.78917594E+01
+ie=    3 incident energy= 1.40652720E-05 inelastic scattering= 2.56159404E+01
+ie=    4 incident energy= 1.66810050E-05 inelastic scattering= 2.35265631E+01
+ie=    5 incident energy= 1.97831890E-05 inelastic scattering= 2.16083331E+01
+ie=    6 incident energy= 2.34622880E-05 inelastic scattering= 1.98473671E+01
+ie=    7 incident energy= 2.78255940E-05 inelastic scattering= 1.82307970E+01
+ie=    8 incident energy= 3.30003480E-05 inelastic scattering= 1.67469473E+01
+ie=    9 incident energy= 3.91374560E-05 inelastic scattering= 1.53848652E+01
+ie=   10 incident energy= 4.64158880E-05 inelastic scattering= 1.41349027E+01
+ie=   11 incident energy= 5.50478980E-05 inelastic scattering= 1.29877204E+01
+ie=   12 incident energy= 6.52852110E-05 inelastic scattering= 1.19351948E+01
+ie=   13 incident energy= 7.74263680E-05 inelastic scattering= 1.09693402E+01
+ie=   14 incident energy= 9.18254280E-05 inelastic scattering= 1.00833687E+01
+ie=   15 incident energy= 1.06420920E-04 inelastic scattering= 9.37650296E+00
+ie=   16 incident energy= 1.28264980E-04 inelastic scattering= 8.55458659E+00
+ie=   17 incident energy= 1.54592770E-04 inelastic scattering= 7.80735424E+00
+ie=   18 incident energy= 1.86324630E-04 inelastic scattering= 7.12822590E+00
+ie=   19 incident energy= 2.24569800E-04 inelastic scattering= 6.51129623E+00
+ie=   20 incident energy= 2.70665210E-04 inelastic scattering= 5.95114179E+00
+ie=   21 incident energy= 3.26222200E-04 inelastic scattering= 5.44298239E+00
+ie=   22 incident energy= 3.93182880E-04 inelastic scattering= 4.98237112E+00
+ie=   23 incident energy= 4.73887960E-04 inelastic scattering= 4.56534479E+00
+ie=   24 incident energy= 5.71158650E-04 inelastic scattering= 4.18830550E+00
+ie=   25 incident energy= 6.88395210E-04 inelastic scattering= 3.84803216E+00
+ie=   26 incident energy= 8.29695850E-04 inelastic scattering= 3.54153069E+00
+ie=   27 incident energy= 1.00000000E-03 inelastic scattering= 3.26641715E+00
+ie=   28 incident energy= 1.19458510E-03 inelastic scattering= 3.03136481E+00
+ie=   29 incident energy= 1.42703340E-03 inelastic scattering= 2.82091756E+00
+ie=   30 incident energy= 1.70471280E-03 inelastic scattering= 2.63363594E+00
+ie=   31 incident energy= 2.03642450E-03 inelastic scattering= 2.46821402E+00
+ie=   32 incident energy= 2.43268220E-03 inelastic scattering= 2.32410856E+00
+ie=   33 incident energy= 2.90604580E-03 inelastic scattering= 2.20071705E+00
+ie=   34 incident energy= 3.47151890E-03 inelastic scattering= 2.09732002E+00
+ie=   35 incident energy= 4.14702460E-03 inelastic scattering= 2.01394149E+00
+ie=   36 incident energy= 4.95397350E-03 inelastic scattering= 1.95113018E+00
+ie=   37 incident energy= 5.91794270E-03 inelastic scattering= 1.90987613E+00
+ie=   38 incident energy= 7.06948590E-03 inelastic scattering= 1.89179408E+00
+ie=   39 incident energy= 7.39081110E-03 inelastic scattering= 1.89118897E+00
+ie=   40 incident energy= 8.82895250E-03 inelastic scattering= 1.90573764E+00
+ie=   41 incident energy= 1.05469350E-02 inelastic scattering= 1.95046270E+00
+ie=   42 incident energy= 1.25992100E-02 inelastic scattering= 2.03156200E+00
+ie=   43 incident energy= 1.50508290E-02 inelastic scattering= 2.15642063E+00
+ie=   44 incident energy= 1.79794950E-02 inelastic scattering= 2.34593377E+00
+ie=   45 incident energy= 1.96510620E-02 inelastic scattering= 2.46506490E+00
+ie=   46 incident energy= 2.34748650E-02 inelastic scattering= 2.73375669E+00
+ie=   47 incident energy= 2.80427220E-02 inelastic scattering= 3.00573745E+00
+ie=   48 incident energy= 3.34994170E-02 inelastic scattering= 3.26361444E+00
+ie=   49 incident energy= 4.00179030E-02 inelastic scattering= 3.48068199E+00
+ie=   50 incident energy= 4.78047890E-02 inelastic scattering= 3.63966469E+00
+ie=   51 incident energy= 5.71068860E-02 inelastic scattering= 3.72144408E+00
+ie=   52 incident energy= 6.24161560E-02 inelastic scattering= 3.72845462E+00
+ie=   53 incident energy= 7.45614060E-02 inelastic scattering= 3.66933874E+00
+ie=   54 incident energy= 8.51975090E-02 inelastic scattering= 3.56061930E+00
+ie=   55 incident energy= 9.73508400E-02 inelastic scattering= 3.40230384E+00
+ie=   56 incident energy= 1.01775670E-01 inelastic scattering= 3.34202180E+00
+ie=   57 incident energy= 1.06401620E-01 inelastic scattering= 3.28237303E+00
+ie=   58 incident energy= 1.11237830E-01 inelastic scattering= 3.22430457E+00
+ie=   59 incident energy= 1.16293860E-01 inelastic scattering= 3.19491177E+00
+ie=   60 incident energy= 1.21579700E-01 inelastic scattering= 3.34220600E+00
+ie=   61 incident energy= 1.27105790E-01 inelastic scattering= 3.85966225E+00
+ie=   62 incident energy= 1.32883050E-01 inelastic scattering= 5.00027557E+00
+ie=   63 incident energy= 1.38922910E-01 inelastic scattering= 6.62471520E+00
+ie=   64 incident energy= 1.45237290E-01 inelastic scattering= 8.31200093E+00
+ie=   65 incident energy= 1.51838670E-01 inelastic scattering= 1.01357010E+01
+ie=   66 incident energy= 1.58740110E-01 inelastic scattering= 1.16419866E+01
+ie=   67 incident energy= 1.65955230E-01 inelastic scattering= 1.25764475E+01
+ie=   68 incident energy= 1.73498290E-01 inelastic scattering= 1.31548681E+01
+ie=   69 incident energy= 1.81384210E-01 inelastic scattering= 1.34828679E+01
+ie=   70 incident energy= 1.89628560E-01 inelastic scattering= 1.36180961E+01
+ie=   71 incident energy= 1.98247630E-01 inelastic scattering= 1.36062410E+01
+ie=   72 incident energy= 2.16678860E-01 inelastic scattering= 1.32692053E+01
+ie=   73 incident energy= 2.36823660E-01 inelastic scattering= 1.26761461E+01
+ie=   74 incident energy= 2.47587860E-01 inelastic scattering= 1.23924235E+01
+ie=   75 incident energy= 2.58841330E-01 inelastic scattering= 1.23800452E+01
+ie=   76 incident energy= 2.70606290E-01 inelastic scattering= 1.29395732E+01
+ie=   77 incident energy= 2.82906000E-01 inelastic scattering= 1.40527421E+01
+ie=   78 incident energy= 2.95764760E-01 inelastic scattering= 1.52333243E+01
+ie=   79 incident energy= 3.09207980E-01 inelastic scattering= 1.59974011E+01
+ie=   80 incident energy= 3.23262230E-01 inelastic scattering= 1.62545009E+01
+ie=   81 incident energy= 3.37955280E-01 inelastic scattering= 1.61860913E+01
+ie=   82 incident energy= 3.69375230E-01 inelastic scattering= 1.55542825E+01
+ie=   83 incident energy= 3.86164230E-01 inelastic scattering= 1.52478524E+01
+ie=   84 incident energy= 4.03716330E-01 inelastic scattering= 1.53937200E+01
+ie=   85 incident energy= 4.41250130E-01 inelastic scattering= 1.70383491E+01
+ie=   86 incident energy= 4.61306020E-01 inelastic scattering= 1.73786603E+01
+ie=   87 incident energy= 4.82273490E-01 inelastic scattering= 1.72500443E+01
+ie=   88 incident energy= 5.04193980E-01 inelastic scattering= 1.68996578E+01
+ie=   89 incident energy= 5.27110810E-01 inelastic scattering= 1.66374893E+01
+ie=   90 incident energy= 5.51069270E-01 inelastic scattering= 1.69634295E+01
+ie=   91 incident energy= 5.76116700E-01 inelastic scattering= 1.76988615E+01
+ie=   92 incident energy= 6.02302590E-01 inelastic scattering= 1.80149599E+01
+ie=   93 incident energy= 6.58299110E-01 inelastic scattering= 1.74881317E+01
+ie=   94 incident energy= 6.88220400E-01 inelastic scattering= 1.76755997E+01
+ie=   95 incident energy= 7.19501670E-01 inelastic scattering= 1.82701244E+01
+ie=   96 incident energy= 7.52204760E-01 inelastic scattering= 1.83836588E+01
+ie=   97 incident energy= 7.86394280E-01 inelastic scattering= 1.80859906E+01
+ie=   98 incident energy= 8.22137800E-01 inelastic scattering= 1.81162433E+01
+ie=   99 incident energy= 8.59505950E-01 inelastic scattering= 1.86083542E+01
+ie=  100 incident energy= 8.98572560E-01 inelastic scattering= 1.86304347E+01
+ie=  101 incident energy= 9.39414850E-01 inelastic scattering= 1.83983479E+01
+ie=  102 incident energy= 9.82113530E-01 inelastic scattering= 1.87002517E+01
+ie=  103 incident energy= 1.02675300E+00 inelastic scattering= 1.88934309E+01
+ie=  104 incident energy= 1.07342140E+00 inelastic scattering= 1.86781467E+01
+ie=  105 incident energy= 1.12221090E+00 inelastic scattering= 1.89209013E+01
+ie=  106 incident energy= 1.17321810E+00 inelastic scattering= 1.90270192E+01
+ie=  107 incident energy= 1.22654370E+00 inelastic scattering= 1.88976327E+01
+ie=  108 incident energy= 1.28229310E+00 inelastic scattering= 1.91635392E+01
+ie=  109 incident energy= 1.34057640E+00 inelastic scattering= 1.90287402E+01
+ie=  110 incident energy= 1.40150880E+00 inelastic scattering= 1.91786765E+01
+ie=  111 incident energy= 1.67422150E+00 inelastic scattering= 1.93605298E+01
+ie=  112 incident energy= 1.75031890E+00 inelastic scattering= 1.93672350E+01
+ie=  113 incident energy= 1.82987510E+00 inelastic scattering= 1.94751894E+01
+ie=  114 incident energy= 1.91304740E+00 inelastic scattering= 1.94390002E+01
+ie=  115 incident energy= 2.00000000E+00 inelastic scattering= 1.95649054E+01
+ie=  116 incident energy= 2.37841420E+00 inelastic scattering= 1.97148883E+01
+ie=  117 incident energy= 2.82842710E+00 inelastic scattering= 1.98301460E+01
+ie=  118 incident energy= 3.36358570E+00 inelastic scattering= 1.99264842E+01
+ie=  119 incident energy= 4.00000000E+00 inelastic scattering= 2.00074794E+01
 Incoherent elastic scattering
 ie=    1 incident energy= 1.00000000E-05 incoherent elastic xs= 8.19661463E+01
-ie=    2 incident energy= 1.11551420E-05 incoherent elastic xs= 8.19645393E+01
-ie=    3 incident energy= 1.24437180E-05 incoherent elastic xs= 8.19627467E+01
-ie=    4 incident energy= 1.38811440E-05 incoherent elastic xs= 8.19607470E+01
-ie=    5 incident energy= 1.54846120E-05 incoherent elastic xs= 8.19585165E+01
-ie=    6 incident energy= 1.72733040E-05 incoherent elastic xs= 8.19560284E+01
-ie=    7 incident energy= 1.92686150E-05 incoherent elastic xs= 8.19532530E+01
-ie=    8 incident energy= 2.14944130E-05 incoherent elastic xs= 8.19501572E+01
-ie=    9 incident energy= 2.39773220E-05 incoherent elastic xs= 8.19467039E+01
-ie=   10 incident energy= 2.67470420E-05 incoherent elastic xs= 8.19428520E+01
-ie=   11 incident energy= 2.98367040E-05 incoherent elastic xs= 8.19385554E+01
-ie=   12 incident energy= 3.32832660E-05 incoherent elastic xs= 8.19337628E+01
-ie=   13 incident energy= 3.71279540E-05 incoherent elastic xs= 8.19284171E+01
-ie=   14 incident energy= 4.14167580E-05 incoherent elastic xs= 8.19224544E+01
-ie=   15 incident energy= 4.62009800E-05 incoherent elastic xs= 8.19158036E+01
-ie=   16 incident energy= 5.15378470E-05 incoherent elastic xs= 8.19083854E+01
-ie=   17 incident energy= 5.74911970E-05 incoherent elastic xs= 8.19001114E+01
-ie=   18 incident energy= 6.41322440E-05 incoherent elastic xs= 8.18908829E+01
-ie=   19 incident energy= 7.15404260E-05 incoherent elastic xs= 8.18805900E+01
-ie=   20 incident energy= 7.98043580E-05 incoherent elastic xs= 8.18691102E+01
-ie=   21 incident energy= 8.90228910E-05 incoherent elastic xs= 8.18563068E+01
-ie=   22 incident energy= 9.93062950E-05 incoherent elastic xs= 8.18420276E+01
-ie=   23 incident energy= 1.10777580E-04 incoherent elastic xs= 8.18261029E+01
-ie=   24 incident energy= 1.23573960E-04 incoherent elastic xs= 8.18083435E+01
-ie=   25 incident energy= 1.37848500E-04 incoherent elastic xs= 8.17885388E+01
-ie=   26 incident energy= 1.53771950E-04 incoherent elastic xs= 8.17664538E+01
-ie=   27 incident energy= 1.71534780E-04 incoherent elastic xs= 8.17418271E+01
-ie=   28 incident energy= 1.91349480E-04 incoherent elastic xs= 8.17143674E+01
-ie=   29 incident energy= 2.13453050E-04 incoherent elastic xs= 8.16837502E+01
-ie=   30 incident energy= 2.38109900E-04 incoherent elastic xs= 8.16496143E+01
-ie=   31 incident energy= 2.65614970E-04 incoherent elastic xs= 8.16115577E+01
-ie=   32 incident energy= 2.96297250E-04 incoherent elastic xs= 8.15691329E+01
-ie=   33 incident energy= 3.30523780E-04 incoherent elastic xs= 8.15218422E+01
-ie=   34 incident energy= 3.68703950E-04 incoherent elastic xs= 8.14691319E+01
-ie=   35 incident energy= 4.11294480E-04 incoherent elastic xs= 8.14103865E+01
-ie=   36 incident energy= 4.58804810E-04 incoherent elastic xs= 8.13449219E+01
-ie=   37 incident energy= 5.11803260E-04 incoherent elastic xs= 8.12719781E+01
-ie=   38 incident energy= 5.70923780E-04 incoherent elastic xs= 8.11907112E+01
-ie=   39 incident energy= 6.36873560E-04 incoherent elastic xs= 8.11001849E+01
-ie=   40 incident energy= 7.10441470E-04 incoherent elastic xs= 8.09993605E+01
-ie=   41 incident energy= 7.92507510E-04 incoherent elastic xs= 8.08870870E+01
-ie=   42 incident energy= 8.84053340E-04 incoherent elastic xs= 8.07620896E+01
-ie=   43 incident energy= 9.86174020E-04 incoherent elastic xs= 8.06229576E+01
-ie=   44 incident energy= 1.00000000E-03 incoherent elastic xs= 8.06041454E+01
-ie=   45 incident energy= 1.10009110E-03 incoherent elastic xs= 8.04681319E+01
-ie=   46 incident energy= 1.22716720E-03 incoherent elastic xs= 8.02958904E+01
-ie=   47 incident energy= 1.36892230E-03 incoherent elastic xs= 8.01043343E+01
-ie=   48 incident energy= 1.52705220E-03 incoherent elastic xs= 7.98913717E+01
-ie=   49 incident energy= 1.70344840E-03 incoherent elastic xs= 7.96547024E+01
-ie=   50 incident energy= 1.90022080E-03 incoherent elastic xs= 7.93918017E+01
-ie=   51 incident energy= 2.11972320E-03 incoherent elastic xs= 7.90999029E+01
-ie=   52 incident energy= 2.36458120E-03 incoherent elastic xs= 7.87759819E+01
-ie=   53 incident energy= 2.63772380E-03 incoherent elastic xs= 7.84167409E+01
-ie=   54 incident energy= 2.94241820E-03 incoherent elastic xs= 7.80185946E+01
-ie=   55 incident energy= 3.28230920E-03 incoherent elastic xs= 7.75776571E+01
-ie=   56 incident energy= 3.66146230E-03 incoherent elastic xs= 7.70897337E+01
-ie=   57 incident energy= 4.08441310E-03 incoherent elastic xs= 7.65503143E+01
-ie=   58 incident energy= 4.55622060E-03 incoherent elastic xs= 7.59545750E+01
-ie=   59 incident energy= 5.08252850E-03 incoherent elastic xs= 7.52973855E+01
-ie=   60 incident energy= 5.66963250E-03 incoherent elastic xs= 7.45733256E+01
-ie=   61 incident energy= 6.32455530E-03 incoherent elastic xs= 7.37767153E+01
-ie=   62 incident energy= 7.05513100E-03 incoherent elastic xs= 7.29016570E+01
-ie=   63 incident energy= 7.87009840E-03 incoherent elastic xs= 7.19420968E+01
-ie=   64 incident energy= 8.77920620E-03 incoherent elastic xs= 7.08919052E+01
-ie=   65 incident energy= 9.79332880E-03 incoherent elastic xs= 6.97449830E+01
-ie=   66 incident energy= 1.00000000E-02 incoherent elastic xs= 6.95143718E+01
-ie=   67 incident energy= 1.09245970E-02 incoherent elastic xs= 6.84953935E+01
-ie=   68 incident energy= 1.21865420E-02 incoherent elastic xs= 6.71375267E+01
-ie=   69 incident energy= 1.35942610E-02 incoherent elastic xs= 6.56662912E+01
-ie=   70 incident energy= 1.51645900E-02 incoherent elastic xs= 6.40773525E+01
-ie=   71 incident energy= 1.69163150E-02 incoherent elastic xs= 6.23673867E+01
-ie=   72 incident energy= 1.88703890E-02 incoherent elastic xs= 6.05343832E+01
-ie=   73 incident energy= 2.10501850E-02 incoherent elastic xs= 5.85779622E+01
-ie=   74 incident energy= 2.34817800E-02 incoherent elastic xs= 5.64997050E+01
-ie=   75 incident energy= 2.53000000E-02 incoherent elastic xs= 5.50138048E+01
-ie=   76 incident energy= 2.61942580E-02 incoherent elastic xs= 5.43034965E+01
-ie=   77 incident energy= 2.92200650E-02 incoherent elastic xs= 5.19958318E+01
-ie=   78 incident energy= 3.25953960E-02 incoherent elastic xs= 4.95860831E+01
-ie=   79 incident energy= 3.63606260E-02 incoherent elastic xs= 4.70866875E+01
-ie=   80 incident energy= 4.05607930E-02 incoherent elastic xs= 4.45132182E+01
-ie=   81 incident energy= 4.52461380E-02 incoherent elastic xs= 4.18843029E+01
-ie=   82 incident energy= 5.04727080E-02 incoherent elastic xs= 3.92213567E+01
-ie=   83 incident energy= 5.63030200E-02 incoherent elastic xs= 3.65481091E+01
-ie=   84 incident energy= 6.28068150E-02 incoherent elastic xs= 3.38899030E+01
-ie=   85 incident energy= 7.00618920E-02 incoherent elastic xs= 3.12727920E+01
-ie=   86 incident energy= 7.81550320E-02 incoherent elastic xs= 2.87224721E+01
-ie=   87 incident energy= 8.71830440E-02 incoherent elastic xs= 2.62631151E+01
-ie=   88 incident energy= 9.72539190E-02 incoherent elastic xs= 2.39162125E+01
-ie=   89 incident energy= 1.00000000E-01 incoherent elastic xs= 2.33386093E+01
-ie=   90 incident energy= 1.08488120E-01 incoherent elastic xs= 2.16995445E+01
-ie=   91 incident energy= 1.21020040E-01 incoherent elastic xs= 1.96263926E+01
-ie=   92 incident energy= 1.34999560E-01 incoherent elastic xs= 1.77051133E+01
-ie=   93 incident energy= 1.50593920E-01 incoherent elastic xs= 1.59390998E+01
-ie=   94 incident energy= 1.67989650E-01 incoherent elastic xs= 1.43271740E+01
-ie=   95 incident energy= 1.87394840E-01 incoherent elastic xs= 1.28643048E+01
-ie=   96 incident energy= 2.00000000E-01 incoherent elastic xs= 1.20607790E+01
-ie=   97 incident energy= 2.09041590E-01 incoherent elastic xs= 1.15425554E+01
-ie=   98 incident energy= 2.33188850E-01 incoherent elastic xs= 1.03520933E+01
-ie=   99 incident energy= 2.60125470E-01 incoherent elastic xs= 9.28213825E+00
-ie=  100 incident energy= 2.90173640E-01 incoherent elastic xs= 8.32172862E+00
-ie=  101 incident energy= 3.00000000E-01 incoherent elastic xs= 8.04927462E+00
-ie=  102 incident energy= 3.23692800E-01 incoherent elastic xs= 7.46026099E+00
-ie=  103 incident energy= 3.61083900E-01 incoherent elastic xs= 6.68781438E+00
-ie=  104 incident energy= 4.00000000E-01 incoherent elastic xs= 6.03717625E+00
-ie=  105 incident energy= 4.49322640E-01 incoherent elastic xs= 5.37447431E+00
-ie=  106 incident energy= 5.00000000E-01 incoherent elastic xs= 4.82974691E+00
-ie=  107 incident energy= 5.59124430E-01 incoherent elastic xs= 4.31902707E+00
-ie=  108 incident energy= 6.23711210E-01 incoherent elastic xs= 3.87178155E+00
-ie=  109 incident energy= 6.95758690E-01 incoherent elastic xs= 3.47084930E+00
-ie=  110 incident energy= 7.76128660E-01 incoherent elastic xs= 3.11143459E+00
-ie=  111 incident energy= 8.65782510E-01 incoherent elastic xs= 2.78923810E+00
-ie=  112 incident energy= 9.65792640E-01 incoherent elastic xs= 2.50040584E+00
-ie=  113 incident energy= 1.00000000E+00 incoherent elastic xs= 2.41487356E+00
-ie=  114 incident energy= 1.07735540E+00 incoherent elastic xs= 2.24148276E+00
-ie=  115 incident energy= 1.20180510E+00 incoherent elastic xs= 2.00937204E+00
-ie=  116 incident energy= 1.34063070E+00 incoherent elastic xs= 1.80129663E+00
-ie=  117 incident energy= 1.49549250E+00 incoherent elastic xs= 1.61476808E+00
-ie=  118 incident energy= 1.66824300E+00 incoherent elastic xs= 1.44755504E+00
-ie=  119 incident energy= 1.86094870E+00 incoherent elastic xs= 1.29765724E+00
-ie=  120 incident energy= 2.00000000E+00 incoherent elastic xs= 1.20743678E+00
-ie=  121 incident energy= 2.07591460E+00 incoherent elastic xs= 1.16328175E+00
-ie=  122 incident energy= 2.31571210E+00 incoherent elastic xs= 1.04282115E+00
-ie=  123 incident energy= 2.58320960E+00 incoherent elastic xs= 9.34834541E-01
-ie=  124 incident energy= 2.88160690E+00 incoherent elastic xs= 8.38030184E-01
-ie=  125 incident energy= 3.00000000E+00 incoherent elastic xs= 8.04957853E-01
-ie=  126 incident energy= 3.21447330E+00 incoherent elastic xs= 7.51250153E-01
-ie=  127 incident energy= 3.50000000E+00 incoherent elastic xs= 6.89963874E-01
-ie=  128 incident energy= 3.58579050E+00 incoherent elastic xs= 6.73456400E-01
-ie=  129 incident energy= 3.75000000E+00 incoherent elastic xs= 6.43966283E-01
-ie=  130 incident energy= 4.00000000E+00 incoherent elastic xs= 6.03718390E-01
-DOTSL ended at 20:07:26:22 on 2021/05/12
- 
+ie=    2 incident energy= 1.18597100E-05 incoherent elastic xs= 8.19635591E+01
+ie=    3 incident energy= 1.40652720E-05 incoherent elastic xs= 8.19604909E+01
+ie=    4 incident energy= 1.66810050E-05 incoherent elastic xs= 8.19568523E+01
+ie=    5 incident energy= 1.97831890E-05 incoherent elastic xs= 8.19525373E+01
+ie=    6 incident energy= 2.34622880E-05 incoherent elastic xs= 8.19474202E+01
+ie=    7 incident energy= 2.78255940E-05 incoherent elastic xs= 8.19413521E+01
+ie=    8 incident energy= 3.30003480E-05 incoherent elastic xs= 8.19341562E+01
+ie=    9 incident energy= 3.91374560E-05 incoherent elastic xs= 8.19256232E+01
+ie=   10 incident energy= 4.64158880E-05 incoherent elastic xs= 8.19155049E+01
+ie=   11 incident energy= 5.50478980E-05 incoherent elastic xs= 8.19035070E+01
+ie=   12 incident energy= 6.52852110E-05 incoherent elastic xs= 8.18892809E+01
+ie=   13 incident energy= 7.74263680E-05 incoherent elastic xs= 8.18724133E+01
+ie=   14 incident energy= 9.18254280E-05 incoherent elastic xs= 8.18524150E+01
+ie=   15 incident energy= 1.13254130E-04 incoherent elastic xs= 8.18226654E+01
+ie=   16 incident energy= 1.36500780E-04 incoherent elastic xs= 8.17904083E+01
+ie=   17 incident energy= 1.64519060E-04 incoherent elastic xs= 8.17515527E+01
+ie=   18 incident energy= 1.98288390E-04 incoherent elastic xs= 8.17047542E+01
+ie=   19 incident energy= 2.38989260E-04 incoherent elastic xs= 8.16483972E+01
+ie=   20 incident energy= 2.88044420E-04 incoherent elastic xs= 8.15805413E+01
+ie=   21 incident energy= 3.47168680E-04 incoherent elastic xs= 8.14988572E+01
+ie=   22 incident energy= 4.18428850E-04 incoherent elastic xs= 8.14005516E+01
+ie=   23 incident energy= 5.04315950E-04 incoherent elastic xs= 8.12822778E+01
+ie=   24 incident energy= 6.07832310E-04 incoherent elastic xs= 8.11400319E+01
+ie=   25 incident energy= 7.32596540E-04 incoherent elastic xs= 8.09690300E+01
+ie=   26 incident energy= 8.82970000E-04 incoherent elastic xs= 8.07635673E+01
+ie=   27 incident energy= 1.09297070E-03 incoherent elastic xs= 8.04777976E+01
+ie=   28 incident energy= 1.36499130E-03 incoherent elastic xs= 8.01096380E+01
+ie=   29 incident energy= 1.70471280E-03 incoherent elastic xs= 7.96530094E+01
+ie=   30 incident energy= 2.12898490E-03 incoherent elastic xs= 7.90876182E+01
+ie=   31 incident energy= 2.65885050E-03 incoherent elastic xs= 7.83890465E+01
+ie=   32 incident energy= 3.32059010E-03 incoherent elastic xs= 7.75282059E+01
+ie=   33 incident energy= 4.14702460E-03 incoherent elastic xs= 7.64708943E+01
+ie=   34 incident energy= 5.17914360E-03 incoherent elastic xs= 7.51775804E+01
+ie=   35 incident energy= 6.46813830E-03 incoherent elastic xs= 7.36036141E+01
+ie=   36 incident energy= 8.07794040E-03 incoherent elastic xs= 7.17001365E+01
+ie=   37 incident energy= 1.00883930E-02 incoherent elastic xs= 6.94160592E+01
+ie=   38 incident energy= 1.25992100E-02 incoherent elastic xs= 6.67015536E+01
+ie=   39 incident energy= 1.57349250E-02 incoherent elastic xs= 6.35135025E+01
+ie=   40 incident energy= 1.96510620E-02 incoherent elastic xs= 5.98232432E+01
+ie=   41 incident energy= 2.45418540E-02 incoherent elastic xs= 5.56264980E+01
+ie=   42 incident energy= 3.06498750E-02 incoherent elastic xs= 5.09546221E+01
+ie=   43 incident energy= 3.82780720E-02 incoherent elastic xs= 4.58850219E+01
+ie=   44 incident energy= 4.78047890E-02 incoherent elastic xs= 4.05470991E+01
+ie=   45 incident energy= 5.97025310E-02 incoherent elastic xs= 3.51189791E+01
+ie=   46 incident energy= 7.13197520E-02 incoherent elastic xs= 3.08524383E+01
+ie=   47 incident energy= 8.14934360E-02 incoherent elastic xs= 2.77694487E+01
+ie=   48 incident energy= 9.31183850E-02 incoherent elastic xs= 2.48344257E+01
+ie=   49 incident energy= 1.06401620E-01 incoherent elastic xs= 2.20831700E+01
+ie=   50 incident energy= 1.16293860E-01 incoherent elastic xs= 2.03646180E+01
+ie=   51 incident energy= 1.27105790E-01 incoherent elastic xs= 1.87449723E+01
+ie=   52 incident energy= 1.38922910E-01 incoherent elastic xs= 1.72272630E+01
+ie=   53 incident energy= 1.51838670E-01 incoherent elastic xs= 1.58123962E+01
+ie=   54 incident energy= 1.65955230E-01 incoherent elastic xs= 1.44993372E+01
+ie=   55 incident energy= 1.81384210E-01 incoherent elastic xs= 1.32853935E+01
+ie=   56 incident energy= 1.98247630E-01 incoherent elastic xs= 1.21665475E+01
+ie=   57 incident energy= 2.16678860E-01 incoherent elastic xs= 1.11378229E+01
+ie=   58 incident energy= 2.36823660E-01 incoherent elastic xs= 1.01936393E+01
+ie=   59 incident energy= 2.58841330E-01 incoherent elastic xs= 9.32812718E+00
+ie=   60 incident energy= 2.82906000E-01 incoherent elastic xs= 8.53538161E+00
+ie=   61 incident energy= 3.09207980E-01 incoherent elastic xs= 7.80965246E+00
+ie=   62 incident energy= 3.37955280E-01 incoherent elastic xs= 7.14546737E+00
+ie=   63 incident energy= 3.69375230E-01 incoherent elastic xs= 6.53770127E+00
+ie=   64 incident energy= 4.03716330E-01 incoherent elastic xs= 5.98160313E+00
+ie=   65 incident energy= 4.41250130E-01 incoherent elastic xs= 5.47279795E+00
+ie=   66 incident energy= 4.82273490E-01 incoherent elastic xs= 5.00726957E+00
+ie=   67 incident energy= 5.27110810E-01 incoherent elastic xs= 4.58133939E+00
+ie=   68 incident energy= 5.76116700E-01 incoherent elastic xs= 4.19163956E+00
+ie=   69 incident energy= 6.29678700E-01 incoherent elastic xs= 3.83508853E+00
+ie=   70 incident energy= 6.88220400E-01 incoherent elastic xs= 3.50886658E+00
+ie=   71 incident energy= 7.52204760E-01 incoherent elastic xs= 3.21039388E+00
+ie=   72 incident energy= 8.22137800E-01 incoherent elastic xs= 2.93730997E+00
+ie=   73 incident energy= 8.98572560E-01 incoherent elastic xs= 2.68745527E+00
+ie=   74 incident energy= 9.82113530E-01 incoherent elastic xs= 2.45885377E+00
+ie=   75 incident energy= 1.07342140E+00 incoherent elastic xs= 2.24969761E+00
+ie=   76 incident energy= 1.17321810E+00 incoherent elastic xs= 2.05833302E+00
+ie=   77 incident energy= 1.28229310E+00 incoherent elastic xs= 1.88324616E+00
+ie=   78 incident energy= 1.40150880E+00 incoherent elastic xs= 1.72305273E+00
+ie=   79 incident energy= 1.53180820E+00 incoherent elastic xs= 1.57648559E+00
+ie=   80 incident energy= 1.67422150E+00 incoherent elastic xs= 1.44238594E+00
+ie=   81 incident energy= 1.82987510E+00 incoherent elastic xs= 1.31969311E+00
+ie=   82 incident energy= 2.00000000E+00 incoherent elastic xs= 1.20743678E+00
+ie=   83 incident energy= 2.11892620E+00 incoherent elastic xs= 1.13966855E+00
+ie=   84 incident energy= 2.24492410E+00 incoherent elastic xs= 1.07570388E+00
+ie=   85 incident energy= 2.37841420E+00 incoherent elastic xs= 1.01532927E+00
+ie=   86 incident energy= 2.51984210E+00 incoherent elastic xs= 9.58343207E-01
+ie=   87 incident energy= 2.66967970E+00 incoherent elastic xs= 9.04555539E-01
+ie=   88 incident energy= 2.82842710E+00 incoherent elastic xs= 8.53786742E-01
+ie=   89 incident energy= 2.99661420E+00 incoherent elastic xs= 8.05867355E-01
+ie=   90 incident energy= 3.17480210E+00 incoherent elastic xs= 7.60637509E-01
+ie=   91 incident energy= 3.36358570E+00 incoherent elastic xs= 7.17946197E-01
+ie=   92 incident energy= 3.56359490E+00 incoherent elastic xs= 6.77650975E-01
+ie=   93 incident energy= 3.77549730E+00 incoherent elastic xs= 6.39617345E-01
+ie=   94 incident energy= 4.00000000E+00 incoherent elastic xs= 6.03718390E-01
+DOTSL ended at 14:14:51:39 on 2021/07/23

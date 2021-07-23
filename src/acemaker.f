@@ -4,25 +4,35 @@ c
 c     Driver program to produce ACE-formatted files for Monte Carlo
 c     calculations.
 c
-c     The code uses the modules LINEAR, RECENT, SIGMA1, LEGEND, SPECTRA,
-c     FIXUP, GROUPIE, MERGER and DICTIN from the PREPRO-2019 code
-c     package.
-c
-c     The package addtionally includes:
-c       1. Driver program ACEMAKER
+c     The package ACEMAKER includes the codes:
+c       1. ACEMAKER, the driver program
 c       2. Module SIXLIN for linearizing and processing MF6 data
-c       3. Module DOACE for generating fast ACE-formatted file.
-c       4. Module DOTSL for preparing ACE-formatted file describing the
-c          thermal scattering law (TSL)
+c       3. Module DOACE for generating fast ACE-formatted files from a
+c          PENDF tape prepared by the ACEMAKER driver.
+c       4. Module DOTSL for preparing thermal ACE-formatted files from
+c          an ENDF-6 tape containing the thermal scattering law (TSL) 
+c       5. Module DODOS for preparing dosimetry ACE-formatted files from
+c          an ENDF-6 or a PENDF formatted tape prepared by ACEMAKER
 c
-c     For preparing fast ACE-formatted files, ACEMAKER invokes the
-c     calculation sequence:
-c     LINEAR + RECENT + LEGEND + SPECTRA + SIXLIN + + SIGMA1 + FIXUP +
-c     GROUPIE + MERGER + DICTIN + DOACE
-c
-c     For generating a thermal ACE-formatted file from TSL data just
-c     the module DOTSL is required.
-c
+c     If required, the driver program calls the following codes from the
+c     PREPRO-2019 package:
+c       1. LINEAR:  for linearizing data on MF1/MF3/MF9/MF10/MF23/MF29
+c       2. RECENT:  for reconstructing cross section from resolved 
+c                   resonance data given on MF2 at T=0.0 K
+c       3. LEGEND:  for checking and converting angular distributions on
+c                   MF4 into linearly interpolable tables 
+c       4. SPECTRA: for checking and converting energy distributions on  
+c                   MF5 into linearly interpolable spectra
+c       5. SIGMA1:  for Doppler broadening linearly interpolable cross
+c                   sections given on a MF3 of a PENDF tape
+c       6. FIXUP:   for checking and correcting ENDF-6 formatted data 
+c                   and preparing all cross sections in an unified 
+c                   incident energy grid
+c       7. GROUPIE: for self-shielding calculation in the unresolved 
+c                   resonance energy range using two-band approach.
+c       8. MERGER:  for retriving or combining ENDF-6 formatted data
+c       9. DICTIN:  for updating the ENDF-6 directory section
+c               
 c     Configuration file: acemaker.cfg
 c
 c     By default the fullpath for the PREPRO and ACEMAKER executables
@@ -61,7 +71,7 @@ c
 c     The keyword set of ACEMAKER is described below for each type of
 c     calculation:
 c
-c==============   For all types of calculations   =====================
+c==========  For all types of calculations IACE=0,1,2  ===========
 c
 c     Keyword  Data-field(7-72)  Description
 c     -----------------------------------------------------------------
@@ -70,6 +80,7 @@ c     ace       IACE             Type of ACE-formatted file to be
 c     ACE                        generated:
 c                                  IACE=0 - fast    (Default)
 c                                  IACE=1 - thermal
+c                                  IACE=2 - dosimetry
 c
 c     endf      full-filename    ENDF-6 formatted data filename
 c     ENDF
@@ -200,6 +211,18 @@ c     The first line of each NMATH set contains the values of THZAID(i),
 c     NMIX(i) and NZAM(i) for material MAT(i). The following NZAM(i)
 c     lines contain the ZA value of each moderator material(one by line)
 c
+c======   For dosimetry ACE-formatted file generation (ACE 2)  ========
+c
+c     Keyword  Data-field(7-72)  Description
+c     -----------------------------------------------------------------
+c
+c     ymin      FYMIN            Minimum allowable value of
+c     YMIN                       cross section or distribution
+c                                (Default: FYMIN=1.0d-30)
+c
+c     pndf      IPNDF            trigger to keep the PENDF tape
+c     PNDF                       IPNDF = 0/1 = no/yes (Default: IPNDF=0)
+c
 c======================================================================
 c
 c     The default input options for ACEMAKER are equivalent to the
@@ -236,7 +259,7 @@ c     one acemaker.inp file by appending after the keyword END a new
 c     title line and new input options finishing with a new END keyword.
 c     ACEMAKER will stop after the last END.
 c
-c     For the thermal option ACE 1 (IACE=1) it is compulsory to enter
+c     For the thermal option ACE 1 (IACE=1), it is compulsory to enter
 c     the keywords: ACE, MAT and THDAT. If the rest of input options
 c     are omitted, then the following default values are applied:
 c
@@ -252,6 +275,22 @@ c     MON    0
 c     KEEP   0
 c     MCNP   0
 c
+c     For the dosimetry option ACE 2 (IACE=2), it is compulsory to enter
+c     the keyword ACE. If the rest of input options are omitted, then
+c     the following default values are used:
+c
+c     ENDF   ENDFB.IN
+c     MAT    0
+c     TEMP   1
+c      293.6
+c     TOL    0.001
+c     YMIN   1.0e-30
+c     SUFF   .00
+c     MON    0
+c     PNDF   0
+c     KEEP   0
+c     MCNP   0
+c 
 c     Input examples:
 c     ===============
 c
@@ -452,6 +491,43 @@ c     with the corresponding THZAID.XXt.xsd files for XSDIR.
 c     Additionaly, if IMON=2, the files THZAID.XXt.plt and
 c     THZAID.XXt.cur are saved for PLOTTAB plottings.
 c
+c     c) Examples for IACE=2 (dosimetry files)
+c
+c     Case 1: Dosimetry
+c     ACE    2
+c     ENDF   \IRDFF-II\IRDFF-II.endf
+c     MAT    1
+c      1325
+c     TEMP   1
+c       293.6
+c     TOL    0.001
+c     YMIN   1.0e-30
+c     SUFF   .20
+c     MON    0
+c     PNDF   0
+c     KEEP   0
+c     MCNP   0
+c     END
+c
+c     The previous example is equivalent to the example below, where
+c     the default values are applied.  
+c
+c     Case 2: Dosimetry
+c     ACE    2
+c     ENDF   \IRDFF-II\IRDFF-II.endf
+c     MAT    1
+c      1325
+c     SUFF   .20
+c     END
+c
+c     In the previous examples for ACE 2, the following files are saved:
+c
+c      ZA013027.20y.acef  for  Al-27 (dosimetry ACE-formatted file)
+c      ZA013027.20y.xsd              (for xsdir)
+c
+c     Additionaly, if IMON=2, the files ZAzzzaaa.XXy.plt and
+c     ZAzzzaaa.XXy.cur are saved for PLOTTAB plottings.
+c     
       implicit real*8 (a-h,o-z)
       parameter (nmatx=300, ntempx=25)
       dimension temp(ntempx)
@@ -465,9 +541,10 @@ c
       character*8  fza
       character*6  thzaid(nmatx)
       character*4  suff
+      character*1  ch
       data nin/20/,nou/21/,nlst/22/,nplt/30/,ncur/31/
       data preprod/'\ACEMAKER\exe\'/,acemakerd/'\ACEMAKER\exe\'/
-      data emax/1.0d+09/,fangmin/1.0d-10/,flegmin/1.0d-02/
+      data fangmin/1.0d-10/,flegmin/1.0d-02/
 c
 c      Open acemaker log file
 c
@@ -534,6 +611,8 @@ c
          write(nou,'(a)')'Fast ACE-formatted file'
        elseif (iace.eq.1) then
          write(nou,'(a)')'Thermal ACE-formatted file'
+       elseif (iace.eq.2) then
+         write(nou,'(a)')'Dosimetry ACE-formatted file'
        endif
        write(nou,*)
        write(nou,'(a21,i6)')'Number of materials: ',nmat
@@ -590,6 +669,9 @@ c
              enddo
            endif
          enddo
+       elseif (iace.eq.2) then
+         write(nou,'(a,4x,1pe12.5)')'Min. allowable cross section:',ymin
+         write(nou,'(a,4x,i2)')'Keep PENDF tape 0/1 = no/yes:',ipndf         
        endif
 c
 c      Deleting internal files
@@ -622,6 +704,10 @@ c
        call delfile('DOTSL.LST')
        call delfile('DOTSL.PLT')
        call delfile('DOTSL.CUR')
+       call delfile('DODOS.INP')
+       call delfile('DODOS.LST')
+       call delfile('DODOS.PLT')
+       call delfile('DODOS.CUR')       
        call delfile('ENDF6.ENDF')
        call delfile('LINEAR.PENDF')
        call delfile('RECENT.PENDF')
@@ -634,6 +720,7 @@ c
        call delfile('GROUPIE.PENDF')
        call delfile('ENDF6.PENDF')
        call delfile('TEMP1.LST')
+       call delfile('acemaker.log')
        call delfile('a.tmp')
 c
 c      Material cycle
@@ -662,20 +749,23 @@ c
          call delfile('MERGER.INP')
          call delfile('MERGER.LST')
 c
-c        Get ZA
+c        Get ZA and MF1 general data
 c
          matj=0
          za=0.0d0
          open(nin,file='ENDF6.ENDF',err=10)
          read(nin,*,err=10,end=10)
-         read(nin,'(d11.0,55x,i4)',err=10,end=10)za,matj
+         call readcont(nin,za,awr,lrp,lfi,nlib,n2,matj,mf,mt,nsi)
    10    if (matj.ne.mati) then
            write(nou,'(a,i4,a)')'*** ERROR: MAT= ',mati,' not found'
            write(*,'(1x,a,i4,a)')'*** ERROR: MAT= ',mati,' not found'
            close (nin,err=15)
    15      call delfile('ENDF6.ENDF')
-           read(nin,'(d11.0,55x,i4)',err=40,end=40)za,matj
+           exit
          endif
+         call readcont(nin,elis,sta,lis,liso,n1,nfor,matj,mf,mt,nsi)
+         call readcont(nin,awi,emax,lrel,l2,nsub,nver,matj,mf,mt,nsi)
+         call readcont(nin,temp0,c2,ldrv,l2,nwd,nxc,matj,mf,mt,nsi)         
          close(nin)
          nza=za
          fza=' '
@@ -684,62 +774,140 @@ c
            if (fza(ii:ii).eq.' ') fza(ii:ii)='0'
          enddo
          xsuff=xsuff0
+         if (nsub.eq.10.or.nsub.eq.19) then
+           zai=1.0d0
+           izai=1
+           ch='n'
+         elseif (nsub.eq.10010) then
+           zai=1001.0d0
+           izai=1001
+           ch='h'
+         elseif (nsub.eq.10020) then
+           zai=1002.0d0
+           izai=1002
+           ch='d'
+         elseif (nsub.eq.10030) then
+           zai=1003.0d0
+           izai=1003
+           ch='t'
+         elseif (nsub.eq.20030) then
+           zai=2003.0d0
+           izai=2003
+           ch='s'
+         elseif (nsub.eq.20040) then
+           zai=2004.0d0
+           izai=2004
+           ch='a'
+         elseif (nsub.eq.0) then
+           zai=0.0d0
+           izai=0
+           ch='p'
+         elseif (nsub.eq.3) then
+           zai=0.0d0
+           izai=0
+           ch='u'
+         elseif (nsub.eq.12.and.iace.eq.1) then
+           zai=1.0d0
+           izai=1
+           ch='n'            
+         else
+           write(*,*)'  === Error: incident particle is not coded'
+           write(*,*)'  === NSUB=',nsub
+           write(nou,*)'  === Error: incident particle is not coded'
+           write(nou,*)'  === NSUB=',nsub                      
+           close(nin)
+           close(nou)
+           stop
+         endif         
 c
-c        Fast ACE-file
+c        Fast and Dosimetry ACE-files
 c
-         if (iace.eq.0) then
+         if (iace.eq.0.or.iace.eq.2) then
+           open(nlst,file='TEMP1.LST')                  
+           write(nlst,'(a)')'ACEMAKER listing file'     
+           write(nlst,'(a)')'====================='
+           write(nlst,*)
+           write(nlst,'(a,a)')' ENDF input tape: ',trim(fendf)
+           write(nlst,*)
+           if (iace.eq.0) then
+             write(nlst,'(a)')' Fast ACE-formatted file'
+           elseif (iace.eq.2) then
+             write(nlst,'(a)')' Dosimetry ACE-formatted file'
+           endif
 c
 c          LINEAR: linearize cross sections at 0.0 K
 c
-           open(nin,file='LINEAR.INP')
-           write(nin,'(2i11,1pe11.4,i11)')0,imon,ymin,1
-           write(nin,'(a)')'ENDF6.ENDF'
-           write(nin,'(a)')'LINEAR.PENDF'
-           write(nin,'(i6,i2,i3,i6,i2,i3)')mati,1,1,mati,99,999
-           write(nin,*)
-           write(nin,'(1p2e11.4)')0.0,0.5d0*tol
-           write(nin,'(1p2e11.4)')1.0,0.5d0*tol
-           write(nin,'(1p2e11.4)')2.0,tol
-           write(nin,'(1p2e11.4)')emax,tol
-           write(nin,*)
-           close(nin)
-           call setcmd(nou,preprod,'linear',cmd)
-           call system(cmd)
-           if (ikeep.ne.1) then
-             call delfile('LINEAR.INP')
-             call delfile('ENDF6.ENDF')
-           endif
-c
+           itemp=0
+           do it=1,ntemp
+             tempi=temp(i)
+             if (temp0.lt.tempi) then
+               itemp=1
+               exit
+             endif
+           enddo
+           if (iace.eq.0.or.
+     &        (iace.eq.2.and.(itemp.eq.1.or.
+     &        (temp0.eq.0.0d0.and.(lrp.eq.1.or.lrp.eq.0))))) then
+             open(nin,file='LINEAR.INP')
+             write(nin,'(2i11,1pe11.4,i11)')0,imon,ymin,1
+             write(nin,'(a)')'ENDF6.ENDF'
+             write(nin,'(a)')'LINEAR.PENDF'
+             write(nin,'(i6,i2,i3,i6,i2,i3)')mati,1,1,mati,99,999
+             write(nin,*)
+             write(nin,'(1p2e11.4)')0.0,0.5d0*tol
+             write(nin,'(1p2e11.4)')1.0,0.5d0*tol
+             write(nin,'(1p2e11.4)')2.0,tol
+             write(nin,'(1p2e11.4)')emax,tol
+             write(nin,*)
+             close(nin)
+             call setcmd(nou,preprod,'linear',cmd)
+             call system(cmd)
+             if (ikeep.ne.1) then
+               call delfile('LINEAR.INP')
+               call delfile('ENDF6.ENDF')
+             endif
+             write(nlst,*)                
+             call cpfile(nlst,'LINEAR.LST')               
+             call delfile('LINEAR.LST')
+           else
+             open(nin,file='LINEAR.PENDF')
+             call cpfile(nin,'ENDF6.ENDF')
+             close(nin)
+             write(nlst,*)
+             write(nlst,'(a,a)')' ** Warning: LINEAR not applied' 
+             write(nlst,'(12x,a)')' ENDF file copied as it is' 
+           endif                                    
+c          
 c          RECENT: reconstruct resonance cross sections at 0.0 K
-c
-           open(nin,file='RECENT.INP')
-           write(nin,'(i11,1pe11.4,4i11)')0,ymin,1,1,1,imon
-           write(nin,'(a)')'LINEAR.PENDF'
-           write(nin,'(a)')'RECENT.PENDF'
-           write(nin,'(2i11)')mati,mati
-           write(nin,*)
-           write(nin,'(1p2e11.4)')0.0,0.5d0*tol
-           write(nin,'(1p2e11.4)')1.0,0.5d0*tol
-           write(nin,'(1p2e11.4)')2.0,tol
-           write(nin,'(1p2e11.4)')emax,tol
-           write(nin,*)
-           close(nin)
-           call setcmd(nou,preprod,'recent',cmd)
-           call system(cmd)
-           if (ikeep.ne.1) then
-             call delfile('RECENT.INP')
-             call delfile('LINEAR.PENDF')
+c          
+           if (temp0.eq.0.0d0.and.(lrp.eq.1.or.lrp.eq.0)) then
+             open(nin,file='RECENT.INP')
+             write(nin,'(i11,1pe11.4,4i11)')0,ymin,1,1,1,imon
+             write(nin,'(a)')'LINEAR.PENDF'
+             write(nin,'(a)')'RECENT.PENDF'
+             write(nin,'(2i11)')mati,mati
+             write(nin,*)
+             write(nin,'(1p2e11.4)')0.0,0.5d0*tol
+             write(nin,'(1p2e11.4)')1.0,0.5d0*tol
+             write(nin,'(1p2e11.4)')2.0,tol
+             write(nin,'(1p2e11.4)')emax,tol
+             write(nin,*)
+             close(nin)
+             call setcmd(nou,preprod,'recent',cmd)
+             call system(cmd)
+             if (ikeep.ne.1) call delfile('RECENT.INP')
+             write(nlst,*)
+             call cpfile(nlst,'RECENT.LST')
+             call delfile('RECENT.LST')
+           else
+             open(nin,file='RECENT.PENDF')
+             call cpfile(nin,'LINEAR.PENDF')
+             close(nin)
+             write(nlst,*)
+             write(nlst,'(a,a)')' ** Warning: RECENT not applied' 
+             write(nlst,'(12x,a)')' PENDF file copied as it is' 
            endif
-c
-c          Merge temperature independent listing files
-c
-           open(nlst,file='TEMP1.LST')
-           write(nlst,'(a)')'ACEMAKER listing file'
-           write(nlst,'(a)')'====================='
-           call cpfile(nlst,'LINEAR.LST')
-           call delfile('LINEAR.LST')
-           call cpfile(nlst,'RECENT.LST')
-           call delfile('RECENT.LST')
+           if (ikeep.ne.1) call delfile('LINEAR.PENDF') 
          endif
 c
 c        Fast ACE-file
@@ -763,6 +931,9 @@ c
              call delfile('LEGEND.INP')
              call delfile('RECENT.PENDF')
            endif
+           write(nlst,*)
+           call cpfile(nlst,'LEGEND.LST')
+           call delfile('LEGEND.LST')
 c
 c          SPECTRA: Process/linearize energy distributions on MF5
 c
@@ -781,6 +952,9 @@ c
              call delfile('SPECTRA.INP')
              call delfile('LEGEND.PENDF')
            endif
+           write(nlst,*)
+           call cpfile(nlst,'SPECTRA.LST')
+           call delfile('SPECTRA.LST')
 c
 c          SIXLIN: Process/linearize angular-energy distributions on MF6
 c
@@ -799,52 +973,102 @@ c
              call delfile('SIXLIN.INP')
              call delfile('SPECTRA.PENDF')
            endif
-c
-c          Merge temperature independent listing files
-c
-           call cpfile(nlst,'LEGEND.LST')
-           call delfile('LEGEND.LST')
-           call cpfile(nlst,'SPECTRA.LST')
-           call delfile('SPECTRA.LST')
+           write(nlst,*)
            call cpfile(nlst,'SIXLIN.LST')
            call delfile('SIXLIN.LST')
          endif
 c
 c         Temperature cycle
 c
+         if (iace.eq.0.or.iace.eq.2) close(nlst)
          do it=1,ntemp
            tempi=temp(it)
            write(nou,'(a5,i4,a7,1pe11.4)')'MAT= ',mati,' TEMP= ',tempi
            write(*,'(1x,a5,i4,a7,1pe11.4)')'MAT= ',mati,' TEMP= ',tempi
+           if (mcnpx.eq.1) then
+             xsuff=xsuff+0.001d0*dble(it-1)
+           else
+             xsuff=xsuff+0.01d0*dble(it-1)
+           endif
+           nsuff=nint(1000.0d0*xsuff+1.0d-5)
+           if (nsuff.ge.1000) nsuff=nsuff-(nsuff/1000)*1000
+           write(suff,'(a1,i3)')'.',nsuff
+           if (suff(2:2).eq.' ') suff(2:2)='0'
+           if (suff(3:3).eq.' ') suff(3:3)='0'
 c
-c          Fast ACE-file
-c
-           if (iace.eq.0) then
-c
-c            SIGMA1: Doppler broadening cross sections
-c
-             open(nin,file='SIGMA1.INP')
-             write(nin,'(2i11,1p2e11.4,2i11)')0,imon,tempi,ymin,1,0
+c          Fast and Dosimetry ACE-files
+c                   
+           if (iace.eq.0.or.iace.eq.2) then  
              if (iace.eq.0) then
-               write(nin,'(a)')'SIXLIN.PENDF'
-             else
-               write(nin,'(a)')'RECENT.PENDF'
+               if (mcnpx.eq.1) then
+                 write(cmd,'(a8,a4,a1,a5)')fza,suff(1:4),ch,'c.lst'
+               else
+                 write(cmd,'(a8,a3,a5)')fza,suff(1:3),'c.lst'
+               endif
+             elseif(iace.eq.2) then
+               if (mcnpx.eq.1) then
+                 write(cmd,'(a8,a4,a1,a5)')fza,suff(1:4),ch,'y.lst'
+               else
+                 write(cmd,'(a8,a3,a5)')fza,suff(1:3),'y.lst'
+               endif             
              endif
-             write(nin,'(a)')'SIGMA1.PENDF'
-             write(nin,'(2i11)')mati,mati
-             write(nin,*)
-             write(nin,'(1p2e11.4)')0.0,0.5d0*tol
-             write(nin,'(1p2e11.4)')1.0,0.5d0*tol
-             write(nin,'(1p2e11.4)')2.0,tol
-             write(nin,'(1p2e11.4)')emax,tol
-             write(nin,*)
-             close(nin)
-             call setcmd(nou,preprod,'sigma1',cmd)
-             call system(cmd)
-             if (ikeep.ne.1) call delfile('SIGMA1.INP')
+             title=trim(cmd)
+             call delfile(title)
+             open(nlst,file=title)
+             call cpfile(nlst,'TEMP1.LST')                          
+             if (temp0.lt.tempi) then
+c
+c              SIGMA1: Doppler broadening cross sections
+c                
+               open(nin,file='SIGMA1.INP')
+               write(nin,'(2i11,1p2e11.4,2i11)')0,imon,tempi,ymin,1,0
+               if (iace.eq.0) then
+                 write(nin,'(a)')'SIXLIN.PENDF'
+               elseif (iace.eq.2) then
+                 write(nin,'(a)')'RECENT.PENDF'
+               endif
+               write(nin,'(a)')'SIGMA1.PENDF'
+               write(nin,'(2i11)')mati,mati
+               write(nin,*)
+               write(nin,'(1p2e11.4)')0.0,0.5d0*tol
+               write(nin,'(1p2e11.4)')1.0,0.5d0*tol
+               write(nin,'(1p2e11.4)')2.0,tol
+               write(nin,'(1p2e11.4)')emax,tol
+               write(nin,*)
+               close(nin)
+               call setcmd(nou,preprod,'sigma1',cmd)
+               call system(cmd)
+               if (ikeep.ne.1) call delfile('SIGMA1.INP')
+               write(nlst,*)
+               call cpfile(nlst,'SIGMA1.LST')
+               call delfile('SIGMA1.LST')               
+             else
+               open(nin,file='SIGMA1.PENDF')
+               if (iace.eq.0) then
+                 call cpfile(nin,'SIXLIN.PENDF')
+               elseif (iace.eq.2) then
+                 call cpfile(nin,'RECENT.PENDF')
+               endif
+               close(nin)
+               write(nlst,*)
+               write(nlst,'(a,a)')' ** Warning: SIGMA1 not applied'
+               write(nlst,'(12x,a)')' PENDF file copied as it is'
+               write(nlst,'(12x,a,1pe12.5)')
+     &           ' Requested temperature [K]: ',tempi
+               write(nlst,'(12x,a,1pe12.5)')
+     &           '  Original temperature [K]: ',temp0
+               write(nlst,'(12x,a,1pe12.5)')
+     &           '            Difference [K]: ',(temp0-tempi)
+               if (tempi.ne.temp0) then
+                 tempi=temp0
+                 write(nlst,'(12x,a,1pe12.5)')' TEMP changed to ',tempi
+                 write(nou,'(9x,a,1pe11.4)')' TEMP changed to ',tempi
+                 write(*,'(10x,a,1pe11.4)')' TEMP changed to ',tempi
+               endif             
+             endif
            endif
 c
-c          Fast ACE-file
+c          Fast ACE-file 
 c
            if (iace.eq.0) then
 c
@@ -861,6 +1085,9 @@ c
                call delfile('FIXUP.INP')
                call delfile('SIGMA1.PENDF')
              endif
+             write(nlst,*)
+             call cpfile(nlst,'FIXUP.LST')
+             call delfile('FIXUP.LST')             
 c
 c            Get probability tables
 c
@@ -906,6 +1133,9 @@ c
                  write(cmd,'(a8,a)')fza,'.PLOT.CUR'
                  call delfile(cmd)
                endif
+               write(nlst,*)
+               call cpfile(nlst,'GROUPIE.LST')
+               call delfile('GROUPIE.LST')               
 c
 c              Checking fza=ZAzzzaaa.URR.ENDF
 c
@@ -936,12 +1166,15 @@ c
                    call delfile('MERGER.INP')
                    if (iurr.ne.1) call delfile(title)
                  endif
+                 write(nlst,*)
+                 call cpfile(nlst,'MERGER.LST')
+                 call delfile('MERGER.LST')
                else
                  write(nou,'(a,a)')' ** Warning:',
      &             ' No unresolved probability tables'
                  write(*,'(1x,a,a)')' ** Warning:',
      &             ' No unresolved probability tables'
-               endif
+               endif               
              endif
 c
 c            DICTIN: Update dictionary section of pendf tape
@@ -963,22 +1196,15 @@ c
                call delfile('FIXUP.PENDF')
                if (ichk.eq.0) call delfile('GROUPIE.PENDF')
              endif
+             write(nlst,*)
+             call cpfile(nlst,'DICTIN.LST')
+             call delfile('DICTIN.LST')             
 c
 c            DOACE: Prepare fast ACE-formatted file for MC
-c                   (Filename: ZAaaazzz.xxc.acef)
+c                   (Filename: ZAzzzaaa.xxc.acef)
 c
              if (mcnpx.eq.1) then
-               xsuff=xsuff+0.001d0*dble(it-1)
-             else
-               xsuff=xsuff+0.01d0*dble(it-1)
-             endif
-             nsuff=nint(1000.0d0*xsuff+1.0d-5)
-             if (nsuff.ge.1000) nsuff=nsuff-(nsuff/1000)*1000
-             write(suff,'(a1,i3)')'.',nsuff
-             if (suff(2:2).eq.' ') suff(2:2)='0'
-             if (suff(3:3).eq.' ') suff(3:3)='0'
-             if (mcnpx.eq.1) then
-               write(cmd,'(a8,a4,a7)')fza,suff(1:4),'nc.acef'
+               write(cmd,'(a8,a4,a1,a6)')fza,suff(1:4),ch,'c.acef'
              else
                write(cmd,'(a8,a3,a6)')fza,suff(1:3),'c.acef'
              endif
@@ -998,6 +1224,9 @@ c
              call setcmd(nou,acemakerd,'doace',cmd)
              call system(cmd)
              if (ikeep.ne.1) call delfile('DOACE.INP')
+             write(nlst,*)
+             call cpfile(nlst,'DOACE.LST')
+             call delfile('DOACE.LST')             
 c
 c            Simple file access checking
 c
@@ -1021,63 +1250,26 @@ c
      &           trim(title),' saved for MAT= ',mati,' TEMP= ',tempi
              endif
 c
-c            Save pendf tape as ZAaaazzz.xxc.pendf, if ipndf=1
+c            Save pendf tape as ZAzzzaaa.xxc.pendf, if ipndf=1
 c
              if (ipndf.gt.0.or.ikeep.eq.1) then
                if (mcnpx.eq.1) then
-                 write(cmd,'(a8,a4,a8)')fza,suff(1:4),'nc.pendf'
+                 write(cmd,'(a8,a4,a1,a7)')fza,suff(1:4),ch,'c.pendf'
                else
                  write(cmd,'(a8,a3,a7)')fza,suff(1:3),'c.pendf'
                endif
                title=trim(cmd)
                call delfile(title)
-               open(nlst,file=title)
-               call cpfile(nlst,'ENDF6.PENDF')
-               close(nlst)
+               open(nin,file=title)
+               call cpfile(nin,'ENDF6.PENDF')
+               close(nin)
              endif
              call delfile('ENDF6.PENDF')
-c
-c            Save *.lst files as ZAaaazzz.xxc.lst
-c
-             close(nlst)
-             if (mcnpx.eq.1) then
-               write(cmd,'(a8,a4,a6)')fza,suff(1:4),'nc.lst'
-             else
-               write(cmd,'(a8,a3,a5)')fza,suff(1:3),'c.lst'
-             endif
-             title=trim(cmd)
-             call delfile(title)
-             open(nlst,file=title)
-             call cpfile(nlst,'TEMP1.LST')
-             call cpfile(nlst,'SIGMA1.LST')
-             call delfile('SIGMA1.LST')
-             call cpfile(nlst,'FIXUP.LST')
-             call delfile('FIXUP.LST')
-             if (iptab.eq.1) then
-               call cpfile(nlst,'GROUPIE.LST')
-               call delfile('GROUPIE.LST')
-               call cpfile(nlst,'MERGER.LST')
-               call delfile('MERGER.LST')
-             endif
-             call cpfile(nlst,'DICTIN.LST')
-             call delfile('DICTIN.LST')
-             call cpfile(nlst,'DOACE.LST')
-             call delfile('DOACE.LST')
            elseif (iace.eq.1) then
 c
 c            DOTSL: Prepare thermal ACE-formatted file for MC
 c                   (Filename: THZAID.xxt.acef)
 c
-             if (mcnpx.eq.1) then
-               xsuff=xsuff+0.001d0*dble(it-1)
-             else
-               xsuff=xsuff+0.01d0*dble(it-1)
-             endif
-             nsuff=nint(1000.0d0*xsuff+1.0d-5)
-             if (nsuff.ge.1000) nsuff=nsuff-(nsuff/1000)*1000
-             write(suff,'(a1,i3)')'.',nsuff
-             if (suff(2:2).eq.' ') suff(2:2)='0'
-             if (suff(3:3).eq.' ') suff(3:3)='0'
              i0=6
              do i=1,6
                if (thzaid(im)(i:i).ne.' ') then
@@ -1088,11 +1280,9 @@ c
              fza='        '
              fza=thzaid(im)(i0:6)
              if (mcnpx.eq.1) then
-               write(cmd,'(a,a4,a7)')trim(fza),suff(1:4),
-     &           'nt.acef'
+               write(cmd,'(a,a4,a7)')trim(fza),suff(1:4),'nt.acef'
              else
-               write(cmd,'(a,a3,a6)')trim(fza),suff(1:3),
-     &           't.acef'
+               write(cmd,'(a,a3,a6)')trim(fza),suff(1:3),'t.acef'
              endif
              title=trim(cmd)
              call delfile(title)
@@ -1130,6 +1320,11 @@ c
              open(nlst,file=title)
              write(nlst,'(a)')'ACEMAKER listing file'
              write(nlst,'(a)')'====================='
+             write(nlst,*)
+             write(nlst,'(a,a)')' ENDF input tape: ',trim(fendf)
+             write(nlst,*)
+             write(nlst,'(a)')' Thermal ACE-formatted file'
+             write(nlst,*)              
              call cpfile(nlst,'DOTSL.LST')
              call delfile('DOTSL.LST')
 c
@@ -1148,7 +1343,7 @@ c
              call cpfile(nin,'a.tmp')
              close(nin)
 c
-c            Save *.plt and *.cur files
+c            Save *.plt and *.cur files, if imon=2
 c                          
              if (imon.eq.2) then
                if (mcnpx.eq.1) then
@@ -1182,11 +1377,95 @@ c
                write(*,'(1x,a,a,a,i4,a,1pe11.4)')' CUR-file: ',
      &           trim(title),'  saved for MAT= ',mati,' TEMP= ',tempi
              endif
+           elseif (iace.eq.2) then
+c
+c            Dosimetry ACE-formatted file
+c            (Filename: ZAzzzaaa.xxy.acef)
+c           
+             if (mcnpx.eq.1) then
+               write(cmd,'(a,a4,a1,a6)')trim(fza),suff(1:4),ch,'y.acef'
+             else
+               write(cmd,'(a,a3,a6)')trim(fza),suff(1:3),'y.acef'
+             endif
+             title=trim(cmd)
+             call delfile(title)
+             open(nin,file='DODOS.INP')
+             write(nin,'(a)')'SIGMA1.PENDF'
+             write(nin,'(a)')trim(title)
+             write(nin,'(2i11)')mati,imon
+             write(nin,'(1p2e11.4)')tol,ymin
+             if (mcnpx.eq.1) then
+               write(nin,'(7x,a4,i11)')suff(1:4),mcnpx
+             else
+               write(nin,'(8x,a3,i11)')suff(1:3),mcnpx
+             endif
+             close(nin)
+             call setcmd(nou,acemakerd,'dodos',cmd)
+             call system(cmd)
+             write(nou,'(a,a,a,i4,a,1pe11.4)')' ACE-file: ',
+     &         trim(title),' saved for MAT= ',mati,' TEMP= ',tempi
+             write(*,'(1x,a,a,a,i4,a,1pe11.4)')' ACE-file: ',
+     &         trim(title),' saved for MAT= ',mati,' TEMP= ',tempi
+             if (ikeep.ne.1) call delfile('DODOS.INP')
+             write(nlst,*)
+             call cpfile(nlst,'DODOS.LST')
+             call delfile('DODOS.LST')
+c
+c            Save *.plt and *.cur files, if imon=2
+c                          
+             if (imon.eq.2) then
+               if (mcnpx.eq.1) then
+                 write(cmd,'(a,a4,a1,a5)')trim(fza),suff(1:4),ch,'y.plt'
+               else
+                 write(cmd,'(a,a3,a5)')trim(fza),suff(1:3),'y.plt'
+               endif             
+               title=trim(cmd)
+               call delfile(title)
+               open (nplt,file=title)
+               call cpfile(nplt,'DODOS.PLT')
+               close(nplt)
+               call delfile('DODOS.PLT')
+               write(nou,'(a,a,a,i4,a,1pe11.4)')' PLT-file: ',
+     &           trim(title),'  saved for MAT= ',mati,' TEMP= ',tempi
+               write(*,'(1x,a,a,a,i4,a,1pe11.4)')' PLT-file: ',
+     &           trim(title),'  saved for MAT= ',mati,' TEMP= ',tempi
+               if (mcnpx.eq.1) then
+                 write(cmd,'(a,a4,a1,a5)')trim(fza),suff(1:4),ch,'y.cur'
+               else
+                 write(cmd,'(a,a3,a5)')trim(fza),suff(1:3),'y.cur'
+               endif
+               title=trim(cmd)
+               call delfile(title)
+               open (ncur,file=title)
+               call cpfile(ncur,'DODOS.CUR')
+               close(ncur)
+               call delfile('DODOS.CUR')
+               write(nou,'(a,a,a,i4,a,1pe11.4)')' CUR-file: ',
+     &           trim(title),'  saved for MAT= ',mati,' TEMP= ',tempi
+               write(*,'(1x,a,a,a,i4,a,1pe11.4)')' CUR-file: ',
+     &           trim(title),'  saved for MAT= ',mati,' TEMP= ',tempi
+             endif             
+c
+c            Save pendf tape as ZAzzzaaa.xxc.pendf, if ipndf=1
+c
+             if (ipndf.gt.0.or.ikeep.eq.1) then
+               if (mcnpx.eq.1) then
+                 write(cmd,'(a8,a4,a1,a7)')fza,suff(1:4),ch,'y.pendf'
+               else
+                 write(cmd,'(a8,a3,a7)')fza,suff(1:3),'y.pendf'
+               endif
+               title=trim(cmd)
+               call delfile(title)
+               open(nin,file=title)
+               call cpfile(nin,'SIGMA1.PENDF')
+               close(nin)
+             endif
+             call delfile('SIGMA1.PENDF')                        
            endif
            call delfile('a.tmp')
+           write(nlst,*)
            write(nlst,'(a)')'End of ACEMAKER listing file'
            write(nlst,'(a)')'============================'
-           close(nlst)
            title=' '
 c
 c          End temperature cycle
@@ -1198,7 +1477,7 @@ c
              call delfile('SIXLIN.PENDF')
            elseif (iace.eq.1) then
              call delfile('ENDF6.ENDF')
-           else
+           elseif (iace.eq.2) then
              call delfile('TEMP1.LST')
              call delfile('RECENT.PENDF')
            endif
@@ -1206,7 +1485,6 @@ c
 c
 c        End material cycle
 c
-   40    continue
        enddo
 c
 c      Check for ending case cycle
@@ -1229,9 +1507,11 @@ c      End of case cycle
 c
       enddo
       call getdtime(cdate,ctime)
+      write(nou,*)
       write(nou,'(a)')'==============================================='
       write(nou,'(a,1x,a,1x,a)')'End of ACEMAKER log file',cdate,ctime
       write(nou,'(a)')'==============================================='
+      write(*,*)
       write(*,'(1x,a)')'==============================================='
       write(*,'(1x,a,1x,a,1x,a)')'End of ACEMAKER log file',cdate,ctime
       write(*,'(1x,a)')'==============================================='
@@ -1443,9 +1723,8 @@ c
           iurr=0
         endif
       endif
-      if (iace.ne.1) then
-        if (imon.eq.2) imon=1
-      else
+      if (iace.eq.0.and.imon.eq.2) imon=1
+      if (iace.eq.1) then
         if (nmat.ne.nmath.or.nmath.le.0) then
           write(*,*)' *** Fatal error reading acemaker input'
           write(*,*)' *** NMAT and NMATH are not consistent',nmat,nmath
@@ -1465,6 +1744,13 @@ c
       close(inp)
       stop
       end
+C======================================================================
+      subroutine readcont(nin,c1,c2,l1,l2,n1,n2,mat,mf,mt,ns)
+      implicit real*8 (a-h, o-z)
+      read(nin,10)c1,c2,l1,l2,n1,n2,mat,mf,mt,ns
+      return
+   10 format(2e11.0,4i11,i4,i2,i3,i5)
+      end
 c======================================================================
       subroutine delfile(fname)
 c
@@ -1482,15 +1768,14 @@ c
 c      Copy a file into unit ncpy
 c
       character*(*) fname
-      character*120 line
+      character*132 line
       data lst/90/
       open(lst,file=fname,status='old',err=10)
       do while (.true.)
         read(lst,'(a)',err=10,end=10)line
         write(ncpy,'(a)')trim(line)
-      enddo
-   10 write(ncpy,*)
-      close(lst,err=20)
+      enddo  
+   10 close(lst,err=20)
    20 return
       end
 c======================================================================

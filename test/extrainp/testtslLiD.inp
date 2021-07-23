@@ -1,0 +1,18 @@
+D bound in 7LiD
+ACE    1
+ENDF   \ENDF-B-VIII.0\tsl\tsl-Din7LiD-mixed.endf
+MAT    1
+ 15
+TEMP   1
+ 293.6
+MON    2
+NBIN   64
+ETHM   4.0
+TOL    0.001
+EPS    0.003
+THDAT  1
+ D_7LiD 1 1
+ 1002
+SUFF   .00
+MCNP   0 
+END
