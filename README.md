@@ -13,7 +13,7 @@ The provided batch files and executables are only for Windows OS. The user can p
 * **Daniel López Aldama** - Consultant, International Atomic Energy Agency, IAEA/NDS, Vienna, Austria
 * **Andrej Trkov** - International Atomic Energy Agency, IAEA/NDS, Vienna, Austria
 
-## PREPRO package's Author
+## PREPRO Package's Author
 
 * **Dermott E. Cullen** - 1466 Hudson Way, Livermore, CA 94550, U.S.A.
 
