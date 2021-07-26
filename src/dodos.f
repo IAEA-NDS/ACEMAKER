@@ -12,7 +12,7 @@ c     line 3:        mat       imon                               (2I11)
 c     line 4:        tol       ymin                             (2E11.0)
 c     line 5:       suff      mcnpx                              (7X,A4)
 c
-c     where
+c     where,
 c        mat: Requested material
 c       imon: Monitor printing trigger (0/1/2) = min/max/max+plt
 c             (Default: imon=0)
@@ -30,7 +30,20 @@ c      if imon=2
 c       3. DODOS.PLT PLOTTAB input option file
 c       4. DODOS.CUR PLOTTAB curve file
 c
+c     MTD numbers for the MTR block in the dosimetry ACE-formatted file:
+c       If the reaction is given in MF3, then the MT number remains the 
+c       the same (MTD=MT). If the dosimetry reaction is given in MF10 or
+c       multiplicities are supplied in MF9 or MF6, then the MTD number
+c       is computed as:
+c        MTD=1000000*(50+lfs)+zap,  if MT=5 or
+c        MTD=1000*(10+lfs)+MT,      otherwise
 c
+c     where,
+c       MTD: Reaction identifier in the dosimetry ACE-formatted file
+c       zap: product ZA number
+c       lfs: level number of the nuclide zap
+c       MT:  ENDF-6 reaction identifier
+c         
 c     Example of input
 c
 c     \IRDFF-II\IRDFF-II.endf
