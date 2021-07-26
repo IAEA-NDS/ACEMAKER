@@ -32,17 +32,17 @@ c       4. DODOS.CUR PLOTTAB curve file
 c
 c     MTD numbers for the MTR block in the dosimetry ACE-formatted file:
 c       If the reaction is given in MF3, then the MT number remains the 
-c       the same (MTD=MT). If the dosimetry reaction is given in MF10 or
+c       same (MTD=MT). If the dosimetry reaction is given in MF10 or
 c       multiplicities are supplied in MF9 or MF6, then the MTD number
 c       is computed as:
-c        MTD=1000000*(50+lfs)+zap,  if MT=5 or
-c        MTD=1000*(10+lfs)+MT,      otherwise
+c         MTD=1000000*(50+lfs)+zap,  if MT=5 or
+c         MTD=1000*(10+lfs)+MT,      otherwise
 c
-c     where,
-c       MTD: Reaction identifier in the dosimetry ACE-formatted file
-c       zap: product ZA number
-c       lfs: level number of the nuclide zap
-c       MT:  ENDF-6 reaction identifier
+c       where,
+c         MTD: reaction identifier in the dosimetry ACE-formatted file
+c         zap: ZA number of the product nuclide
+c         lfs: level number of the product nuclide
+c         MT:  reaction identifier according to the ENDF-6 format
 c         
 c     Example of input
 c
