@@ -1,7 +1,7 @@
 DOTSL log file
 ==============
 PROGRAM DOTSL: Process Thermal Scattering Law
-Started at 14:26:10:82 on 2021/07/23
+Started at 16:21:43:00 on 2021/08/26
  Thermal inelastic scattering
 ie=    1 incident energy= 1.00000000E-05 inelastic scattering= 8.41413526E+01
 ie=    2 incident energy= 1.18597100E-05 inelastic scattering= 7.72715312E+01
@@ -110,6 +110,76 @@ ie=  104 incident energy= 2.51984210E+00 inelastic scattering= 2.00707306E+01
 ie=  105 incident energy= 2.99661420E+00 inelastic scattering= 2.01361859E+01
 ie=  106 incident energy= 3.56359490E+00 inelastic scattering= 2.01912785E+01
 ie=  107 incident energy= 4.00000000E+00 inelastic scattering= 2.02230181E+01
+Coherent elastic scattering
+ie=    1 incident energy= 3.69744300E-03 coherent elastic xs= 1.60825765E-01
+ie=    2 incident energy= 4.92992400E-03 coherent elastic xs= 8.86497033E-01
+ie=    3 incident energy= 9.85984800E-03 coherent elastic xs= 8.78424596E-01
+ie=    4 incident energy= 1.35572900E-02 coherent elastic xs= 6.72426717E-01
+ie=    5 incident energy= 1.47897700E-02 coherent elastic xs= 7.43404394E-01
+ie=    6 incident energy= 1.97197000E-02 coherent elastic xs= 6.07362688E-01
+ie=    7 incident energy= 2.34171400E-02 coherent elastic xs= 5.18333580E-01
+ie=    8 incident energy= 2.46496200E-02 coherent elastic xs= 6.07289281E-01
+ie=    9 incident energy= 2.95795400E-02 coherent elastic xs= 5.76553591E-01
+ie=   10 incident energy= 3.32769900E-02 coherent elastic xs= 5.14828715E-01
+ie=   11 incident energy= 3.94393900E-02 coherent elastic xs= 4.49317801E-01
+ie=   12 incident energy= 4.31368300E-02 coherent elastic xs= 4.11722419E-01
+ie=   13 incident energy= 4.43693100E-02 coherent elastic xs= 4.25587191E-01
+ie=   14 incident energy= 4.92992400E-02 coherent elastic xs= 3.97020116E-01
+ie=   15 incident energy= 5.29966800E-02 coherent elastic xs= 3.69428047E-01
+ie=   16 incident energy= 5.42291600E-02 coherent elastic xs= 3.70860253E-01
+ie=   17 incident energy= 5.91590900E-02 coherent elastic xs= 3.42287550E-01
+ie=   18 incident energy= 6.28565300E-02 coherent elastic xs= 3.22187050E-01
+ie=   19 incident energy= 6.40890100E-02 coherent elastic xs= 3.21029612E-01
+ie=   20 incident energy= 6.90189300E-02 coherent elastic xs= 3.05427656E-01
+ie=   21 incident energy= 7.88787800E-02 coherent elastic xs= 2.67746915E-01
+ie=   22 incident energy= 8.38087100E-02 coherent elastic xs= 2.54956794E-01
+ie=   23 incident energy= 8.87386300E-02 coherent elastic xs= 2.42453935E-01
+ie=   24 incident energy= 9.24360700E-02 coherent elastic xs= 2.32768226E-01
+ie=   25 incident energy= 9.36685500E-02 coherent elastic xs= 2.30539706E-01
+ie=   26 incident energy= 9.85984800E-02 coherent elastic xs= 2.19644157E-01
+ie=   27 incident energy= 1.02295900E-01 coherent elastic xs= 2.11727743E-01
+ie=   28 incident energy= 1.03528400E-01 coherent elastic xs= 2.10167838E-01
+ie=   29 incident energy= 1.08458300E-01 coherent elastic xs= 2.00981760E-01
+ie=   30 incident energy= 1.12155800E-01 coherent elastic xs= 1.94372025E-01
+ie=   31 incident energy= 1.18318200E-01 coherent elastic xs= 1.84465281E-01
+ie=   32 incident energy= 1.22015600E-01 coherent elastic xs= 1.78898436E-01
+ie=   33 incident energy= 1.23248100E-01 coherent elastic xs= 1.77318677E-01
+ie=   34 incident energy= 1.28178000E-01 coherent elastic xs= 1.70888296E-01
+ie=   35 incident energy= 1.31875500E-01 coherent elastic xs= 1.66116906E-01
+ie=   36 incident energy= 1.33107900E-01 coherent elastic xs= 1.64713514E-01
+ie=   37 incident energy= 1.41735300E-01 coherent elastic xs= 1.54698441E-01
+ie=   38 incident energy= 1.42967800E-01 coherent elastic xs= 1.53549680E-01
+ie=   39 incident energy= 1.47897700E-01 coherent elastic xs= 1.48528003E-01
+ie=   40 incident energy= 1.51595200E-01 coherent elastic xs= 1.44914153E-01
+ie=   41 incident energy= 1.57757600E-01 coherent elastic xs= 1.39268409E-01
+ie=   42 incident energy= 1.61455000E-01 coherent elastic xs= 1.36096188E-01
+ie=   43 incident energy= 1.62687500E-01 coherent elastic xs= 1.35112470E-01
+ie=   44 incident energy= 1.67617400E-01 coherent elastic xs= 1.31176059E-01
+ie=   45 incident energy= 1.71314900E-01 coherent elastic xs= 1.28352700E-01
+ie=   46 incident energy= 1.72547300E-01 coherent elastic xs= 1.27465744E-01
+ie=   47 incident energy= 1.77477300E-01 coherent elastic xs= 1.23939738E-01
+ie=   48 incident energy= 1.81174700E-01 coherent elastic xs= 1.21414966E-01
+ie=   49 incident energy= 1.82407200E-01 coherent elastic xs= 1.20603956E-01
+ie=   50 incident energy= 1.87337100E-01 coherent elastic xs= 1.17452763E-01
+ie=   51 incident energy= 1.91034500E-01 coherent elastic xs= 1.15185320E-01
+ie=   52 incident energy= 1.97197000E-01 coherent elastic xs= 1.11590541E-01
+ie=   53 incident energy= 2.02126900E-01 coherent elastic xs= 1.08885359E-01
+ie=   54 incident energy= 2.07056800E-01 coherent elastic xs= 1.06299093E-01
+ie=   55 incident energy= 2.10754200E-01 coherent elastic xs= 1.04438108E-01
+ie=   56 incident energy= 2.11986700E-01 coherent elastic xs= 1.03833401E-01
+ie=   57 incident energy= 2.20614100E-01 coherent elastic xs= 9.97776661E-02
+ie=   58 incident energy= 2.21846600E-01 coherent elastic xs= 9.92282505E-02
+ie=   59 incident energy= 2.26776500E-01 coherent elastic xs= 9.70737268E-02
+ie=   60 incident energy= 2.40333800E-01 coherent elastic xs= 9.16000163E-02
+ie=   61 incident energy= 2.46496200E-01 coherent elastic xs= 8.93135472E-02
+ie=   62 incident energy= 2.56356000E-01 coherent elastic xs= 8.58805333E-02
+ie=   63 incident energy= 2.66215900E-01 coherent elastic xs= 8.27021226E-02
+ie=   64 incident energy= 2.90865500E-01 coherent elastic xs= 7.56953300E-02
+ie=   65 incident energy= 3.68511800E-01 coherent elastic xs= 5.97475576E-02
+ie=   66 incident energy= 4.76970100E-01 coherent elastic xs= 4.61626421E-02
+ie=   67 incident energy= 5.81731000E-01 coherent elastic xs= 3.78503466E-02
+ie=   68 incident energy= 6.90189300E-01 coherent elastic xs= 3.19032039E-02
+ie=   69 incident energy= 6.95119300E-01 coherent elastic xs= 3.16769798E-02
 Incoherent elastic scattering
 ie=    1 incident energy= 1.00000000E-05 incoherent elastic xs= 8.02397356E+01
 ie=    2 incident energy= 1.18597100E-05 incoherent elastic xs= 8.02359678E+01
@@ -207,74 +277,4 @@ ie=   93 incident energy= 3.36358570E+00 incoherent elastic xs= 4.72454375E-01
 ie=   94 incident energy= 3.56359490E+00 incoherent elastic xs= 4.45937550E-01
 ie=   95 incident energy= 3.77549730E+00 incoherent elastic xs= 4.20908996E-01
 ie=   96 incident energy= 4.00000000E+00 incoherent elastic xs= 3.97285195E-01
-Coherent elastic scattering
-ie=    1 incident energy= 3.69744300E-03 coherent elastic xs= 1.60825765E-01
-ie=    2 incident energy= 4.92992400E-03 coherent elastic xs= 8.86497033E-01
-ie=    3 incident energy= 9.85984800E-03 coherent elastic xs= 8.78424596E-01
-ie=    4 incident energy= 1.35572900E-02 coherent elastic xs= 6.72426717E-01
-ie=    5 incident energy= 1.47897700E-02 coherent elastic xs= 7.43404394E-01
-ie=    6 incident energy= 1.97197000E-02 coherent elastic xs= 6.07362688E-01
-ie=    7 incident energy= 2.34171400E-02 coherent elastic xs= 5.18333580E-01
-ie=    8 incident energy= 2.46496200E-02 coherent elastic xs= 6.07289281E-01
-ie=    9 incident energy= 2.95795400E-02 coherent elastic xs= 5.76553591E-01
-ie=   10 incident energy= 3.32769900E-02 coherent elastic xs= 5.14828715E-01
-ie=   11 incident energy= 3.94393900E-02 coherent elastic xs= 4.49317801E-01
-ie=   12 incident energy= 4.31368300E-02 coherent elastic xs= 4.11722419E-01
-ie=   13 incident energy= 4.43693100E-02 coherent elastic xs= 4.25587191E-01
-ie=   14 incident energy= 4.92992400E-02 coherent elastic xs= 3.97020116E-01
-ie=   15 incident energy= 5.29966800E-02 coherent elastic xs= 3.69428047E-01
-ie=   16 incident energy= 5.42291600E-02 coherent elastic xs= 3.70860253E-01
-ie=   17 incident energy= 5.91590900E-02 coherent elastic xs= 3.42287550E-01
-ie=   18 incident energy= 6.28565300E-02 coherent elastic xs= 3.22187050E-01
-ie=   19 incident energy= 6.40890100E-02 coherent elastic xs= 3.21029612E-01
-ie=   20 incident energy= 6.90189300E-02 coherent elastic xs= 3.05427656E-01
-ie=   21 incident energy= 7.88787800E-02 coherent elastic xs= 2.67746915E-01
-ie=   22 incident energy= 8.38087100E-02 coherent elastic xs= 2.54956794E-01
-ie=   23 incident energy= 8.87386300E-02 coherent elastic xs= 2.42453935E-01
-ie=   24 incident energy= 9.24360700E-02 coherent elastic xs= 2.32768226E-01
-ie=   25 incident energy= 9.36685500E-02 coherent elastic xs= 2.30539706E-01
-ie=   26 incident energy= 9.85984800E-02 coherent elastic xs= 2.19644157E-01
-ie=   27 incident energy= 1.02295900E-01 coherent elastic xs= 2.11727743E-01
-ie=   28 incident energy= 1.03528400E-01 coherent elastic xs= 2.10167838E-01
-ie=   29 incident energy= 1.08458300E-01 coherent elastic xs= 2.00981760E-01
-ie=   30 incident energy= 1.12155800E-01 coherent elastic xs= 1.94372025E-01
-ie=   31 incident energy= 1.18318200E-01 coherent elastic xs= 1.84465281E-01
-ie=   32 incident energy= 1.22015600E-01 coherent elastic xs= 1.78898436E-01
-ie=   33 incident energy= 1.23248100E-01 coherent elastic xs= 1.77318677E-01
-ie=   34 incident energy= 1.28178000E-01 coherent elastic xs= 1.70888296E-01
-ie=   35 incident energy= 1.31875500E-01 coherent elastic xs= 1.66116906E-01
-ie=   36 incident energy= 1.33107900E-01 coherent elastic xs= 1.64713514E-01
-ie=   37 incident energy= 1.41735300E-01 coherent elastic xs= 1.54698441E-01
-ie=   38 incident energy= 1.42967800E-01 coherent elastic xs= 1.53549680E-01
-ie=   39 incident energy= 1.47897700E-01 coherent elastic xs= 1.48528003E-01
-ie=   40 incident energy= 1.51595200E-01 coherent elastic xs= 1.44914153E-01
-ie=   41 incident energy= 1.57757600E-01 coherent elastic xs= 1.39268409E-01
-ie=   42 incident energy= 1.61455000E-01 coherent elastic xs= 1.36096188E-01
-ie=   43 incident energy= 1.62687500E-01 coherent elastic xs= 1.35112470E-01
-ie=   44 incident energy= 1.67617400E-01 coherent elastic xs= 1.31176059E-01
-ie=   45 incident energy= 1.71314900E-01 coherent elastic xs= 1.28352700E-01
-ie=   46 incident energy= 1.72547300E-01 coherent elastic xs= 1.27465744E-01
-ie=   47 incident energy= 1.77477300E-01 coherent elastic xs= 1.23939738E-01
-ie=   48 incident energy= 1.81174700E-01 coherent elastic xs= 1.21414966E-01
-ie=   49 incident energy= 1.82407200E-01 coherent elastic xs= 1.20603956E-01
-ie=   50 incident energy= 1.87337100E-01 coherent elastic xs= 1.17452763E-01
-ie=   51 incident energy= 1.91034500E-01 coherent elastic xs= 1.15185320E-01
-ie=   52 incident energy= 1.97197000E-01 coherent elastic xs= 1.11590541E-01
-ie=   53 incident energy= 2.02126900E-01 coherent elastic xs= 1.08885359E-01
-ie=   54 incident energy= 2.07056800E-01 coherent elastic xs= 1.06299093E-01
-ie=   55 incident energy= 2.10754200E-01 coherent elastic xs= 1.04438108E-01
-ie=   56 incident energy= 2.11986700E-01 coherent elastic xs= 1.03833401E-01
-ie=   57 incident energy= 2.20614100E-01 coherent elastic xs= 9.97776661E-02
-ie=   58 incident energy= 2.21846600E-01 coherent elastic xs= 9.92282505E-02
-ie=   59 incident energy= 2.26776500E-01 coherent elastic xs= 9.70737268E-02
-ie=   60 incident energy= 2.40333800E-01 coherent elastic xs= 9.16000163E-02
-ie=   61 incident energy= 2.46496200E-01 coherent elastic xs= 8.93135472E-02
-ie=   62 incident energy= 2.56356000E-01 coherent elastic xs= 8.58805333E-02
-ie=   63 incident energy= 2.66215900E-01 coherent elastic xs= 8.27021226E-02
-ie=   64 incident energy= 2.90865500E-01 coherent elastic xs= 7.56953300E-02
-ie=   65 incident energy= 3.68511800E-01 coherent elastic xs= 5.97475576E-02
-ie=   66 incident energy= 4.76970100E-01 coherent elastic xs= 4.61626421E-02
-ie=   67 incident energy= 5.81731000E-01 coherent elastic xs= 3.78503466E-02
-ie=   68 incident energy= 6.90189300E-01 coherent elastic xs= 3.19032039E-02
-ie=   69 incident energy= 6.95119300E-01 coherent elastic xs= 3.16769798E-02
-DOTSL ended at 14:35:46:44 on 2021/07/23
+DOTSL ended at 16:31:23:80 on 2021/08/26
