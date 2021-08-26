@@ -1766,7 +1766,7 @@ C======================================================================
       allocatable ee(:),xse(:),ue(:,:),uei(:),ue2(:)
       data line115/115*'='/
 c
-c     Read elastic thermal scattering data
+c     searching for thermal elastic scattering data
 c
       write(lst,*)
       call findmt(in2,matsl,7,2,icod)
@@ -1785,7 +1785,7 @@ c
       call readcont(in2,za,awr,lthr,l2,n1,n2,mat,mf,mt,nsi)
       if (lthr.eq.1.or.lthr.eq.3) then
 c
-c       Coherent elastic data (lthr=1 or 3)
+c       reading coherent elastic data (lthr=1 or 3)
 c
         call readcont(in2,temp1,c2,lt,l2,nr,np,mat,mf,mt,nsi)
         backspace(in2)
@@ -1853,7 +1853,7 @@ c
       endif
       if (lthr.eq.2.or.lthr.eq.3) then
 c
-c       Incoherent elastic data (lthr=2 or 3)
+c       reading incoherent elastic data (lthr=2 or 3)
 c
         call readcont(in2,sb,c2,l1,l2,nr,nt,mat,mf,mt,nsi)
         backspace(in2)
@@ -1879,6 +1879,76 @@ c
         deallocate(t,w)
       endif
       dnmix=dble(nmix)
+c
+c       Processing thermal elastic scattering data
+c      
+      if (lthr.eq.1.or.lthr.eq.3) then
+c
+c       Processing thermal coherent elastic scattering
+c
+        write(*,'(a)')' Coherent elastic scattering'
+        write(lst,*)
+        write(lst,'(a)')' Thermal coherent elastic scattering'
+        write(lst,*)
+        allocate (t(np), w(np))
+        write(lst,'(a,a)')'   ie   Bragg energy     S(E,T)    ',
+     &      ' cross section'
+        write(lst,'(50a1)')line115(1:50)
+        j=0
+        b0=0.0d0
+        btol=tolbrg
+        emax=ei(nei)
+        i=1
+        do while (i.le.np.and.eb(i).le.emax)
+          b1=s(i)
+          if ((b1-b0).gt.btol.or.i.eq.np) then
+            j=j+1
+            t(j)=eb(i)*ev2mev
+            w(j)=b1*ev2mev/dnmix
+            b0=b1
+            btol=(b0+1.0d0)*tolbrg
+          endif
+          i=i+1
+        enddo
+        np=j
+c
+c       Set flags and triggers for coherent elastic scattering
+c
+        if (lthr.eq.1) then
+          nxs(5)=4
+          nxs(8)=0
+          jxs(7)=0
+          jxs(8)=0
+          jxs(9)=0
+        else
+          nxs(5)=5
+        endif
+        nxs(6)=-1
+        itce=nxs(1)+1
+        itcx=itce+np+1
+        jxs(4)=itce
+        jxs(5)=itcx
+        jxs(6)=0       
+c
+c       Loading XSS array
+c
+        j0=itcx-1
+        xss(itce)=np
+        do j=1,np
+          xss(itce+j)=t(j)
+          xss(j0+j)=w(j)
+          xscoh=w(j)/t(j)
+          write(lst,'(i5,1p3e15.8)')j,t(j),w(j),xscoh
+          write(*,'(a,i5,1p,2(a,e15.8))')' ie=',j,' incident energy=',
+     &      t(j)/ev2mev,' coherent elastic xs=',xscoh
+        enddo
+        ixss=2*np+1
+        nxs(1)=nxs(1)+ixss
+        write(lst,*)
+        write(lst,'(a,a,2i10)')' Length of coherent elastic data and',
+     &    ' XSS array: ',ixss,nxs(1)
+        deallocate(eb,s,t,w)
+      endif     
 c
 c       Processing thermal incoherent elastic scattering
 c
@@ -2001,18 +2071,25 @@ c
 c
 c       Set flags and triggers for incoherent elastic scattering
 c
-        if (lthr.eq.2) then
-          nxs(5)=3
-        else
-          nxs(5)=5
-        endif
-        nxs(6)=nbin-1
         itce=nxs(1)+1
         itcx=itce+nee+1
         itca=itcx+nee
-        jxs(4)=itce
-        jxs(5)=itcx
-        jxs(6)=itca
+        if (lthr.eq.2) then
+          nxs(5)=3
+          nxs(6)=nbin-1
+          nxs(8)=0
+          jxs(4)=itce
+          jxs(5)=itcx
+          jxs(6)=itca
+          jxs(7)=0
+          jxs(8)=0
+          jxs(9)=0                    
+        else
+          nxs(8)=nbin-1
+          jxs(7)=itce
+          jxs(8)=itcx
+          jxs(9)=itca         
+        endif
 c
 c       Prepare itce and itca block for incoherent elastic
 c
@@ -2039,70 +2116,6 @@ c
         write(lst,'(a,a,2i10)')' Length of incoherent elastic data and',
      &    ' XSS array: ',ixss,nxs(1)
         deallocate (ee,xse,ue,uei,ue2)
-      endif
-      if (lthr.eq.1.or.lthr.eq.3) then
-c
-c       Processing thermal coherent elastic scattering
-c
-        write(*,'(a)')' Coherent elastic scattering'
-        write(lst,*)
-        write(lst,'(a)')' Thermal coherent elastic scattering'
-        write(lst,*)
-        allocate (t(np), w(np))
-        write(lst,'(a,a)')'   ie   Bragg energy     S(E,T)    ',
-     &      ' cross section'
-        write(lst,'(50a1)')line115(1:50)
-        j=0
-        b0=0.0d0
-        btol=tolbrg
-        emax=ei(nei)
-        i=1
-        do while (i.le.np.and.eb(i).le.emax)
-          b1=s(i)
-          if ((b1-b0).gt.btol.or.i.eq.np) then
-            j=j+1
-            t(j)=eb(i)*ev2mev
-            w(j)=b1*ev2mev/dnmix
-            b0=b1
-            btol=(b0+1.0d0)*tolbrg
-          endif
-          i=i+1
-        enddo
-        np=j
-c
-c       Set flags and triggers for coherent elastic scattering
-c
-        jtce=nxs(1)+1
-        jtcx=jtce+np+1
-        if (lthr.eq.1) then
-          nxs(5)=4
-          nxs(6)=-1
-          jxs(4)=jtce
-          jxs(5)=jtcx
-          jxs(6)=0
-        else
-          jxs(7)=jtce
-          jxs(8)=jtcx
-        endif
-c
-c       Loading XSS array
-c
-        j0=jtcx-1
-        xss(jtce)=np
-        do j=1,np
-          xss(jtce+j)=t(j)
-          xss(j0+j)=w(j)
-          xscoh=w(j)/t(j)
-          write(lst,'(i5,1p3e15.8)')j,t(j),w(j),xscoh
-          write(*,'(a,i5,1p,2(a,e15.8))')' ie=',j,' incident energy=',
-     &      t(j)/ev2mev,' coherent elastic xs=',xscoh
-        enddo
-        ixss=2*np+1
-        nxs(1)=nxs(1)+ixss
-        write(lst,*)
-        write(lst,'(a,a,2i10)')' Length of coherent elastic data and',
-     &    ' XSS array: ',ixss,nxs(1)
-        deallocate(eb,s,t,w)
       endif
       return
       end
@@ -2652,6 +2665,7 @@ c
       idpnc=nxs(5)
       ncl=nxs(6)
       ifeng=nxs(7)
+      nclj=nxs(8)
       itie=jxs(1)
       itix=jxs(2)
       itxe=jxs(3)
@@ -2660,6 +2674,7 @@ c
       itca=jxs(6)
       jtce=jxs(7)
       jtcx=jxs(8)
+      jtca=jxs(9)
       write(nout,'(8i9)')(nxs(i),i=1,16)
       write(nout,'(8i9)')(jxs(i),i=1,32)
 c
@@ -2686,44 +2701,62 @@ c
         call typen(l,nout,2)
         l=l+1
       enddo
-c
+      if (idpnc.ne.0) then
+c                           
 c       itce block (elastic)
-c
-      if (itce.ne.0) then
-         l=itce
-         ne=nint(xss(l))
-         nexe=ne
-         call typen(l,nout,1)
-         l=l+1
-         n=2*ne
-         do i=1,n
+c                             
+        if (itce.ne.0) then
+          l=itce
+          ne=nint(xss(l))
+          nexe=ne
+          call typen(l,nout,1)
+          l=l+1
+          n=2*ne
+          do i=1,n
             call typen(l,nout,2)
             l=l+1
-         enddo
-      endif
+          enddo
+        endif
 c
 c       itca block (elastic angular distribution)
 c
-      if (itce.ne.0.and.ncl.ne.-1) then
-         n=nexe*(ncl+1)
-         do i=1,n
+        if (itca.ne.0.and.ncl.ne.-1) then
+          n=nexe*(ncl+1)
+          do i=1,n
             call typen(l,nout,2)
             l=l+1
-         enddo
-      endif
+          enddo
+        endif
 c
-c       jtce block for mixed TSL (coherent elastic scattering)
+c       mixed TSL (incoherent elastic scattering)
 c
-      if (idpnc.ne.0.and.idpnc.ne.3.and.idpnc.ne.4.and.jtce.gt.0) then
-         l=jtce
-         ne=nint(xss(l))
-         call typen(l,nout,1)
-         l=l+1
-         n=2*ne
-         do i=1,n
-            call typen(l,nout,2)
+        if (idpnc.eq.5) then
+c     
+c         jtce=itce2 block
+c            
+          if (jtce.ne.0) then        
+            l=jtce
+            ne=nint(xss(l))
+            nexe=ne
+            call typen(l,nout,1)
             l=l+1
-         enddo
+            n=2*ne
+            do i=1,n
+              call typen(l,nout,2)
+              l=l+1
+            enddo
+          endif
+c     
+c         jtca=itca2 block
+c          
+          if (jtca.ne.0.and.nclj.ne.-1) then
+            n=nexe*(nclj+1)
+            do i=1,n
+              call typen(l,nout,2)
+              l=l+1
+            enddo
+          endif          
+        endif
       endif
 c
 c       finish
@@ -2821,6 +2854,7 @@ c
       idpnc=nxs(5)
       ncl=nxs(6)
       ifeng=nxs(7)
+      nclj=nxs(8)
       itie=jxs(1)
       itix=jxs(2)
       itxe=jxs(3)
@@ -2829,12 +2863,15 @@ c
       itca=jxs(6)
       jtce=jxs(7)
       jtcx=jxs(8)
+      jtca=jxs(9)
       nei=0
       ne=0
       nec=0
 c
 c     Cross section plotting
 c
+c       Inelastic
+c      
       nei=nint(xss(itie))
       emax=xss(itie+nei)
       write(ncur,'(a)')'Inelastic'
@@ -2845,44 +2882,28 @@ c
       enddo
       write(ncur,*)
       nc=1
-      if (idpnc.gt.0.and.idpnc.ne.4.and.itce.gt.0) then
-        write(ncur,'(a)')'Incoherent elastic'
-        ne=nint(xss(itce))
-        do i=1,ne
-          call chendf(xss(itce+i),x)
-          call chendf(xss(itcx+i-1),y)
-          write(ncur,'(2a11)')x,y
-        enddo
-        write(ncur,*)
-        nc=nc+1
-      endif
-      if ((idpnc.eq.4.and.itce.gt.0).or.
-     &    (idpnc.gt.0.and.idpnc.ne.4.and.jtce.gt.0)) then
-        if (idpnc.eq.4.and.itce.gt.0) then
-          ktce=itce
-          ktcx=itcx
-        else
-          ktce=jtce
-          ktcx=jtcx
-        endif
+c
+c       Coherent elastic
+c      
+      if ((idpnc.eq.4.or.idpnc.eq.5).and.itce.ne.0) then
         write(ncur,'(a)')'Coherent elastic'
-        nec=nint(xss(ktce))
-        e=xss(ktce+1)
+        nec=nint(xss(itce))
+        e=xss(itce+1)
         xs=0.0d0
         call chendf(e,x)
         call chendf(xs,y)
         write(ncur,'(2a11)')x,y
         j=2
         do while (e.le.emax)
-          xs=cohxs(nec,xss(ktce+1),xss(ktcx),e)
+          xs=cohxs(nec,xss(itce+1),xss(itcx),e)
           call chendf(e,x)
           call chendf(xs,y)
           write(ncur,'(2a11)')x,y
           e=e*r0
-          if (e.ge.xss(ktce+j).and.j.le.nec) then
-            e=xss(ktce+j)
+          if (e.ge.xss(itce+j).and.j.le.nec) then
+            e=xss(itce+j)
             e1=e*0.999999999d0
-            xs=cohxs(nec,xss(ktce+1),xss(ktcx),e1)
+            xs=cohxs(nec,xss(itce+1),xss(itcx),e1)
             call chendf(e1,x)
             call chendf(xs,y)
             write(ncur,'(2a11)')x,y
@@ -2891,7 +2912,7 @@ c
         enddo
         if (e/r0.lt.emax) then
           e=emax
-          xs=cohxs(nec,xss(ktce+1),xss(ktcx),e)
+          xs=cohxs(nec,xss(itce+1),xss(itcx),e)
           call chendf(e,x)
           call chendf(xs,y)
           write(ncur,'(2a11)')x,y
@@ -2899,13 +2920,37 @@ c
         write(ncur,*)
         nc=nc+1
       endif
+c
+c       Incoherent elastic
+c      
+      if ((idpnc.eq.3.and.itce.ne.0).or.(idpnc.eq.5.and.jtce.ne.0)) then
+        if (idpnc.eq.3) then
+          ktce=itce
+          ktcx=itcx
+        else
+          ktce=jtce
+          ktcx=jtcx
+        endif
+        write(ncur,'(a)')'Incoherent elastic'
+        ne=nint(xss(ktce))
+        do i=1,ne
+          call chendf(xss(ktce+i),x)
+          call chendf(xss(ktcx+i-1),y)
+          write(ncur,'(2a11)')x,y
+        enddo
+        write(ncur,*)
+        nc=nc+1
+      endif
+c
+c      Total
+c            
       if (nc.gt.1) then
         write(ncur,'(a)')'Total'
         nu1=nei+ne
         numax=nu1
         allocate(eu1(numax))
         if (ne.gt.0) then
-          call union(nei,xss(itie+1),ne,xss(itce+1),nu1,eu1,numax)
+          call union(nei,xss(itie+1),ne,xss(ktce+1),nu1,eu1,numax)
         else
           do i=1,nei
             eu1(i)=xss(itie+i)
@@ -2915,7 +2960,7 @@ c
         numax=nu2
         allocate(eu2(numax))
         if (nec.gt.0) then
-          call union(nu1,eu1,nec,xss(ktce+1),nu2,eu2,numax)
+          call union(nu1,eu1,nec,xss(itce+1),nu2,eu2,numax)
         else
           do i=1,nu1
             eu2(i)=eu1(i)
@@ -2924,19 +2969,19 @@ c
         j=1
         do i=1,nu2
           e=eu2(i)
-          if (nec.gt.0.and.e.ge.xss(ktce+j).and.j.le.nec) then
-            e1=xss(ktce+j)
+          if (nec.gt.0.and.e.ge.xss(itce+j).and.j.le.nec) then
+            e1=xss(itce+j)
             e0=e1*0.999999999d0
             xs=xsvalue(nei,xss(itie+1),xss(itix),e0)
-            if (ne.gt.0) xs=xsvalue(ne,xss(itce+1),xss(itcx),e0)+xs
-            if (nec.gt.0)xs=cohxs(nec,xss(ktce+1),xss(ktcx),e0)+xs
+            if (ne.gt.0) xs=xsvalue(ne,xss(ktce+1),xss(ktcx),e0)+xs
+            if (nec.gt.0)xs=cohxs(nec,xss(itce+1),xss(itcx),e0)+xs
             call chendf(e0,x)
             call chendf(xs,y)
             write(ncur,'(2a11)')x,y
             do while (e1.lt.e)
               xs=xsvalue(nei,xss(itie+1),xss(itix),e1)
-              if (ne.gt.0) xs=xsvalue(ne,xss(itce+1),xss(itcx),e1)+xs
-              if (nec.gt.0)xs=cohxs(nec,xss(ktce+1),xss(ktcx),e1)+xs
+              if (ne.gt.0) xs=xsvalue(ne,xss(ktce+1),xss(ktcx),e1)+xs
+              if (nec.gt.0)xs=cohxs(nec,xss(itce+1),xss(itcx),e1)+xs
               call chendf(e1,x)
               call chendf(xs,y)
               write(ncur,'(2a11)')x,y
@@ -2945,8 +2990,8 @@ c
             j=j+1
           endif
           xs=xsvalue(nei,xss(itie+1),xss(itix),e)
-          if (ne.gt.0) xs=xsvalue(ne,xss(itce+1),xss(itcx),e)+xs
-          if (nec.gt.0)xs=cohxs(nec,xss(ktce+1),xss(ktcx),e)+xs
+          if (ne.gt.0) xs=xsvalue(ne,xss(ktce+1),xss(ktcx),e)+xs
+          if (nec.gt.0)xs=cohxs(nec,xss(itce+1),xss(itcx),e)+xs
           call chendf(e,x)
           call chendf(xs,y)
           write(ncur,'(2a11)')x,y
@@ -3118,14 +3163,22 @@ c
 c     Calculation of the incoherent elastic average cosine as a
 c     function of incident energy (Ein)
 c
-      if (ne.gt.0) then
+      if ((idpnc.eq.3.and.itca.ne.0).or.(idpnc.eq.5.and.jtca.ne.0)) then
+        if (idpnc.eq.3) then
+          nbin=ncl+1
+          ktce=itce
+          ktca=itca
+        else
+          nbin=nclj+1
+          ktce=jtce
+          ktca=jtca
+        endif
         write(ncur,'(a)')'Incoherent elastic'
-        nbin=ncl+1
-        j0=itca-1
+        j0=ktca-1
         do i=1,ne
           ij0=j0+(i-1)*nbin+1
           uu=avecos(xss(ij0),nbin)
-          call chendf(xss(itce+i),x)
+          call chendf(xss(ktce+i),x)
           call chendf(uu,y)
           write(ncur,'(2a11)')x,y
         enddo
@@ -3136,28 +3189,21 @@ c
 c     Calculation of coherent elastic average cosine as a
 c     function of incident energy (Ein)
 c
-      if (nec.gt.0) then
-        if (idpnc.eq.4.and.itce.gt.0) then
-          ktce=itce
-          ktcx=itcx
-        else
-          ktce=jtce
-          ktcx=jtcx
-        endif
+      if ((idpnc.eq.4.or.idpnc.eq.5).and.itce.ne.0) then
         write(ncur,'(a)')'Coherent elastic'
-        e=xss(ktce+1)
+        e=xss(itce+1)
         j=2
         do while (e.le.emax)
           uu=0.0d0
           sums=0.0d0
           s0=0.0d0
           do i=1,nec
-            ei=xss(ktce+i)
+            ei=xss(itce+i)
             if (ei.gt.e) then
               exit
             else
               uui=1.0d0-2.0d0*ei/e
-              s1=xss(ktcx+i-1)
+              s1=xss(itcx+i-1)
               ds=(s1-s0)/e
               uu=ds*uui+uu
               sums=ds+sums
@@ -3173,8 +3219,8 @@ c
           call chendf(uu,y)
           write(ncur,'(2a11)')x,y
           e=e*r0
-          if (e.ge.xss(ktce+j).and.j.le.nec) then
-            e=xss(ktce+j)
+          if (e.ge.xss(itce+j).and.j.le.nec) then
+            e=xss(itce+j)
             j=j+1
           endif
         enddo
