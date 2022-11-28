@@ -1,0 +1,40 @@
+H bound in ZrHn
+ACE    1
+ENDF   \ENDF-B-VIII.0\tsl\tsl-HinZrH.endf
+MAT    1
+ 7
+TEMP   1
+ 296.0
+MON    2
+NBIN   32
+ETHM   10.0
+TOL    0.001
+EPS    0.001
+THDAT  1
+ H_ZrH 1 1
+ 1001
+SUFF   .80
+MCNP   0
+KEEP   0 
+END
+Zr bound in ZrHn
+ACE    1
+ENDF   \ENDF-B-VIII.0\tsl\tsl-ZrinZrH.endf
+MAT    1
+ 58
+TEMP   1
+ 296.0
+MON    2
+NBIN   32
+ETHM   10.0
+TOL    0.001
+EPS    0.001
+THDAT   1
+ Zr_ZrH 1 3
+ 40000
+ 40090
+ 40091
+SUFF   .80
+MCNP   0
+KEEP   0
+END
