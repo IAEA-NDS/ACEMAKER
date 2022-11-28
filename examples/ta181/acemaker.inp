@@ -1,0 +1,16 @@
+Some title for the output (e.g., library and isotope)
+ENDF  input.endf
+ACE   0
+MAT   0
+TEMP  1
+ 293.6
+TOL   0.001
+YMIN  1.0E-20
+DXMU  0.01
+SUFF  .80
+PTAB  1
+PNDF  0
+MON   1
+KEEP  0
+MCNP  0
+END
