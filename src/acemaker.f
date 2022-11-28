@@ -7,12 +7,15 @@ c
 c     The package ACEMAKER includes the codes:
 c       1. ACEMAKER, the driver program
 c       2. Module SIXLIN for linearizing and processing MF6 data
-c       3. Module DOACE for generating fast ACE-formatted files from a
+c       3. Module GAMLIN to linerize gamma files MF12, MF13 & MF14.
+c       4. Module DOACE for generating fast ACE-formatted files from a
 c          PENDF tape prepared by the ACEMAKER driver.
-c       4. Module DOTSL for preparing thermal ACE-formatted files from
+c       5. Module DOTSL for preparing thermal ACE-formatted files from
 c          an ENDF-6 tape containing the thermal scattering law (TSL) 
-c       5. Module DODOS for preparing dosimetry ACE-formatted files from
+c       6. Module DODOS for preparing dosimetry ACE-formatted files from
 c          an ENDF-6 or a PENDF formatted tape prepared by ACEMAKER
+c       7. Module DOPHN for generating photo-nuclear ACE-formatted files
+c          from a PENDF tape prepared by ACEMAKER driver.
 c
 c     If required, the driver program calls the following codes from the
 c     PREPRO-2019 package:
@@ -71,7 +74,7 @@ c
 c     The keyword set of ACEMAKER is described below for each type of
 c     calculation:
 c
-c==========  For all types of calculations IACE=0,1,2  ===========
+c==========  For all types of calculations IACE=0,1,2,3  ===========
 c
 c     Keyword  Data-field(7-72)  Description
 c     -----------------------------------------------------------------
@@ -81,6 +84,7 @@ c     ACE                        generated:
 c                                  IACE=0 - fast    (Default)
 c                                  IACE=1 - thermal
 c                                  IACE=2 - dosimetry
+c                                  IACE=3 - photo-nuclear
 c
 c     endf      full-filename    ENDF-6 formatted data filename
 c     ENDF
@@ -90,12 +94,6 @@ c     MAT                        It should be followed by NMAT lines
 c                                containing material numbers (MAT),
 c                                one by line (NMAT=0 means first MAT
 c                                in the input ENDF tape, if IACE=0)
-c
-c     temp      NTEMP            Number of temperatures
-c     TEMP                       It should be followed by NTEMP lines
-c                                containing the temperatures in
-c                                Kelvin, one by line
-c                                (Default: NTEMP=1, 293.6 K)
 c
 c     tol       TOL              Maximum fraction tolerance for
 c     TOL                        linearization/reconstruction of data
@@ -123,6 +121,18 @@ c     end                        End of case
 c     END                        It should be the last keyword
 c
 c
+c==========        For IACE=0,1,2 (no photo-nuclear)       ===========
+c
+c     temp      NTEMP            Number of temperatures
+c     TEMP                       It should be followed by NTEMP lines
+c                                containing the temperatures in
+c                                Kelvin, one by line
+c                                (Default: NTEMP=1, 293.6 K)
+c
+c     For IACE=3 (photo-nuclear data) the temperature is taken from the
+c     ENDF-6 input tape.
+c
+c
 c========   For fast ACE-formatted file generation (ACE 0)   ==========
 c
 c     Keyword  Data-field(7-72)  Description
@@ -132,10 +142,6 @@ c     ymin      FYMIN            Minimum allowable value of
 c     YMIN                       cross section or distribution
 c                                (Default: FYMIN=1.0d-30)
 c
-c     dxmu      FMUMAX           Maximum cosine interval(mu) for
-c     DXMU                       angular distribution reconstruction
-c                                (Default: FMUMAX=0.001)
-c
 c     ptab      IPTAB            Probability table trigger in the URR
 c     PTAB                       IPTAB = 0/1 = no/yes (Default: IPTAB=1)
 c
@@ -143,8 +149,17 @@ c     pndf      IPNDF            trigger to keep the PENDF tape
 c     PNDF                       IPNDF = 0/1 = no/yes (Default: IPNDF=0)
 c
 c     urr       IURR             trigger to keep the PTAB intermediate
-c     URR                        file ZAzzzaaa.URR.ENDF from groupie
-c                                IURR = 0/1 = no/yes (Default: IURR=0)
+c     URR                        file ZAzzzaaa.URR.ENDF from GROUPIE or
+c                                to use an external file containing 
+c                                section MF2/MT153
+c                                IURR=0: use GROUPIE delete the file
+c                                    =1: use GROUPIE keep the file
+c                                    =2: use external file containing
+c                                        section MF2/MT153. In this
+c                                        case, next input lines should
+c                                        contain the name of the files
+c                                        including full path. One by
+c                                        line for each temperature. 
 c
 c========   For thermal ACE-formatted file generation (ACE 1)   =======
 c
@@ -211,6 +226,7 @@ c     The first line of each NMATH set contains the values of THZAID(i),
 c     NMIX(i) and NZAM(i) for material MAT(i). The following NZAM(i)
 c     lines contain the ZA value of each moderator material(one by line)
 c
+c
 c======   For dosimetry ACE-formatted file generation (ACE 2)  ========
 c
 c     Keyword  Data-field(7-72)  Description
@@ -223,6 +239,45 @@ c
 c     pndf      IPNDF            trigger to keep the PENDF tape
 c     PNDF                       IPNDF = 0/1 = no/yes (Default: IPNDF=0)
 c
+c     dpro      IDOS            trigger to force the calculation of
+c     DPRO                      dosimetry reactions from MF6 yields and
+c                               MF3 cross sections in spite of MF8 is 
+c                               not available
+c                               IDOS= 0/1 =no/yes (Default: IDOS=0)
+c
+c
+c====== For photo-nuclear ACE-formatted file generation (ACE 3) ========
+c
+c     Keyword  Data-field(7-72)  Description
+c     -----------------------------------------------------------------
+c
+c     ymin      FYMIN            Minimum allowable value of
+c     YMIN                       cross section or distribution
+c                                (Default: FYMIN=1.0d-30)
+c
+c     pndf      IPNDF            trigger to keep the PENDF tape
+c     PNDF                       IPNDF = 0/1 = no/yes (Default: IPNDF=0)
+c
+c     dneu      IDNEU            trigger for delayed neutron treament 
+c     DNEU                       IDNEU= -1: Delayed data are ignored
+c                                IDNEU=0/1: Prompt and delayed data are
+c                                           considered using multiple
+c                                           lAW=61 in the ACE-formatted
+c                                           file. If IDNEU=1, a first 
+c                                           order relativistic 
+c                                           correction is applied for
+c                                           converting data beetwen LAB
+c                                           and CM systems, if required.
+c                                           If IDNEU=0, no correction is
+c                                           applied. (Default: IDNEU=1)
+c
+c     DPRO      IDOS             dosimetry or activation trigger
+c                                IDOS=1 dosimetry/activation reactions
+c                                       are included                                                
+c                                IDOS=0 dosimetry/activation reactions
+c                                       are omitted on the ACE-formatted
+c                                       file. (Default: IDOS=0)
+c                     
 c======================================================================
 c
 c     The default input options for ACEMAKER are equivalent to the
@@ -230,7 +285,7 @@ c     following acemaker.inp file:
 c
 c     123456789012345678901234567890123456789012345678901234.. (columns)
 c
-c     ACEMAKER default title (default options)
+c     ACEMAKER default title (default options ACE 0)
 c     ACE    0
 c     ENDF   ENDFB.IN
 c     MAT    0
@@ -238,7 +293,6 @@ c     TEMP   1
 c      293.6
 c     TOL    0.001
 c     YMIN   1.0e-30
-c     DXMU   0.001
 c     SUFF   .00
 c     PTAB   1
 c     PNDF   0
@@ -247,7 +301,7 @@ c     KEEP   0
 c     MCNP   0
 c     END
 c
-c     The default is a fast ACE-formatted file generation.The keyword
+c     The default is a fast ACE-formatted file generation. The keyword
 c     MAT    0 in the 4th input line above, means the first material on
 c     the input ENDF tape (ENDFB.IN in this case)
 c
@@ -527,13 +581,34 @@ c      ZA013027.20y.xsd              (for xsdir)
 c
 c     Additionaly, if IMON=2, the files ZAzzzaaa.XXy.plt and
 c     ZAzzzaaa.XXy.cur are saved for PLOTTAB plottings.
-c     
+c
+c     d) Examples for IACE=3 (Photo-nuclear data)
+c
+c     Case 1: Photo nuclear data processing
+c     ACE    3                      
+c     ENDF   D:\PD2019\g_92-U-235_9228.endf  
+c     MAT    0                      
+c     MCNP   0                      
+c     SUFF   .38                    
+c     TOL    0.001                  
+c     YMIN   1.0E-30                                  
+c     MON    0                      
+c     PNDF   0                      
+c     KEEP   0                      
+c     DNEU   1
+c     DPRO   1                      
+c     END                           
+c
+c     In this example the delayed neutron data is considered and the 
+c     relativistic correction is applied. Dosimetry/activation cross
+c     sections are also included if any. The rest of the input options
+c     have the same meaning as above. The files ZA092235.38u.acef and
+c     ZA092235.38u.xsd are created.
+c    
       implicit real*8 (a-h,o-z)
       parameter (nmatx=300, ntempx=25)
-      dimension temp(ntempx)
-      dimension mat(nmatx),nmix(nmatx),nzam(nmatx),izam(16,nmatx)
-      character*80 cmd
-      character*72 fendf
+      character*132 cmd
+      character*80 fendf,fnurr(ntempx),furr
       character*66 title
       character*62 preprod,acemakerd
       character*11 ctime
@@ -542,6 +617,8 @@ c
       character*6  thzaid(nmatx)
       character*4  suff
       character*1  ch
+      dimension temp(ntempx)
+      dimension mat(nmatx),nmix(nmatx),nzam(nmatx),izam(16,nmatx)      
       data nin/20/,nou/21/,nlst/22/,nplt/30/,ncur/31/
       data preprod/'\ACEMAKER\exe\'/,acemakerd/'\ACEMAKER\exe\'/
       data fangmin/1.0d-10/,flegmin/1.0d-02/
@@ -581,8 +658,8 @@ c
       ic=1
       jc=0
       call getinp(ic,title,iace,fendf,nmat,mat,ntemp,temp,tol,mcnpx,
-     &  ymin,dxmu,xsuff,iptab,ipndf,iurr,imon,ikeep,nbin,ethmax,eps,
-     &  thzaid,nmix,nzam,izam)
+     &  ymin,xsuff,iptab,ipndf,iurr,fnurr,imon,ikeep,nbin,ethmax,
+     &  eps,thzaid,nmix,nzam,izam,idneu,idos)
 c
 c      case cycle
 c
@@ -595,11 +672,6 @@ c
        write(*,'(1x,a6,i4)')'Case: ',jc
        write(*,'(1x,a10)')'=========='
        write(*,'(1x,a7,a)')'Title: ',trim(title)
-       if (iace.eq.0) then
-         write(*,'(1x,a)')'Fast ACE-formatted file'
-       elseif (iace.eq.1) then
-         write(*,'(1x,a)')'Thermal ACE-formatted file'
-       endif
        write(nou,*)
        write(nou,'(a6,i4)')'Case: ',jc
        write(nou,'(a10)')'=========='
@@ -609,10 +681,16 @@ c
        write(nou,*)
        if (iace.eq.0) then
          write(nou,'(a)')'Fast ACE-formatted file'
+         write(*,'(1x,a)')'Fast ACE-formatted file'
        elseif (iace.eq.1) then
          write(nou,'(a)')'Thermal ACE-formatted file'
+         write(*,'(1x,a)')'Thermal ACE-formatted file'
        elseif (iace.eq.2) then
          write(nou,'(a)')'Dosimetry ACE-formatted file'
+         write(*,'(1x,a)')'Dosimetry ACE-formatted file'
+       elseif (iace.eq.3) then
+         write(nou,'(a)')'Photo-nuclear ACE-formatted file'
+         write(*,'(1x,a)')'Photo-nuclear ACE-formatted file'         
        endif
        write(nou,*)
        write(nou,'(a21,i6)')'Number of materials: ',nmat
@@ -621,13 +699,15 @@ c
        do i=1,nmat
          write(nou,'(i4,i11)')i,mat(i)
        enddo
-       write(nou,*)
-       write(nou,'(a24,i3)')'Number of temperatures: ',ntemp
-       write(nou,'(a23)')'======================='
-       write(nou,'(a5,a16)')'  No.',' TEMPERATURE [K]'
-       do i=1,ntemp
-         write(nou,'(i4,1pe13.5)')i,temp(i)
-       enddo
+       if (iace.ne.3) then
+         write(nou,*)
+         write(nou,'(a24,i3)')'Number of temperatures: ',ntemp
+         write(nou,'(a23)')'======================='
+         write(nou,'(a5,a16)')'  No.',' TEMPERATURE [K]'
+         do i=1,ntemp
+           write(nou,'(i4,1pe13.5)')i,temp(i)
+         enddo
+       endif
        write(nou,*)
        write(nou,'(a33,i2)')'MCNP trigger: 0/1 = MCNP/MCNPX : ',mcnpx
        write(nou,'(a,i2)')'Monitor option 0/1/2=min/max/plt:',imon
@@ -646,10 +726,16 @@ c
        xsuff0=xsuff
        if (iace.eq.0) then
          write(nou,'(a,4x,1pe12.5)')'Min. allowable cross section:',ymin
-         write(nou,'(a,12x,1pe12.5)')'Max. cosine interval:',dxmu
          write(nou,'(a,1x,i2)')'Probability tables 0/1 = no/yes:',iptab
          write(nou,'(a,4x,i2)')'Keep PENDF tape 0/1 = no/yes:',ipndf
          write(nou,'(a,5x,i2)')'Keep all tapes 0/1 = no/yes:',ikeep
+         write(nou,'(a,3x,i2)')'Del./Keep/Read URR data 0/1/2:',iurr
+         if (iurr.eq.2) then
+           write(nou,'(a4,a)')'  No.',' URR file (one by temperature)'
+           do i=1,ntemp
+             write(nou,'(i4,2x,a)')i,fnurr(i)
+           enddo 
+         endif
        elseif (iace.eq.1) then
          write(nou,'(a,i6)')'Number of equiprobable cosines:',nbin
          write(nou,'(a,1pe12.5)')'Maximum thermal energy:',ethmax
@@ -669,9 +755,13 @@ c
              enddo
            endif
          enddo
-       elseif (iace.eq.2) then
+       elseif (iace.eq.2.or.iace.eq.3) then
          write(nou,'(a,4x,1pe12.5)')'Min. allowable cross section:',ymin
-         write(nou,'(a,4x,i2)')'Keep PENDF tape 0/1 = no/yes:',ipndf         
+         write(nou,'(a,4x,i2)')'Keep PENDF tape 0/1 = no/yes:',ipndf
+         write(nou,'(a,4x,i2)')'Production IDOS 0/1 = no/yes:',idos
+         if (iace.eq.3) then
+           write(nou,'(a,4x,i2)')'Delayed neutrons opt. -1/0/1:',idneu
+         endif                  
        endif
 c
 c      Deleting internal files
@@ -690,6 +780,8 @@ c
        call delfile('SIXLIN.INP')
        call delfile('SIXLIN.LST')
        call delfile('SIXLIN.TMP')
+       call delfile('GAMLIN.INP')
+       call delfile('GAMLIN.LST')
        call delfile('SIGMA1.INP')
        call delfile('SIGMA1.LST')
        call delfile('FIXUP.INP')
@@ -707,7 +799,9 @@ c
        call delfile('DODOS.INP')
        call delfile('DODOS.LST')
        call delfile('DODOS.PLT')
-       call delfile('DODOS.CUR')       
+       call delfile('DODOS.CUR')
+       call delfile('DOPHN.INP')
+       call delfile('DOPHN.LST')       
        call delfile('ENDF6.ENDF')
        call delfile('LINEAR.PENDF')
        call delfile('RECENT.PENDF')
@@ -717,7 +811,7 @@ c
        call delfile('SIGMA1.PENDF')
        call delfile('FIXUP.PENDF')
        call delfile('GROUPIE.ENDF')
-       call delfile('GROUPIE.PENDF')
+       call delfile('URR.PENDF')
        call delfile('ENDF6.PENDF')
        call delfile('TEMP1.LST')
        call delfile('acemaker.log')
@@ -785,11 +879,11 @@ c
          elseif (nsub.eq.10020) then
            zai=1002.0d0
            izai=1002
-           ch='d'
+           ch='o'
          elseif (nsub.eq.10030) then
            zai=1003.0d0
            izai=1003
-           ch='t'
+           ch='r'
          elseif (nsub.eq.20030) then
            zai=2003.0d0
            izai=2003
@@ -801,11 +895,11 @@ c
          elseif (nsub.eq.0) then
            zai=0.0d0
            izai=0
-           ch='p'
+           ch='u'
          elseif (nsub.eq.3) then
            zai=0.0d0
            izai=0
-           ch='u'
+           ch='p'
          elseif (nsub.eq.12.and.iace.eq.1) then
            zai=1.0d0
            izai=1
@@ -822,7 +916,7 @@ c
 c
 c        Fast and Dosimetry ACE-files
 c
-         if (iace.eq.0.or.iace.eq.2) then
+         if (iace.eq.0.or.iace.eq.2.or.iace.eq.3) then
            open(nlst,file='TEMP1.LST')                  
            write(nlst,'(a)')'ACEMAKER listing file'     
            write(nlst,'(a)')'====================='
@@ -835,17 +929,18 @@ c
              write(nlst,'(a)')' Dosimetry ACE-formatted file'
            endif
 c
-c          LINEAR: linearize cross sections at 0.0 K
+c          LINEAR: linearize cross sections at temp0 K
 c
            itemp=0
            do it=1,ntemp
-             tempi=temp(i)
+             if (iace.eq.3) temp(it)=temp0
+             tempi=temp(it)
              if (temp0.lt.tempi) then
                itemp=1
                exit
              endif
            enddo
-           if (iace.eq.0.or.
+           if (iace.eq.0.or.iace.eq.3.or.
      &        (iace.eq.2.and.(itemp.eq.1.or.
      &        (temp0.eq.0.0d0.and.(lrp.eq.1.or.lrp.eq.0))))) then
              open(nin,file='LINEAR.INP')
@@ -880,7 +975,8 @@ c
 c          
 c          RECENT: reconstruct resonance cross sections at 0.0 K
 c          
-           if (temp0.eq.0.0d0.and.(lrp.eq.1.or.lrp.eq.0)) then
+           if ((iace.eq.0.or.iace.eq.2).and.
+     &         temp0.eq.0.0d0.and.(lrp.eq.1.or.lrp.eq.0)) then
              open(nin,file='RECENT.INP')
              write(nin,'(i11,1pe11.4,4i11)')0,ymin,1,1,1,imon
              write(nin,'(a)')'LINEAR.PENDF'
@@ -904,7 +1000,9 @@ c
              call cpfile(nin,'LINEAR.PENDF')
              close(nin)
              write(nlst,*)
-             write(nlst,'(a,a)')' ** Warning: RECENT not applied' 
+             if (iace.eq.0.or.iace.eq.2) then
+               write(nlst,'(a,a)')' ** Warning: RECENT not applied'
+             endif 
              write(nlst,'(12x,a)')' PENDF file copied as it is' 
            endif
            if (ikeep.ne.1) call delfile('LINEAR.PENDF') 
@@ -912,7 +1010,7 @@ c
 c
 c        Fast ACE-file
 c
-         if (iace.eq.0) then
+         if (iace.eq.0.or.iace.eq.3) then
 c
 c          LEGEND: Process/linearize angular distributions on MF4
 c
@@ -935,7 +1033,7 @@ c
            call cpfile(nlst,'LEGEND.LST')
            call delfile('LEGEND.LST')
 c
-c          SPECTRA: Process/linearize energy distributions on MF5
+c          SPECTRA: Process/linearize energy distributions on MF5 & MF15
 c
            open(nin,file='SPECTRA.INP')
            write(nin,'(2i11,1pe11.4,i11)')0,imon,ymin,1
@@ -959,11 +1057,11 @@ c
 c          SIXLIN: Process/linearize angular-energy distributions on MF6
 c
            open(nin,file='SIXLIN.INP')
-           write(nin,'(2i11,1pe11.4)')0,imon,ymin
+           write(nin,'(2i11)')0,imon
            write(nin,'(a)')'SPECTRA.PENDF'
            write(nin,'(a)')'SIXLIN.PENDF'
            write(nin,'(2i11)')mati,mati
-           write(nin,'(1p2e11.4)')tol,dxmu
+           write(nin,'(1p2e11.4)')tol,ymin
            write(nin,*)
            close(nin)
            call setcmd(nou,acemakerd,'sixlin',cmd)
@@ -976,11 +1074,31 @@ c
            write(nlst,*)
            call cpfile(nlst,'SIXLIN.LST')
            call delfile('SIXLIN.LST')
+c
+c          GAMLIN: Process/linearize gamma files MF12,MF13 & MF14
+c
+           open(nin,file='GAMLIN.INP')
+           write(nin,'(2i11)')0,imon
+           write(nin,'(a)')'SIXLIN.PENDF'
+           write(nin,'(a)')'GAMLIN.PENDF'
+           write(nin,'(2i11)')mati,mati
+           write(nin,'(1p2e11.4)')tol,ymin
+           write(nin,*)
+           close(nin)
+           call setcmd(nou,acemakerd,'gamlin',cmd)
+           call system(cmd)
+           if (ikeep.ne.1) then
+             call delfile('GAMLIN.INP')
+             call delfile('SIXLIN.PENDF')
+           endif           
+           write(nlst,*)
+           call cpfile(nlst,'GAMLIN.LST')
+           call delfile('GAMLIN.LST')                    
          endif
 c
 c         Temperature cycle
 c
-         if (iace.eq.0.or.iace.eq.2) close(nlst)
+         if (iace.eq.0.or.iace.eq.2.or.iace.eq.3) close(nlst)
          do it=1,ntemp
            tempi=temp(it)
            write(nou,'(a5,i4,a7,1pe11.4)')'MAT= ',mati,' TEMP= ',tempi
@@ -1003,7 +1121,11 @@ c
                if (mcnpx.eq.1) then
                  write(cmd,'(a8,a4,a1,a5)')fza,suff(1:4),ch,'c.lst'
                else
-                 write(cmd,'(a8,a3,a5)')fza,suff(1:3),'c.lst'
+                 if (ch.eq.'n') then
+                   write(cmd,'(a8,a3,a5)')fza,suff(1:3),'c.lst'
+                 else
+                   write(cmd,'(a8,a3,a1,a4)')fza,suff(1:3),ch,'.lst'
+                 endif
                endif
              elseif(iace.eq.2) then
                if (mcnpx.eq.1) then
@@ -1023,7 +1145,7 @@ c
                open(nin,file='SIGMA1.INP')
                write(nin,'(2i11,1p2e11.4,2i11)')0,imon,tempi,ymin,1,0
                if (iace.eq.0) then
-                 write(nin,'(a)')'SIXLIN.PENDF'
+                 write(nin,'(a)')'GAMLIN.PENDF'
                elseif (iace.eq.2) then
                  write(nin,'(a)')'RECENT.PENDF'
                endif
@@ -1045,7 +1167,7 @@ c
              else
                open(nin,file='SIGMA1.PENDF')
                if (iace.eq.0) then
-                 call cpfile(nin,'SIXLIN.PENDF')
+                 call cpfile(nin,'GAMLIN.PENDF')
                elseif (iace.eq.2) then
                  call cpfile(nin,'RECENT.PENDF')
                endif
@@ -1067,11 +1189,10 @@ c
                endif             
              endif
            endif
-c
-c          Fast ACE-file 
-c
            if (iace.eq.0) then
 c
+c            Fast ACE-file 
+c           
 c            FIXUP: fix formats and XS. Prepare unified energy grid
 c
              open(nin,file='FIXUP.INP')
@@ -1091,37 +1212,11 @@ c
 c
 c            Get probability tables
 c
-             if (iptab.gt.0) then
-               write(cmd,'(a8,a)')fza,'.SHIELD.LST'
-               call delfile(cmd)
-               write(cmd,'(a8,a)')fza,'.UNSHIELD.LST'
-               call delfile(cmd)
-               write(cmd,'(a8,a)')fza,'.MULTBAND.LST'
-               call delfile(cmd)
-               write(cmd,'(a8,a)')fza,'.MULTBAND.TAB'
-               call delfile(cmd)
-               write(cmd,'(a8,a)')fza,'.PLOT.CUR'
-               call delfile(cmd)
-               write(cmd,'(a8,a)')fza,'.URR.ENDF'
-               call delfile(cmd)
-c
-c              GROUPIE: Generate 2-bands(bins) probability tables in URR
-c
-               open(nin,file='GROUPIE.INP')
-               write(nin,'(4i11,1pe11.4,i11)')0,-11,2,0,1.0d-3,0
-               write(nin,'(a)')'FIXUP.PENDF'
-               write(nin,'(a)')'GROUPIE.ENDF'
-               write(nin,'(5i11)')1,1,1,1,1
-               write(nin,'(a20,i5,a6,1pe11.4)')'GROUPIE 2-BANDS MAT=',
-     &           mati,' TEMP=',tempi
-               write(nin,'(i6,i2,i3,i6,i2,i3)')mati,1,1,mati,99,999
-               write(nin,*)
-               close(nin)
-               call setcmd(nou,preprod,'groupie',cmd)
-               call system(cmd)
-               if (ikeep.ne.1) then
-                 call delfile('GROUPIE.INP')
-                 call delfile('GROUPIE.ENDF')
+             if (iptab.gt.0) then     
+               if (iurr.ne.2) then
+                 write(cmd,'(a8,a)')fza,'.URR.ENDF'
+                 furr=trim(cmd)
+                 call delfile(furr)
                  write(cmd,'(a8,a)')fza,'.SHIELD.LST'
                  call delfile(cmd)
                  write(cmd,'(a8,a)')fza,'.UNSHIELD.LST'
@@ -1130,31 +1225,72 @@ c
                  call delfile(cmd)
                  write(cmd,'(a8,a)')fza,'.MULTBAND.TAB'
                  call delfile(cmd)
-                 write(cmd,'(a8,a)')fza,'.PLOT.CUR'
+                 write(cmd,'(a8,a)')fza,'.PLOT.CUR'                 
                  call delfile(cmd)
-               endif
-               write(nlst,*)
-               call cpfile(nlst,'GROUPIE.LST')
-               call delfile('GROUPIE.LST')               
+c              
+c                GROUPIE: Generate 2-bands probability tables in URR
+c              
+                 open(nin,file='GROUPIE.INP')
+                 write(nin,'(4i11,1pe11.4,i11)')0,-11,2,0,1.0d-3,0
+                 write(nin,'(a)')'FIXUP.PENDF'
+                 write(nin,'(a)')'GROUPIE.ENDF'
+                 write(nin,'(5i11)')1,1,1,1,1
+                 write(nin,'(a20,i5,a6,1pe11.4)')'GROUPIE 2-BANDS MAT=',
+     &             mati,' TEMP=',tempi
+                 write(nin,'(i6,i2,i3,i6,i2,i3)')mati,1,1,mati,99,999
+                 write(nin,*)
+                 close(nin)
+                 call setcmd(nou,preprod,'groupie',cmd)
+                 call system(cmd)
+                 if (ikeep.ne.1) then
+                   call delfile('GROUPIE.INP')
+                   call delfile('GROUPIE.ENDF')
+                   write(cmd,'(a8,a)')fza,'.SHIELD.LST'
+                   call delfile(cmd)
+                   write(cmd,'(a8,a)')fza,'.UNSHIELD.LST'
+                   call delfile(cmd)
+                   write(cmd,'(a8,a)')fza,'.MULTBAND.LST'
+                   call delfile(cmd)
+                   write(cmd,'(a8,a)')fza,'.MULTBAND.TAB'
+                   call delfile(cmd)
+                   write(cmd,'(a8,a)')fza,'.PLOT.CUR'
+                   call delfile(cmd)
+                   write(cmd,'(a8,a)')fza,'.PLOT.PLT'
+                   call delfile(cmd)
+                 endif
+                 write(nlst,*)
+                 call cpfile(nlst,'GROUPIE.LST')
+                 call delfile('GROUPIE.LST')
+               else
+                 furr=trim(fnurr(it))
+                 call getdtime(cdate,ctime)
+                 if (nou.gt.0) then
+                   write(nou,'(1x,a,1x,a,1x,a,a)')ctime,cdate,
+     &                'URR data from ',trim(furr)
+                 endif
+                 write(*,'(1x,1x,a,1x,a,1x,a,a)')ctime,cdate,
+     &             'URR data from ',trim(furr)
+               endif                             
 c
-c              Checking fza=ZAzzzaaa.URR.ENDF
+c              Checking furr file containing PTABLE array
 c
-               write(cmd,'(a8,a)')fza,'.URR.ENDF'
-               title=trim(cmd)
                ichk=1
-               open(nin,file=title,status='old',err=20)
+               open(nin,file=furr,status='old',err=20)
                read(nin,'(a)',err=20,end=20)cmd
                read(nin,'(a)',err=20,end=20)cmd
                ichk=0
    20          close(nin)
                if (ichk.eq.0) then
+                 write(nlst,*)
+                 write(nlst,'(a,a)')' MF2/MT=152 & 153 data from file ',
+     &             trim(furr)              
 c
 c                MERGER: Merge sections 2/152 & 2/153
 c
                  open(nin,file='MERGER.INP')
-                 write(nin,'(a)')'GROUPIE.PENDF'
+                 write(nin,'(a)')'URR.PENDF'
                  write(nin,'(a,i4,a)')'PENDF tape MAT= ',mati,' PTAB-2'
-                 write(nin,'(a)')title
+                 write(nin,'(a)')trim(furr)
                  write(nin,'(a)')'FIXUP.PENDF'
                  write(nin,'(a3)')'END'
                  write(nin,'(i6,i2,i3,i6,i2,i3)')mati,1,1,mati,99,999
@@ -1164,7 +1300,7 @@ c
                  call system(cmd)
                  if (ikeep.ne.1) then
                    call delfile('MERGER.INP')
-                   if (iurr.ne.1) call delfile(title)
+                   if (iurr.eq.0) call delfile(furr)
                  endif
                  write(nlst,*)
                  call cpfile(nlst,'MERGER.LST')
@@ -1183,7 +1319,7 @@ c
              call delfile('DICTIN.LST')
              open(nin,file='DICTIN.INP')
              if (iptab.eq.1.and.ichk.eq.0) then
-               write(nin,'(a)')'GROUPIE.PENDF'
+               write(nin,'(a)')'URR.PENDF'
              else
                write(nin,'(a)')'FIXUP.PENDF'
              endif
@@ -1194,7 +1330,7 @@ c
              if (ikeep.ne.1) then
                call delfile('DICTIN.INP')
                call delfile('FIXUP.PENDF')
-               if (ichk.eq.0) call delfile('GROUPIE.PENDF')
+               if (ichk.eq.0) call delfile('URR.PENDF')
              endif
              write(nlst,*)
              call cpfile(nlst,'DICTIN.LST')
@@ -1206,7 +1342,11 @@ c
              if (mcnpx.eq.1) then
                write(cmd,'(a8,a4,a1,a6)')fza,suff(1:4),ch,'c.acef'
              else
-               write(cmd,'(a8,a3,a6)')fza,suff(1:3),'c.acef'
+               if (ch.eq.'n') then
+                 write(cmd,'(a8,a3,a6)')fza,suff(1:3),'c.acef'
+               else
+                 write(cmd,'(a8,a3,a1,a5)')fza,suff(1:3),ch,'.acef'
+               endif             
              endif
              title=trim(cmd)
              call delfile(title)
@@ -1256,7 +1396,11 @@ c
                if (mcnpx.eq.1) then
                  write(cmd,'(a8,a4,a1,a7)')fza,suff(1:4),ch,'c.pendf'
                else
-                 write(cmd,'(a8,a3,a7)')fza,suff(1:3),'c.pendf'
+                 if (ch.eq.'n') then
+                   write(cmd,'(a8,a3,a7)')fza,suff(1:3),'c.pendf'
+                 else
+                   write(cmd,'(a8,a3,a1,a6)')fza,suff(1:3),ch,'.pendf'
+                 endif               
                endif
                title=trim(cmd)
                call delfile(title)
@@ -1392,7 +1536,7 @@ c
              open(nin,file='DODOS.INP')
              write(nin,'(a)')'SIGMA1.PENDF'
              write(nin,'(a)')trim(title)
-             write(nin,'(2i11)')mati,imon
+             write(nin,'(3i11)')mati,imon,idos
              write(nin,'(1p2e11.4)')tol,ymin
              if (mcnpx.eq.1) then
                write(nin,'(7x,a4,i11)')suff(1:4),mcnpx
@@ -1460,9 +1604,65 @@ c
                call cpfile(nin,'SIGMA1.PENDF')
                close(nin)
              endif
-             call delfile('SIGMA1.PENDF')                        
-           endif
-           call delfile('a.tmp')
+             call delfile('SIGMA1.PENDF')
+           elseif (iace.eq.3) then
+c
+c            DOPHN: Photo-nuclear ACE-formatted file
+c            (Filename: ZAzzzaaa.xxu.acef)
+c
+             if (mcnpx.eq.1) then
+               write(cmd,'(a,a4,a1,a5)')trim(fza),suff(1:4),ch,'c.lst'
+             else
+               write(cmd,'(a,a3,a1,a4)')trim(fza),suff(1:3),ch,'.lst'
+             endif
+             title=trim(cmd)
+             call delfile(title)
+             open(nlst,file=title)
+             call cpfile(nlst,'TEMP1.LST')
+             if (mcnpx.eq.1) then
+               write(cmd,'(a,a4,a1,a6)')trim(fza),suff(1:4),ch,'c.acef'
+             else
+               write(cmd,'(a,a3,a1,a5)')trim(fza),suff(1:3),ch,'.acef'
+             endif
+             title=trim(cmd)
+             call delfile(title)
+             open(nin,file='DOPHN.INP')
+             write(nin,'(5i11)')0,imon,mcnpx,idneu,idos
+             write(nin,'(1p2e11.4)')tol,ymin
+             write(nin,'(a)')'GAMLIN.PENDF'
+             write(nin,'(a)')trim(title)
+             write(nin,'(i11)')mati
+             if (mcnpx.eq.1) then
+               write(nin,'(a4)')suff(1:4)
+             else
+               write(nin,'(a3,a1)')suff(1:3),' '
+             endif
+             write(nin,*)
+             close(nin)
+             call setcmd(nou,acemakerd,'dophn',cmd)
+             call system(cmd)
+             write(nou,'(a,a,a,i4,a,1pe11.4)')' ACE-file: ',
+     &         trim(title),' saved for MAT= ',mati,' TEMP= ',tempi
+             write(*,'(1x,a,a,a,i4,a,1pe11.4)')' ACE-file: ',
+     &         trim(title),' saved for MAT= ',mati,' TEMP= ',tempi
+             if (ikeep.ne.1) call delfile('DOPHN.INP')
+             write(nlst,*)
+             call cpfile(nlst,'DOPHN.LST')
+             call delfile('DOPHN.LST')
+             if (ipndf.gt.0.or.ikeep.eq.1) then
+               if (mcnpx.eq.1) then
+                 write(cmd,'(a8,a4,a1,a7)')fza,suff(1:4),ch,'c.pendf'
+               else
+                 write(cmd,'(a8,a3,a1,a6)')fza,suff(1:3),ch,'.pendf'
+               endif
+               title=trim(cmd)
+               call delfile(title)
+               open(nin,file=title)
+               call cpfile(nin,'GAMLIN.PENDF')
+               close(nin)
+             endif                           
+           endif          
+           if (ikeep.ne.1) call delfile('a.tmp')
            write(nlst,*)
            write(nlst,'(a)')'End of ACEMAKER listing file'
            write(nlst,'(a)')'============================'
@@ -1472,14 +1672,14 @@ c          End temperature cycle
 c
          enddo
          if (ikeep.ne.1) then
-           if (iace.eq.0) then
+           if (iace.eq.0.or.iace.eq.3) then
              call delfile('TEMP1.LST')
-             call delfile('SIXLIN.PENDF')
+             call delfile('GAMLIN.PENDF')
            elseif (iace.eq.1) then
              call delfile('ENDF6.ENDF')
            elseif (iace.eq.2) then
              call delfile('TEMP1.LST')
-             call delfile('RECENT.PENDF')
+             call delfile('RECENT.PENDF')                          
            endif
          endif
 c
@@ -1499,8 +1699,8 @@ c
 c       Get input options for next case
 c
         call getinp(ic,title,iace,fendf,nmat,mat,ntemp,temp,tol,mcnpx,
-     &    ymin,dxmu,xsuff,iptab,ipndf,iurr,imon,ikeep,nbin,ethmax,eps,
-     &    thzaid,nmix,nzam,izam)
+     &    ymin,xsuff,iptab,ipndf,iurr,fnurr,imon,ikeep,nbin,ethmax,
+     &    eps,thzaid,nmix,nzam,izam,idneu,idos)
        endif
 c
 c      End of case cycle
@@ -1520,14 +1720,13 @@ c
       end
 c======================================================================
       subroutine getinp(ic,title,iace,fendf,nmat,mat,ntemp,temp,tol,
-     &  mcnpx,ymin,dxmu,xsuff,iptab,ipndf,iurr,imon,ikeep,nbin,ethmax,
-     &  eps,thzaid,nmix,nzam,izam)
+     &  mcnpx,ymin,xsuff,iptab,ipndf,iurr,fnurr,imon,ikeep,nbin,
+     &  ethmax,eps,thzaid,nmix,nzam,izam,idneu,idos)
 c
 c      Read ACEMAKER input options
 c
       implicit real*8 (a-h,o-z)
-      character*80 line
-      character*72 fendf
+      character*80 line,fendf,fnurr(*)
       character*66 title
       character*6 keyw,thzaid(*)
       dimension temp(*),mat(*),nmix(*),nzam(*),izam(16,*)
@@ -1540,7 +1739,6 @@ c
       temp(1)=293.6d0
       tol=1.0d-3
       ymin=1.0d-30
-      dxmu=1.0d-3
       xsuff=0.0d0
       iptab=1
       ipndf=0
@@ -1551,6 +1749,8 @@ c
       ethmax=4.0d0
       eps=3.0d-3
       mcnpx=0
+      idneu=1
+      idos=0
       nmath=-1
       keyw='      '
       if (ic.eq.1) then
@@ -1575,21 +1775,18 @@ c
         keyw=line(1:6)
         if (index(keyw,'ace').gt.0.or.index(keyw,'ACE').gt.0) then
           read(line(7:80),*,err=20)iace
-          if (iace.lt.0.or.iace.gt.2) iace=0
+          if (iace.lt.0.or.iace.gt.3) iace=0
         elseif (index(keyw,'endf').gt.0.or.index(keyw,'ENDF').gt.0) then
-          i=7
-          do while (line(i:i).eq.' '.and.i.le.80)
-            i=i+1
+          backspace(inp)
+          read(inp,'(6x,a80)',end=10,err=20)line
+          i0=-1
+          do i=1,80
+            if (line(i:i).ne.' '.and.line(i:i).ne.'') then
+              i0=i
+              exit
+            endif
           enddo
-          if (i.le.80) then
-            fendf=' '
-            k=1
-            do while (line(i:i).ne.' '.and.i.le.80)
-              fendf(k:k)=line(i:i)
-              k=k+1
-              i=i+1
-            enddo
-          endif
+          if (i0.gt.0) fendf=trim(line(i0:80))          
         elseif (index(keyw,'mat').gt.0.or.index(keyw,'MAT').gt.0) then
           read(line(7:80),*,err=20)nmat
           if (nmat.le.0) then
@@ -1613,8 +1810,8 @@ c
           read(line(7:80),*,err=20)tol
           if (tol.le.0.0d0) then
             tol=1.0d-3
-          elseif (tol.lt.1.0d-9) then
-            tol=1.0d-9
+          elseif (tol.lt.1.0d-8) then
+            tol=1.0d-8
           endif
         elseif (index(keyw,'mcnp').gt.0.or.index(keyw,'MCNP').gt.0) then
           read(line(7:80),*,err=20)mcnpx
@@ -1625,13 +1822,6 @@ c
         elseif (index(keyw,'ymin').gt.0.or.index(keyw,'YMIN').gt.0) then
           read(line(7:80),*,err=20)ymin
           if (ymin.lt.1.0d-30) ymin=1.0d-30
-        elseif (index(keyw,'dxmu').gt.0.or.index(keyw,'DXMU').gt.0) then
-          read(line(7:80),*,err=20)dxmu
-          if (dxmu.le.0.0d0) then
-            dxmu=1.0d-3
-          elseif (dxmu.lt.1.0d-9) then
-            dxmu=1.0d-9
-          endif
         elseif (index(keyw,'ptab').gt.0.or.index(keyw,'PTAB').gt.0) then
           read(line(7:80),*,err=20)iptab
           if (iptab.ge.1) then
@@ -1648,10 +1838,13 @@ c
           endif
         elseif (index(keyw,'urr').gt.0.or.index(keyw,'URR').gt.0) then
           read(line(7:80),*,err=20)iurr
-          if (iurr.ge.1) then
-            iurr=1
-          else
+          if (iurr.lt.1.or.iurr.gt.2) then
             iurr=0
+          elseif (iurr.eq.2) then
+            do i=1,ntemp
+              read(inp,*,err=20)line
+              fnurr(i)=trim(line)
+            enddo            
           endif
         elseif (index(keyw,'mon').gt.0.or.index(keyw,'MON').gt.0) then
           read(line(7:80),*,err=20)imon
@@ -1673,8 +1866,8 @@ c
           read(line(7:80),*,err=20)eps
           if (eps.le.0.0d0) then
             eps=3.0d-3
-          elseif (eps.lt.1.0d-9) then
-            eps=1.0d-9
+          elseif (eps.lt.1.0d-8) then
+            eps=1.0d-8
           endif
         elseif (index(keyw,'thdat').gt.0.or.
      &          index(keyw,'THDAT').gt.0) then
@@ -1692,6 +1885,22 @@ c
               read(inp,*,err=20)izam(j,i)
             enddo
           enddo
+        elseif (index(keyw,'dneu').gt.0.or.index(keyw,'DNEU').gt.0) then
+          read(line(7:80),*,err=20)idneu
+          if (idneu.gt.0) then
+            idneu=1
+          elseif (idneu.lt.0) then
+            idneu=-1
+          else
+            idneu=0
+          endif
+        elseif (index(keyw,'dpro').gt.0.or.index(keyw,'DPRO').gt.0) then
+          read(line(7:80),*,err=20)idos
+          if (idos.le.0) then
+            idos=0
+          elseif (idos.gt.2) then
+            idos=1
+          endif                    
         elseif (index(keyw,'end').gt.0.or.index(keyw,'END').gt.0) then
           istop=1
         endif
@@ -1700,10 +1909,10 @@ c
 c
 c       Checking input options
 c
-        open (ndat,file=fendf,status='old',err=20)
+        open (ndat,file=fendf,status='old',err=30)
         if (nmat.eq.0) then
-          read(ndat,*,err=20,end=20)
-          read(ndat,'(a66,i4)',err=20,end=20)line(1:66),mat(1)
+          read(ndat,*,err=30,end=30)
+          read(ndat,'(a66,i4)',err=30,end=30)line(1:66),mat(1)
           nmat=1
         endif
         close(ndat)
@@ -1717,13 +1926,13 @@ c
       endif
       if (ikeep.eq.1) then
         ipndf=1
-        if (iptab.eq.1) then
+        if (iptab.eq.1.and.iace.eq.0) then
           iurr=1
         else
           iurr=0
         endif
       endif
-      if (iace.eq.0.and.imon.eq.2) imon=1
+      if ((iace.eq.0.or.iace.eq.3).and.imon.eq.2) imon=1
       if (iace.eq.1) then
         if (nmat.ne.nmath.or.nmath.le.0) then
           write(*,*)' *** Fatal error reading acemaker input'
@@ -1731,6 +1940,9 @@ c
           write(*,*)' *** Check input options'
           stop
         endif
+      elseif (iace.eq.3) then
+        ntemp=1
+        temp(1)=0.0d0
       endif
       return
 c
@@ -1740,7 +1952,14 @@ c
       return
    20 write(*,*)
       write(*,*)' *** Fatal error reading acemaker input'
-      write(*,*)' *** Check input options and input endf tape'
+      write(*,*)' *** Check input options and input ENDF tape'
+      write(*,*)' *** Keyword: ',keyw
+      write(*,*)' *** Line: ',trim(line)
+      close(inp)
+      stop
+   30 write(*,*)
+      write(*,*)' *** Fatal error reading input ENDF tape'
+      write(*,*)' *** Filename: ',trim(fendf)
       close(inp)
       stop
       end
@@ -1786,12 +2005,13 @@ c======================================================================
       character*11  ctime
       character*10  cdate
       call getdtime(cdate,ctime)
-      write(cmd,'(a,a)')trim(fpath),trim(codenm)
       if (nou.gt.0) then
-        write(nou,'(1x,a,1x,a,1x,a)')ctime,cdate,trim(cmd)
+        write(nou,'(1x,a,1x,a,1x,a,a)')ctime,cdate,trim(fpath),
+     &   trim(codenm)
       endif
-      write(*,'(1x,1x,a,1x,a,1x,a)')ctime,cdate,trim(cmd)
-      write(cmd,'(a,a,a)')trim(fpath),trim(codenm),' 1>a.tmp 2>&1'
+      write(*,'(1x,1x,a,1x,a,1x,a,a)')ctime,cdate,trim(fpath),
+     &   trim(codenm)
+      write(cmd,'(a,a,a)')trim(fpath),trim(codenm),' 1>>a.tmp 2>&1'
       return
       end
 c======================================================================

@@ -39,7 +39,8 @@ c     ZAID for U235 should be 92235.00c and minimum printout will be
 c     produced during DOACE processing.
 c
       implicit real*8 (a-h, o-z)
-      parameter (nnxc=300,npmax=500000,nbmax=2000000,nxsmax=200000000)
+      parameter (nnxc=300,npmax=2000000,nbmax=2000000,nxsmax=200000000)
+      parameter (tol=0.001d0,ymin=1.0d-30,bk=8.6173303d-11)
       character*1 line1(80),line2(80)
       character*4 suff
       character*10 hd,hm
@@ -181,7 +182,7 @@ c
         write(hz,'(i6,a3,a4)')matza,suff(1:3),'c   '
       endif
       write(hm,'(a6,i4)')'   mat',mat0
-      tz=8.617342d-11*temp
+      tz=bk*temp
       write(*,*)' Material=',mat0,' read'
       write(iou,*)
       write(iou,'(a,i5,a,i7,a,1pe15.8)')' Material=',mat0,' ZA=',matza,
@@ -832,8 +833,12 @@ c
         m6=iposm(nmf6,mf6,mti)
         if (m4.gt.0.and.m6.eq.0) then
           call findmt(nin,mat0,4,mti,icod)
-          call readcont(nin,c1,c2,l1,ltt,n1,n2,mat,mf,mt,ns)
-          call readcont(nin,c1,c2,li,lct,n1,n2,mat,mf,mt,ns)
+          call readcont(nin,c1,c2,lvt,ltt,n1,n2,mat,mf,mt,ns)
+          if (lvt.eq.1.and.mti.eq.2) then
+            call readlist(nin,c1,c2,li,lct,n1,n2,b)
+          else
+            call readcont(nin,c1,c2,li,lct,n1,n2,mat,mf,mt,ns)
+          endif
           if (ltt.eq.0.and.li.eq.1) then
             write(*,*)' mti=', mti,' MF4 LTT=0 LI=1 isotropic'
             write(iou,*)' mti=', mti,' MF4 LTT=0 LI=1 isotropic'
@@ -878,8 +883,8 @@ c             iso=isochk(np,y)
                   write(iou,*)' ERROR: Increase size xss ',nxss
                   stop
                 endif
-                xss(lc+j)=-(lxs-kand+1)
                 call cdfcal(np,x,y,jj,y2)
+                xss(lc+j)=-(lxs-kand+1)
                 xss(lxs)=jj
                 imu=lxs+1
                 xss(imu)=np
@@ -957,23 +962,40 @@ c             iso=isochk(np,y)
                   lxs=lc+ne+1
                   do j=1,ne
                     call readlist(nin,c1,e,lang,l2,nw,np,b)
-                    if (lang.eq.11) then
-                      jj=1
-                    elseif (lang.eq.12) then
-                      jj=2
+                    if (lang.eq.0) then
+                      nl=np
+                      do i=nl,1,-1
+                        b(i+1)=b(i)
+                      enddo
+                      b(1)=1.0d0
+                      call leg2lin(nl,b,np,x,y,tol,ymin,npmax)
+                    elseif (lang.eq.12.or.lang.eq.14) then
+                      i=0
+                      do ij=1,np
+                        i=i+1
+                        x(ij)=b(i)
+                        i=i+1
+                        y(ij)=b(i)
+                      enddo
+                      if (lang.ne.12) then
+                        nr=1
+                        nbt(1)=np
+                        ibt(1)=lang-10
+                        call linear(nr,nbt,ibt,np,x,y,tol,ymin,npmax)
+                        do i=1,np
+                          if (y1(i).lt.0.0d0) y1(i)=1.0d-30
+                        enddo
+                        jj=2
+                        c=1.0d0
+                        call renorm(np,x,y,jj,c,fn)                        
+                      endif
                     else
-                      write(iou,*)' Non a linearly interpolable cosine',
-     &                ' grid. Run SIXLIN'
+                      write(iou,*)' MF6/LAW=2 LANG=',lang,' not allowed'
                       stop
                     endif
-                    do i=1,np
-                      i2=i+i
-                      x(i)=b(i2-1)
-                      y(i)=b(i2)
-                    enddo
                     xss(le+j)=e*ev2mev
                     write(iou,*)' Incident energy j=',j,' E=',xss(le+j),
-     &              ' MeV'
+     &                ' MeV'
 c                   iso=isochk(np,y)
                     iso=0
                     if (iso.eq.1) then
@@ -986,13 +1008,14 @@ c                   iso=isochk(np,y)
                         write(iou,*)' ERROR: Increase size xss ',nxss
                         stop
                       endif
+                      jj=2
+                      call cdfcal(np,x,y,jj,y2)
                       xss(lc+j)=-(lxs-kand+1)
                       xss(lxs)=jj
                       imu=lxs+1
                       xss(imu)=np
                       ipdf=imu+np
                       icdf=ipdf+np
-                      call cdfcal(np,x,y,jj,y2)
                       if (imon.gt.0) then
                         write(iou,*)' Angular distribution intt=',jj,
      &                  ' np=',np
@@ -1144,16 +1167,6 @@ c
             lxsd=lxsn+ne+1
             do j=1,ne
               call readtab1(nin,c1,e,l1,l2,nr,nep,nbt,ibt,x,y)
-              if (nep.gt.npmax) then
-                write(iou,*)' ERROR: Increase TAB1 arrays size ',npmax
-                stop
-              endif
-              if ((lxs+2+3*nep).gt.nxss) then
-                write(iou,*)' ERROR: Increase size xss ',nxss
-                stop
-              endif
-              xss(lxs+j)=e*ev2mev
-              xss(lxsn+j)=lxsd-kdlw+1
               call checklaw(nr,ibt,icod)
               if (icod.lt.0) then
                 write(iou,*)' ERROR: E'' data are not lin-lin or',
@@ -1161,8 +1174,7 @@ c
                 write(iou,*)' Use SPECTRA'
                 stop
               endif
-              if (icod.eq.0)icod=2
-              xss(lxsd)=icod
+              if (icod.eq.0)icod=2              
               if (qi.lt.0.0d0) then
                 iep=0
                 i=1
@@ -1177,6 +1189,18 @@ c
                   nep=iep
                 endif
               endif
+              if (nep.gt.npmax) then
+                write(iou,*)' ERROR: Increase TAB1 arrays size ',npmax
+                stop
+              endif
+              if ((lxs+2+3*nep).gt.nxss) then
+                write(iou,*)' ERROR: Increase size xss ',nxss
+                stop
+              endif
+              call cdfcal(nep,x,y,icod,y2)
+              xss(lxs+j)=e*ev2mev
+              xss(lxsn+j)=lxsd-kdlw+1              
+              xss(lxsd)=icod                            
               lxsd=lxsd+1
               xss(lxsd)=nep
               if (imon.gt.0) then
@@ -1185,7 +1209,6 @@ c
                 write(iou,*)'   i  ','   Outgoing energy  ',
      &          ' pdf                ',' cdf                '
               endif
-              call cdfcal(nep,x,y,icod,y2)
               nep2=nep+nep
               do i=1,nep
                 xss(lxsd+i)=x(i)*ev2mev
@@ -1308,7 +1331,7 @@ c
                 if (ytot.gt.0.0d0) then
                   xss(lxs+npy+iy)=y(iy)/ytot
                 else
-                  xss(lxs+npy+iy)=1.0d0
+                  xss(lxs+npy+iy)=0.0d0
                 endif
               enddo
               lxs=lxs+2*npy+1
@@ -1324,12 +1347,15 @@ c
                 if (law.eq.1) then
                   if(lang.eq.2) then
                     lawn=44
-                  elseif (lang.eq.11.or.lang.eq.12) then
+                  elseif (lang.eq.1.or.(lang.ge.11.and.lang.le.15)) then
                     lawn=61
+                    if (lang.eq.11) then
+                      intmu=1
+                    else
+                      intmu=2
+                    endif
                   else
-                    write(iou,*)' ERROR: law=',law,' lang=',lang,' not',
-     &              ' coded'
-                    write(iou,*)' Run SIXLIN'
+                    write(iou,*)' MF6/LAW=1 LANG=',lang,' not allowed'
                     stop
                   endif
                   xss(lawxs)=lawn
@@ -1358,7 +1384,8 @@ c
                 do j=1,ne
                   call readlist(nin,c1,e,nd,na,nw,nep,b)
                   if (nw.gt.nbmax) then
-                    write(iou,*)' ERROR: Increase list arrays ',nbmax
+                    write(iou,*)' ERROR: Increase size of list arrays'
+                    write(iou,*)' Set nbmax greater than ',nbmax
                     stop
                   endif
                   ee=e*ev2mev
@@ -1391,14 +1418,13 @@ c
                     write(iou,*)' Increase size XSS', nxss
                     stop
                   endif
+                  call cdfcal1(nep,nd,x,y,lep,y1)
                   xss(lxsd)=lep+10*nd
                   lxsd=lxsd+1
                   xss(lxsd)=nep
                   nep2=nep+nep
                   nep3=nep2+nep
                   nep4=nep3+nep
-                  lxscd=lxsd+nep4+1
-                  call cdfcal1(nep,nd,x,y,lep,y1)
                   do ip=1,nep
                     xss(lxsd+ip)=x(ip)*ev2mev
                     if (ip.gt.nd) then
@@ -1412,7 +1438,7 @@ c
                     do ip=1,nep
                       if (na.eq.0) then
                         xss(lxsd+nep3+ip)=0.0d0
-                        xss(lxsd+nep4+ip)=1.0d-10
+                        xss(lxsd+nep4+ip)=1.0d-20
                       else
                         ip0=na2*(ip-1)
                         xss(lxsd+nep3+ip)=b(ip0+3)
@@ -1426,32 +1452,41 @@ c
                     enddo
                     lxsd=lxsd+5*nep+1
                   elseif (lawn.eq.61) then
-                    nmu0=na/2
+                    lxscd=lxsd+nep4+1
                     do ip=1,nep
                       xss(lxsd+nep3+ip)=lxscd-kdlw+1
-                      if (nmu0.gt.0) then
-                        intmu=lang-10
-                        xss(lxscd)=intmu
-                        ip0=na2*(ip-1)
-                        do im=1,nmu0
-                          im0=ip0+2*im+1
-                          x2(im)=b(im0)
-                          y2(im)=b(im0+1)
-                        enddo
-                        if (intmu.eq.2.and.nmu0.gt.3) then
-                          call thinxs(x2,y2,nmu0,x,y,nmu,5.0d-4)
-                        else
-                          nmu=nmu0
+                      ip0=na2*(ip-1)+2
+                      if (na.gt.0.and.b(ip0).gt.0.0d0) then                                              
+                        if (lang.eq.1) then
+                          call leg2lin(na,b(ip0),nmu,x,y,tol,ymin,npmax)
+                        else                        
+                          im0=ip0
+                          nmu=na/2
                           do im=1,nmu
-                            x(im)=x2(im)
-                            y(im)=y2(im)
+                            im0=im0+1
+                            x(im)=b(im0)
+                            im0=im0+1
+                            y(im)=2.0d0*b(im0)*b(ip0)
                           enddo
+                          if (lang.gt.12) then
+                            nr=1
+                            nbt(1)=nmu
+                            ibt(1)=lang-10
+                            call linear(nr,nbt,ibt,nmu,x,y,tol,ymin,
+     &                         npmax)
+                            do im=1,nmu
+                              if (y(im).lt.0.0d0) y(im)=1.0d-30
+                            enddo                          
+                            c=b(i0)
+                            ilaw=2                          
+                            call renorm(nmu,x,y,ilaw,c,fn)                                                        
+                          endif
                         endif
-                        write(iou,*)' mti= ',mti,' ip= ',ip,
-     &                  ' initial nmu= ',nmu0,' final nmu= ',nmu
+                        call cdfcal(nmu,x,y,intmu,y1)
+                        xss(lxscd)=intmu
+                        write(iou,*)' mti= ',mti,' ip= ',ip,' nmu= ',nmu
                         lxscd=lxscd+1
                         xss(lxscd)=nmu
-                        call cdfcal(nmu,x,y,intmu,y1)
                         nmu2=nmu+nmu
                         do im=1,nmu
                           xss(lxscd+im)=x(im)
@@ -1554,6 +1589,14 @@ c
         write(*,*)' mtinel=',mtinel,' mtabso=',mtabso,' temp=',tempz
         write(iou,*)' PTABLE nbin=',nbin,' intunr=',iintt,' lssf=',lssf
         write(iou,*)' mtinel=',mtinel,' mtabso=',mtabso,' temp=',tempz
+        if (c2.gt.0.0d0.and.lssf.eq.0) then
+          lssf0=1
+          write(*,*)' PTABLE changed to self-shielding factors(LSSF=1)'
+          write(iou,*)' PTABLE changed to self-shielding factors',
+     &                '(LSSF=1)'      
+        else
+          lssf0=0
+        endif        
         if (mtinel.ne.0) then
           ilf=mtinel
         else
@@ -1575,30 +1618,80 @@ c
         nbin5=nbin4+nbin
         nbin6=nbin5+nbin
         nrec=1+nbin6
+        xx1=b(1)
+        xx2=b(1+nrec)
+        xx=edelta(xx1,1.0d0)
+        if (xx.ge.xx2) xx=0.5d0*(xx1+xx2)
+        b(1)=xx
         xss(lxs)=nunr
         xss(lxs+1)=nbin
         xss(lxs+2)=iintt
         xss(lxs+3)=ilf
         xss(lxs+4)=ioa
-        xss(lxs+5)=lssf
+        if (lssf0.eq.1) then
+          xss(lxs+5)=lssf0
+        else
+          xss(lxs+5)=lssf
+        endif
         lxs=lxs+6
         do ie=1,nunr
           ie1=ie-1
           je=1+ie1*nrec
           xss(lxs+ie1)=b(je)*ev2mev
           lx=lxs+nunr-1+ie1*nbin6
+          if (lssf0.eq.1) then
+            do k=1,5
+              x(k)=0.0d0
+            enddo
+            do ibin=1,nbin
+              prob=b(je+ibin)
+              x(1)=b(je+nbin+ibin)*prob+x(1)
+              x(2)=b(je+nbin2+ibin)*prob+x(2)
+              x(3)=b(je+nbin3+ibin)*prob+x(3)
+              x(4)=b(je+nbin4+ibin)*prob+x(4)
+              x(5)=b(je+nbin5+ibin)*prob+x(5)
+            enddo
+          endif
           sum=0.0d0
           do ibin=1,nbin
             sum=sum+b(je+ibin)
             xss(lx+ibin)=sum
-            xss(lx+nbin+ibin)=b(je+nbin+ibin)
-            xss(lx+nbin2+ibin)=b(je+nbin2+ibin)
-            xss(lx+nbin3+ibin)=b(je+nbin3+ibin)
-            xss(lx+nbin4+ibin)=b(je+nbin4+ibin)
-            if (lssf.eq.0) then
-              xss(lx+nbin5+ibin)=b(je+nbin5+ibin)*ev2mev
+            if (lssf0.eq.1) then
+              if (x(1).ne.0.0d0) then
+                xss(lx+nbin+ibin)=b(je+nbin+ibin)/x(1)
+              else
+                xss(lx+nbin+ibin)=1.0d0
+              endif
+              if (x(2).ne.0.0d0) then
+                xss(lx+nbin2+ibin)=b(je+nbin2+ibin)/x(2)
+              else
+                xss(lx+nbin2+ibin)=1.0d0
+              endif
+              if (x(3).ne.0.0d0) then
+                xss(lx+nbin3+ibin)=b(je+nbin3+ibin)/x(3)
+              else
+                xss(lx+nbin3+ibin)=1.0d0
+              endif
+              if (x(4).ne.0.0d0) then
+                xss(lx+nbin4+ibin)=b(je+nbin4+ibin)/x(4)
+              else
+                xss(lx+nbin4+ibin)=1.0d0
+              endif
+              if (x(5).ne.0.0d0) then
+                xss(lx+nbin5+ibin)=b(je+nbin5+ibin)/x(5)
+              else
+                xss(lx+nbin5+ibin)=1.0d0
+              endif
             else
-              xss(lx+nbin5+ibin)=b(je+nbin5+ibin)
+              xss(lx+nbin+ibin)=b(je+nbin+ibin)
+              xss(lx+nbin2+ibin)=b(je+nbin2+ibin)
+              xss(lx+nbin3+ibin)=b(je+nbin3+ibin)
+              xss(lx+nbin4+ibin)=b(je+nbin4+ibin)
+              if (lssf.eq.1) then
+                xss(lx+nbin5+ibin)=b(je+nbin5+ibin)
+              else
+                xss(lx+nbin5+ibin)=b(je+nbin5+ibin)*ev2mev
+              endif            
             endif
           enddo
           xss(lx+nbin)=1.0d0
@@ -1726,10 +1819,10 @@ c
             xss(ldat+ne+ie-1)=lxs-kdnd+1
             lep=ibt(1)
             if (lep.gt.2) lep=2
+            call cdfcal(nep,x,y,lep,y2)
             xss(lxs)=lep
             lxs=lxs+1
             xss(lxs)=nep
-            call cdfcal(nep,x,y,lep,y2)
             nep2=nep+nep
             do i=1,nep
               xss(lxs+i)=x(i)*ev2mev
@@ -1874,17 +1967,21 @@ c
       character*11 x0,x1
       icod=0
       call ff2chx(x(1),x0)
+      read(x0,'(e11.0)')x(1)
       y0=y(1)
       j=1
       i=2
       do while (i.le.n)
         call ff2chx(x(i),x1)
         y1=y(i)
-        if (x0.eq.x1.and.y0.eq.y1) then
-          write(*,*)' duplicate point at ',x(i),' ', x1,' ',y1
+        if (x0.eq.x1.and.((y0.eq.y1).or.(i.eq.n.and.y1.eq.0.0d0))) then
+          write(*,*)' Warning: duplicate point at x=',x1,' y=',y1,
+     &      ' i=',i,' removed'
           if (nerr.gt.0) then
-            write(nerr,*)' duplicate point at ',x(i),' ', x1,' ',y1
+            write(nerr,*)' Warning: duplicate point at x=',x1,' y=',y1,
+     &        ' i=',i,' removed'
           endif
+          icod=icod+1
         else
           j=j+1
           read(x1,'(e11.0)')x(j)
@@ -1901,22 +1998,35 @@ c
       do while (i.le.n)
         call ff2chx(x(i),x1)
         if (x0.eq.x1) then
-          do while(x0.eq.x1)
+          if (i.lt.n) then
+            do while(x0.eq.x1.and.i.lt.n)
+              icod=icod+1
+              i=i+1
+              call ff2chx(x(i),x1)
+            enddo
+          endif
+          if (i.lt.n) then
+            i=i-1
+            xx=edelta(x(i),1.0d0) 
+            if (xx.ge.x(i+1)) xx=0.5d0*(x(i)+x(i+1))
+            call ff2chx(xx,x1)
+            j=j+1
+            x(j)=xx
+            y(j)=y(i)
+            write(*,*)' Warning: discontinuity at x=',x0,' i=',i,
+     &        ' x(i) set to ',x1
+            if (nerr.gt.0) then
+              write(nerr,*)' Warning: discontinuity at x=',x0,' i=',i,
+     &          ' x(i) set to ',x1
+            endif
+          else
             icod=icod+1
-            i=i+1
-            call ff2chx(x(i),x1)
-          enddo
-          i=i-1
-          call ff2chx(x(i),x1)
-          x(j)=edelta(x(i),-1.0d0)
-          j=j+1
-          x(j)=edelta(x(i),1.0d0)
-          y(j)=y(i)
-          write(*,*)' discontinuity at x=',x1,' set to ',
-     &                x(j-1),' ',x(j)
-          if (nerr.gt.0) then
-            write(nerr,*)' discontinuity at x=',x1,' set to ',
-     &                     x(j-1),' ',x(j)
+            write(*,*)' Warning: discontinuity at x=',x0,' i=',i,
+     &        ' x(i) removed'
+            if (nerr.gt.0) then
+              write(nerr,*)' Warning: discontinuity at x=',x0,' i=',i,
+     &          ' x(i) removed'
+            endif            
           endif
         else
           j=j+1
@@ -1933,7 +2043,7 @@ C======================================================================
       subroutine ff2chx(xx,strxx)
       implicit real*8 (a-h,o-z)
 c
-c     pack value into 11-character string
+c     pack value into 11-character string (9 digit precision)
 c
       character*11 strxx
       character*12 str12
@@ -2062,6 +2172,66 @@ c
       endif
       return
       end
+C======================================================================      
+      subroutine chendf(ffin,str11)
+      implicit real*8 (a-h,o-z)
+c
+c     pack value into 11-character string (8 digit precision)
+c
+      character*11 str11
+      character*12 str12
+      character*13 str13
+      character*15 str15
+      write(str15,'(1pe15.8)')ffin
+      read(str15,'(e15.0)')ff
+      aff=dabs(ff)
+      if (aff.lt.1.00000d-99) then
+        str11=' 0.0       '
+      elseif (aff.lt.9.99999d+99) then
+        write(str15,'(1pe15.8)')ff
+        read(str15,'(12x,i3)')iex
+        select case (iex)
+          case (-9,-8,-7,-6,-5,-4, 9)
+            write(str13,'(1pe13.6)')ff
+            str11(1:9)=str13(1:9)
+            str11(10:10)=str13(11:11)
+            str11(11:11)=str13(13:13)
+          case (-3,-2,-1)
+            write(str12,'(f12.9)')ff
+            str11(1:1)=str12(1:1)
+            str11(2:11)=str12(3:12)
+          case (0)
+            write(str11,'(f11.8)')ff
+          case (1)
+            write(str11,'(f11.7)')ff
+          case (2)
+            write(str11,'(f11.6)')ff
+          case (3)
+            write(str11,'(f11.5)')ff
+          case (4)
+            write(str11,'(f11.4)')ff
+          case (5)
+            write(str11,'(f11.3)')ff
+          case (6)
+            write(str11,'(f11.2)')ff
+          case (7)
+            write(str11,'(f11.1)')ff
+          case (8)
+            write(str11,'(f11.0)')ff
+          case default
+            write(str12,'(1pe12.5)')ff
+            str11(1:8)=str12(1:8)
+            str11(9:11)=str12(10:12)
+        end select
+      else
+        if (ff.lt.0.0000d0) then
+          str11='-9.99999+99'
+        else
+          str11=' 9.99999+99'
+        endif
+      endif
+      return
+      end            
 C======================================================================
       real*8 function edelta(ffin,fdig)
       implicit real*8 (a-h,o-z)
@@ -2239,14 +2409,20 @@ c      Function f is given by an ENDF-6/TAB1 record
 c
         implicit real*8 (a-h, o-z)
         dimension nbt(*),ibt(*),x(*),y(*)
+        character*11 cx0,cx1
         if (x0.lt.x(1).or.x0.gt.x(np)) then
           fvalue=0.0d0
         else
-          i=1
+          call chendf(x0,cx0)
+          i=2
           do while (i.le.np.and.x(i).lt.x0)
             i=i+1
           enddo
-          if (x0.eq.x(i)) then
+          i1=i-1
+          call chendf(x(i1),cx1)
+          if (cx0.eq.cx1) then
+            fvalue=y(i1)
+          elseif (x0.eq.x(i)) then
             fvalue=y(i)
           else
             j=1
@@ -2254,7 +2430,7 @@ c
               j=j+1
             enddo
             ilaw=ibt(j)
-            call terp1m(x(i-1),y(i-1),x(i),y(i),x0,y0,ilaw)
+            call terp1m(x(i1),y(i1),x(i),y(i),x0,y0,ilaw)
             fvalue=y0
           endif
         endif
@@ -2268,71 +2444,27 @@ c      Function f is given by np linearly interpolable tabulated points.
 c
         implicit real*8 (a-h, o-z)
         dimension x(*),y(*)
+        character*11 cx0,cx1
         if (x0.lt.x(1).or.x0.gt.x(np)) then
           fvalin=0.0d0
         else
-          i=1
+          call chendf(x0,cx0)
+          i=2
           do while (i.le.np.and.x(i).lt.x0)
             i=i+1
           enddo
-          if (x0.eq.x(i)) then
+          i1=i-1
+          call chendf(x(i1),cx1)
+          if (cx0.eq.cx1) then
+            fvalin=y(i1)
+          elseif (x0.eq.x(i)) then
             fvalin=y(i)
           else
-            call terp1m(x(i-1),y(i-1),x(i),y(i),x0,y0,2)
+            call terp1m(x(i1),y(i1),x(i),y(i),x0,y0,2)
             fvalin=y0
           endif
         endif
         return
-      end
-C======================================================================
-      subroutine terp1m(x1,y1,x2,y2,x,y,i)
-c
-c      interpolate one point using ENDF-6 interpolation laws
-c      (borrowed and modified from NJOY)
-c      (x1,y1) and (x2,y2) are the end points
-c      (x,y) is the interpolated point
-c      i is the interpolation law (1-5)
-c
-c     *****************************************************************
-      implicit real*8 (a-h,o-z)
-      parameter (zero=0.0d0)
-c
-c     *** x1=x2
-      if (x2.eq.x1) then
-        y=y1
-        return
-      endif
-c
-c     ***y is constant
-      if (i.eq.1.or.y2.eq.y1.or.x.eq.x1) then
-         y=y1
-c
-c     ***y is linear in x
-      else if (i.eq.2) then
-         y=y1+(x-x1)*(y2-y1)/(x2-x1)
-c
-c     ***y is linear in ln(x)
-      else if (i.eq.3) then
-         y=y1+log(x/x1)*(y2-y1)/log(x2/x1)
-c
-c     ***ln(y) is linear in x
-      else if (i.eq.4) then
-         y=y1*exp((x-x1)*log(y2/y1)/(x2-x1))
-c
-c     ***ln(y) is linear in ln(x)
-      else if (i.eq.5) then
-         if (y1.eq.zero) then
-            y=y1
-         else
-            y=y1*exp(log(x/x1)*log(y2/y1)/log(x2/x1))
-         endif
-c
-c     ***coulomb penetrability law (charged particles only)
-      else
-        write(*,*) ' Interpolation law: ',i,' not allowed'
-        stop
-      endif
-      return
       end
 C======================================================================
       function isconst(n,y)
@@ -2592,11 +2724,13 @@ c       lep=ilaw-(ilaw/10)*10
 c              y        x
 c       lep=1 constant
 c       lep=2 lin      lin
+c       lep=3 lin      log
 c       lep=4 log      lin
-c
+c       lep=5 log      log
 c
       implicit real*8 (a-h, o-z)
       dimension x(*),y(*),cdf(*)
+      parameter (eps=1.0d-6, zero=0.0d0)
       ll=ilaw/10
       lep=ilaw-ll*10
       sum=0.0d0
@@ -2617,19 +2751,69 @@ c
         do j=2,np
           j1=j-1
           xr=x(j)-x(j1)
-          y1=y(j1)
-          if (y1.ne.0.0d0.and.xr.ne.0.0d0) then
-            yr=y(j)/y1
-            if (yr.gt.1.0d-12) then
-              sum=sum+y1*xr*(yr-1.0d0)/dlog(yr)
+          if (xr.gt.zero) then
+            y1=y(j1)
+            y2=y(j)
+            yr=y2-y1
+            ay1=abs(y1)
+            ayr=abs(yr)            
+            if (y1*y2.gt.zero.and.ayr.gt.eps*ay1) then
+              sum=sum+xr*yr/log(y2/y1)
             else
-              sum=sum+y1*xr
+              sum=sum+0.5d0*(y1+y2)*xr
+            endif
+          endif
+          cdf(j)=sum
+        enddo
+      elseif (lep.eq.3) then                                  
+        do j=2,np                                            
+          j1=j-1                                              
+          x1=x(j1)                                                                                         
+          x2=x(j)                                            
+          xr=x2-x1                                           
+          if (xr.gt.zero) then
+            y1=y(j1)                                                                                         
+            y2=y(j)
+            ax1=abs(x1)                                              
+            if (x1*x2.gt.zero.and.xr.gt.eps*ax1) then    
+              sum=sum+x2*y2-x1*y1-xr*(y2-y1)/log(x2/x1)  
+            else                                              
+              sum=sum+0.5d0*(y1+y2)*xr                   
+            endif                                             
+          endif
+          cdf(j)=sum                                               
+        enddo                                                 
+      elseif (lep.eq.5) then
+        do j=2,np
+          j1=j-1
+          x1=x(j1)
+          x2=y(j)
+          xr=x2-x1
+          if (xr.gt.zero) then
+            y1=y(j1)
+            y2=y(j)            
+            yr=y2-y1
+            ax1=abs(x1)
+            ay1=abs(y1)
+            ayr=abs(yr)
+            x12=x1*x2
+            y12=y1*y2
+            if (x12.gt.zero.and.xr.gt.eps*ax1.and.
+     &          y12.gt.zero.and.ayr.gt.eps*ay1) then
+              d=log(y2/y1)/log(x2/x1)+1.0d0
+              sum=sum+y1*x1*(((x2/x1)**d)-1.0d0)/d
+            elseif (y12.gt.zero.and.ayr.gt.eps*ay1) then
+              sum=sum+xr*yr/log(y2/y1)
+            elseif (x12.gt.zero.and.xr.gt.eps*ax1) then
+              sum=sum+x2*y2-x1*y1-xr*yr/log(x2/x1)
+            else
+              sum=sum+0.5d0*(y1+y2)*xr
             endif
           endif
           cdf(j)=sum
         enddo
       else
-        write(*,*)' ERROR: ilaw=',ilaw,' not coded'
+        write(*,*)' ERROR in cdfcal: ilaw=',ilaw,' not coded'
         stop
       endif
       if (sum.ne.0.0d0) then
@@ -2646,7 +2830,7 @@ c
 C======================================================================
       subroutine cdfcal1(np,nd,x,y,ilaw,cdf)
 c
-c     calculate cdf normalized to 1.0 with nd discrete contribution
+c     calculate cdf normalized to 1.0 with nd discrete contributions
 c
 c       lep=ilaw-(ilaw/10)*10
 c              y        x
@@ -2656,6 +2840,7 @@ c       lep=4 log      lin
 c
       implicit real*8 (a-h, o-z)
       dimension x(*),y(*),cdf(*)
+      parameter (eps=1.0d-6, zero=0.0d0)
       ll=ilaw/10
       lep=ilaw-ll*10
       sum=0.0d0
@@ -2685,19 +2870,69 @@ c
           do j=j0,np
             j1=j-1
             xr=x(j)-x(j1)
-            y1=y(j1)
-            if (y1.ne.0.0d0.and.xr.ne.0.0d0) then
-              yr=y(j)/y1
-              if (yr.gt.1.0d-12) then
-                sum=sum+y1*xr*(yr-1.0d0)/dlog(yr)
+            if (xr.gt.zero) then
+              y1=y(j1)
+              y2=y(j)
+              yr=y2-y1
+              ay1=abs(y1)
+              ayr=abs(yr)            
+              if (y1*y2.gt.zero.and.ayr.gt.eps*ay1) then
+                sum=sum+xr*yr/log(y2/y1)
               else
-                sum=sum+y1*xr
+                sum=sum+0.5d0*(y1+y2)*xr
+              endif
+            endif
+            cdf(j)=sum
+          enddo
+        elseif (lep.eq.3) then                                  
+          do j=j0,np                                            
+            j1=j-1                                              
+            x1=x(j1)                                                                                         
+            x2=x(j)                                            
+            xr=x2-x1                                           
+            if (xr.gt.zero) then
+              y1=y(j1)                                                                                         
+              y2=y(j)
+              ax1=abs(x1)                                              
+              if (x1*x2.gt.zero.and.xr.gt.eps*ax1) then    
+                sum=sum+x2*y2-x1*y1-xr*(y2-y1)/log(x2/x1)  
+              else                                              
+                sum=sum+0.5d0*(y1+y2)*xr                   
+              endif                                             
+            endif
+            cdf(j)=sum                                               
+          enddo                                                 
+        elseif (lep.eq.5) then
+          do j=j0,np
+            j1=j-1
+            x1=x(j1)
+            x2=y(j)
+            xr=x2-x1
+            if (xr.gt.zero) then
+              y1=y(j1)
+              y2=y(j)            
+              yr=y2-y1
+              ax1=abs(x1)
+              ay1=abs(y1)
+              ayr=abs(yr)
+              x12=x1*x2
+              y12=y1*y2
+              if (x12.gt.zero.and.xr.gt.eps*ax1.and.
+     &            y12.gt.zero.and.ayr.gt.eps*ay1) then
+                d=log(y2/y1)/log(x2/x1)+1.0d0
+                sum=sum+y1*x1*(((x2/x1)**d)-1.0d0)/d
+              elseif (y12.gt.zero.and.ayr.gt.eps*ay1) then
+                sum=sum+xr*yr/log(y2/y1)
+              elseif (x12.gt.zero.and.xr.gt.eps*ax1) then
+                sum=sum+x2*y2-x1*y1-xr*yr/log(x2/x1)
+              else
+                sum=sum+0.5d0*(y1+y2)*xr
               endif
             endif
             cdf(j)=sum
           enddo
         else
-          write(*,*)' ERROR: ilaw=',ilaw,' not coded'
+          write(*,*)' ERROR in cdfcal1: ilaw=',ilaw,' not coded'
           stop
         endif
       endif
@@ -2715,6 +2950,7 @@ c
 C======================================================================
       subroutine union(np1,x1,np2,x2,np3,x3,npmax)
       implicit real*8 (a-h, o-z)
+      parameter(eps=1.0d-9)
 c
 c     Prepare union grid x3 from x1 and x2
 c
@@ -2724,15 +2960,17 @@ c
       k=0
       do while (i.le.np1.and.j.le.np2)
         call inc(k,npmax)
-        if (x1(i).lt.x2(j)) then
-          x3(k)=x1(i)
-          i=i+1
-        elseif (x1(i).eq.x2(j)) then
-          x3(k)=x1(i)
+        xx1=x1(i)
+        xx2=x2(j)
+        if (abs(xx2-xx1).lt.eps*xx2) then
+          x3(k)=xx1
           i=i+1
           j=j+1
+        elseif (xx1.lt.xx2) then
+          x3(k)=xx1
+          i=i+1
         else
-          x3(k)=x2(j)
+          x3(k)=xx2
           j=j+1
         endif
       enddo
@@ -2760,6 +2998,117 @@ c
         write(*,*)' Error: dimension = ',nmax,' is not enough'
         write(*,*)'        increase array size'
         stop
+      endif
+      return
+      end
+C======================================================================      
+      subroutine renorm(np,x,y,ilaw,c,fn)
+c
+c     renormalize tabulated data with interpolation law = ilaw to a
+c     constant c. if c=0.0d0, then return the value of integral in c
+c
+c       lep=ilaw-(ilaw/10)*10
+c              y        x
+c       lep=1 constant
+c       lep=2 lin      lin
+c       lep=3 lin      log
+c       lep=4 log      lin
+c       lep=5 log      log
+c
+      implicit real*8 (a-h, o-z)
+      parameter (eps=1.0d-6, zero=0.0d0)
+      dimension x(*),y(*)
+      ll=ilaw/10
+      lep=ilaw-ll*10
+      sum=0.0d0
+      if (lep.eq.1) then
+        do j=2,np
+          j1=j-1
+          sum=sum+y(j1)*(x(j)-x(j1))
+        enddo
+      elseif (lep.eq.2) then
+        do j=2,np
+          j1=j-1
+          sum=sum+0.5d0*(y(j)+y(j1))*(x(j)-x(j1))
+        enddo
+      elseif (lep.eq.4) then
+        do j=2,np
+          j1=j-1
+          xr=x(j)-x(j1)
+          if (xr.gt.zero) then
+            y1=y(j1)
+            y2=y(j)
+            yr=y2-y1
+            ay1=abs(y1)
+            ayr=abs(yr)
+            if (y1*y2.gt.zero.and.ayr.gt.eps*ay1) then
+              sum=sum+xr*yr/log(y2/y1)
+            else
+              sum=sum+0.5d0*(y1+y2)*xr
+            endif
+          endif
+        enddo
+      elseif (lep.eq.3) then
+        do j=2,np
+          j1=j-1
+          x1=x(j1)
+          x2=x(j)
+          xr=x2-x1
+          if (xr.gt.zero) then
+            y1=y(j1)
+            y2=y(j)
+            ax1=abs(x1)
+            if (x1*x2.gt.zero.and.xr.gt.eps*ax1) then
+              sum=sum+x2*y2-x1*y1-xr*(y2-y1)/log(x2/x1)
+            else
+              sum=sum+0.5d0*(y1+y2)*xr
+            endif
+          endif
+        enddo
+      elseif (lep.eq.5) then
+        do j=2,np
+          j1=j-1
+          x1=x(j1)
+          x2=y(j)
+          xr=x2-x1
+          if (xr.gt.zero) then
+            y1=y(j1)
+            y2=y(j)
+            yr=y2-y1
+            ax1=abs(x1)
+            ay1=abs(y1)
+            ayr=abs(yr)
+            x12=x1*x2
+            y12=y1*y2
+            if (x12.gt.zero.and.xr.gt.eps*ax1.and.
+     &          y12.gt.zero.and.ayr.gt.eps*ay1) then
+              d=log(y2/y1)/log(x2/x1)+1.0d0
+              sum=sum+y1*x1*(((x2/x1)**d)-1.0d0)/d
+            elseif (y12.gt.zero.and.ayr.gt.eps*ay1) then
+              sum=sum+xr*yr/log(y2/y1)
+            elseif (x12.gt.zero.and.xr.gt.eps*ax1) then
+              sum=sum+x2*y2-x1*y1-xr*yr/log(x2/x1)
+            else
+              sum=sum+0.5d0*(y1+y2)*xr
+            endif
+          endif
+        enddo
+      else
+        write(*,*)' ERROR in renorm: ilaw=',ilaw,' not coded'
+        stop
+      endif
+      fn=1.0d0
+      if (c.eq.zero) then
+        c=sum
+      else
+        if (sum.ne.0.0d0) then
+          fn=c/sum
+          do j=1,np
+            y(j)=y(j)*fn
+          enddo
+        else
+          write(*,*)' Warning: Integral equal zero'
+        endif
       endif
       return
       end
@@ -2819,17 +3168,35 @@ c      on return if icod=0, material found
 c                if icod=1, material not found
 c
       character*66 line
-      rewind nin
-      icod=0
-      mat0=-2
-      do while (mat0.ne.mat.and.mat0.ne.-1)
-        call readtext(nin,line,mat0,mf,mt,ns)
-      enddo
-      if (mat0.eq.-1)then
+      read(nin,'(a66,i4,i2,i3,i5)',iostat=iosnin)line,mat0,mf,mt,ns
+      if (iosnin.lt.0.or.mat0.eq.-1.or.mat0.ge.mat) then
+        rewind(nin)
+        read(nin,*)
+        mat0=0
+      elseif (iosnin.gt.0) then
         icod=1
-      else
+        return
+      elseif (mat0.eq.0) then
         backspace nin
+        backspace nin
+        read(nin,'(a66,i4,i2,i3,i5)',err=10,end=10)line,mat0,mf,mt,ns
+        if (mat0.ge.mat) then
+          rewind(nin)
+          read(nin,*)
+          mat0=0
+        endif
       endif
+      do while (mat0.lt.mat.and.mat0.ne.-1)
+        read(nin,'(a66,i4,i2,i3,i5)',err=10,end=10)line,mat0,mf,mt,ns
+      enddo
+      if (mat0.eq.mat)then
+        icod=0
+        backspace nin
+      else
+        icod=1
+      endif
+      return
+   10 icod=1
       return
       end
 C======================================================================
@@ -2840,19 +3207,52 @@ c      on return if icod=0, mat/mf found
 c                if icod=1, mat/mf not found
 c
       character*66 line
-      call findmat(nin,mat,icod)
-      if (icod.eq.0) then
-        mat1=mat
-        mf1=-1
-        do while (mf1.ne.mf.and.mat1.eq.mat)
-          call readtext(nin,line,mat1,mf1,mt1,ns)
-        enddo
-        if (mat1.ne.mat) then
-          icod=1
-        else
+      read(nin,'(a66,i4,i2,i3,i5)',iostat=iosnin)line,mat0,mf0,mt,ns
+      if (mat0.eq.0) then
+        read(nin,'(a66,i4,i2,i3,i5)',iostat=iosnin)line,mat0,mf0,mt,ns
+      endif
+      if (iosnin.ne.0.or.mat0.eq.-1.or.mat0.gt.mat.or.
+     &  (mat0.eq.mat.and.mf0.gt.mf)) then
+        call findmat(nin,mat,icod)
+      elseif (mat0.eq.mat) then
+        if (mf0.eq.0.or.mf0.eq.mf) then
           backspace nin
+          backspace nin
+          read(nin,'(a66,i4,i2,i3,i5)',err=10,end=10)line,mat0,mf0,mt,ns
+          if (mf0.ge.mf) then
+            call findmat(nin,mat,icod)
+          else
+            icod=0
+          endif
+        else
+          icod=0
+        endif
+      elseif (mat0.lt.mat) then
+        do while (mat0.lt.mat.and.mat0.ne.-1)
+          read(nin,'(a66,i4,i2,i3,i5)',err=10,end=10)line,mat0,mf0,mt,ns
+        enddo
+        if (mat0.eq.mat)then
+          icod=0
+          backspace nin
+        else
+          icod=1
         endif
       endif
+      if (icod.eq.0) then
+        mat0=mat
+        mf0=-1
+        do while (mat0.eq.mat.and.mf0.lt.mf)
+          read(nin,'(a66,i4,i2,i3,i5)',err=10,end=10)line,mat0,mf0,mt,ns
+        enddo
+        if (mat0.eq.mat.and.mf0.eq.mf) then
+          icod=0
+          backspace nin
+        else
+          icod=1
+        endif
+      endif
+      return
+   10 icod=1
       return
       end
 C======================================================================
@@ -2863,20 +3263,40 @@ c      tape, on return if icod=0, mat/mf/mt found
 c                      if icod=1, mat/mf/mt not found
 c
       character*66 line
-      rewind nin
-      call findmf(nin,mat,mf,icod)
-      if (icod.eq.0) then
-        mf1=mf
-        mt1=-1
-        do while (mt1.ne.mt.and.mf1.eq.mf)
-          call readtext(nin,line,mat1,mf1,mt1,ns)
-        enddo
-        if (mf1.ne.mf) then
-          icod=1
+      read(nin,'(a66,i4,i2,i3,i5)',iostat=iosnin)line,mat0,mf0,mt0,ns
+      if (iosnin.ne.0.or.mat0.ne.mat.or.
+     &  (mat0.eq.mat.and.mf0.ne.mf).or.
+     &  (mat0.eq.mat.and.mf0.eq.mf.and.mt0.gt.mt)) then
+        call findmf(nin,mat,mf,icod)
+      elseif (mat0.eq.mat.and.mf0.eq.mf) then
+        if (mt0.eq.0.or.mt0.eq.mt) then
+         backspace nin
+         backspace nin
+         read(nin,'(a66,i4,i2,i3,i5)',err=10,end=10)line,mat0,mf0,mt0,ns
+         if (mt0.ge.mt) then
+           call findmf(nin,mat,mf,icod)
+         else
+           icod=0
+         endif
         else
-          backspace nin
+         icod=0
         endif
       endif
+      if (icod.eq.0) then
+        mf0=mf
+        mt0=-1
+        do while (mt0.lt.mt.and.mf0.eq.mf)
+         read(nin,'(a66,i4,i2,i3,i5)',err=10,end=10)line,mat0,mf0,mt0,ns
+        enddo
+        if (mf0.eq.mf.and.mt0.eq.mt) then
+          icod=0
+          backspace nin
+        else
+          icod=1
+        endif
+      endif
+      return
+   10 icod=1
       return
       end
 C======================================================================
@@ -2885,17 +3305,19 @@ c
 c     find next mt on mf file for current material
 c
       character*66 line
-      mt1=-1
-      do while (mt1.ne.0)
-        call readtext(nin,line,mat1,mf1,mt1,ns1)
+      mt0=-1
+      do while (mt0.ne.0)
+        read(nin,'(a66,i4,i2,i3,i5)',err=10,end=10)line,mat0,mf0,mt0,ns
       enddo
-      call readtext(nin,line,mat1,mf1,mt,ns1)
-      if (mt.ne.0.and.mf1.eq.mf) then
+      read(nin,'(a66,i4,i2,i3,i5)',err=10,end=10)line,mat0,mf0,mt,ns
+      if (mt.ne.0.and.mf0.eq.mf) then
         backspace nin
       else
         mt=-1
       endif
       return
+   10 mt=-2
+      return   
       end
 C======================================================================
       subroutine nextsub6(nin,law,nbt,ibt,x,b)
@@ -2926,10 +3348,386 @@ c
       return
       end
 C======================================================================
-C      Compute kalbach parameter a
-C      (Borrowed from NJOY)
+C     Get date and time
+C======================================================================
+      subroutine getdtime(cdate,ctime)
+      character*11  ctime
+      character*10  cdate,time
+      character*8   date
+      call date_and_time(date,time)
+      ctime(1:2)=time(1:2)
+      ctime(3:3)=':'
+      ctime(4:5)=time(3:4)
+      ctime(6:6)=':'
+      ctime(7:8)=time(5:6)
+      ctime(9:9)=':'
+      ctime(10:11)=time(8:9)
+      cdate(1:4)=date(1:4)
+      cdate(5:5)='/'
+      cdate(6:7)=date(5:6)
+      cdate(8:8)='/'
+      cdate(9:10)=date(7:8)
+      return
+      end
+C======================================================================
+C     Legendre polynomials
+C======================================================================
+      subroutine leg2lin(na,b,np,xt,yt,epy,ymin,npmax)
+      implicit real*8 (a-h, o-z)
+      parameter (nmu0max=3, ns=25, h0=1.0d-8, yzero=1.0d-30)
+      dimension b(*),xt(*),yt(*)
+      dimension xs(ns),ys(ns),xmu0(nmu0max)
+c
+c     Starting convertion from Legendre representation to tabular data
+c
+      if (na.gt.0) then
+        if (na.eq.1) then
+          xmu0(1)=-1.0d0
+          xmu0(2)=1.0d0
+          nmu0=2
+        else
+          xmu0(1)=-1.0d0
+          xmu0(2)=0.0d0
+          xmu0(3)=1.0d0
+          nmu0=3
+        endif
+        x0=xmu0(1)
+        y0=yleg(x0,b,na)
+        np=1
+        xt(1)=x0
+        yt(1)=y0
+        do i=2,nmu0
+          x1=xmu0(i)
+          y1=yleg(x1,b,na)
+          dymax=0.05d0*max(abs(y0),abs(y1))
+          k=0
+          nostop=1
+          do while (nostop.eq.1)
+            xm=0.5d0*(x0+x1)
+            ymlin=0.5d0*(y0+y1)
+            ymlaw=yleg(xm,b,na)
+            dy=dabs(ymlin-ymlaw)
+            ymabs=dabs(ymlaw)
+            ylabs=dabs(ymlin)
+            dx=dabs(xm-x0)
+            if ((dy.le.epy*ymabs.and.dabs(y1-y0).le.(ylabs+dymax)).or.
+     &          ymabs.le.ymin.or.dx.le.h0.or.k.eq.ns) then
+              call inc(np,npmax)
+              xt(np)=x1
+              yt(np)=y1
+              if (k.eq.0) then
+                nostop=0
+              else
+                x0=x1
+                y0=y1
+                x1=xs(k)
+                y1=ys(k)
+                k=k-1
+              endif
+            else
+              k=k+1
+              xs(k)=x1
+              ys(k)=y1
+              x1=xm
+              y1=ymlaw
+            endif
+          enddo
+          x0=x1
+          y0=y1
+        enddo
+        do i=1,np
+          if (yt(i).lt.0.0d0) yt(i)=yzero
+        enddo
+        c=b(1)
+        if (c.gt.0.0d0) then
+          ilaw=2
+          call renorm(np,xt,yt,ilaw,c,fn)
+        endif
+      else
+        np=2
+        xt(1)=-1.0d0
+        xt(2)=1.0d0
+        yt(1)=0.5d0
+        yt(2)=0.5d0
+      endif
+      return
+      end
+C======================================================================
+      real*8 function yleg(x,a,na)
+c
+c     calculate y(x) using a legendre expansion
+c
+      implicit real*8 (a-h,o-z)
+      dimension a(*),p(65)
+      call legndr(x,p,na)
+      n=na+1
+      yleg=0.0d0
+      do l=1,n
+        yleg=yleg+(dble(l)-0.5d0)*a(l)*p(l)
+      enddo
+      return
+      end
+C======================================================================
+C     Linearization
+C======================================================================
+      subroutine linear(nr,nbt,ibt,np,x,y,epy,ymin,npmax)
+c
+c      Linearize x,y data
+c
+      implicit real*8(a-h, o-z)
+      parameter (ns=32)
+      dimension nbt(*),ibt(*),x(*),y(*)
+      dimension xt(npmax),yt(npmax),xs(ns),ys(ns)
+c
+c     Check interpolation law
+c
+      call checklaw(nr,ibt,icod)
+      if (icod.eq.0) then
+        if (nr.ne.1) then
+          nr=1
+          nbt(nr)=np
+          ibt(nr)=2
+        endif
+        return
+      endif
+c
+c     Check for minimun space
+c
+      if (np.gt.npmax) then
+        write(*,*)' === Increase dimension of arrays ',npmax
+        write(*,*)' === Stop in linear'
+        stop
+      endif
+c
+c      Starting linearization
+c
+      ii=0
+      do j=1,nr
+        ilaw=ibt(j)
+        ilaw=ilaw-(ilaw/10)*10
+        iup=nbt(j)
+        if (j.gt.1) then
+          ilow=nbt(j-1)+1
+        else
+          ilow=1
+        endif
+        if(ilaw.eq.2) then
+c
+c         linear-linear interpolation law, just copy data
+c
+          do i=ilow,iup
+            call inc(ii,npmax)
+            xt(ii)=x(i)
+            yt(ii)=y(i)
+          enddo
+        elseif (ilaw.eq.1) then
+c
+c         histogram interpolation
+c         constant interpolation law, convert to linear by
+c         given linear interpolation with zero slope
+c
+          call inc(ii,npmax)
+          xt(ii)=x(ilow)
+          yt(ii)=y(ilow)
+          do i=ilow+1,iup
+            call inc(ii,npmax)
+            xt(ii)=x(i)
+            yt(ii)=y(i-1)
+            call inc(ii,npmax)
+            xt(ii)=x(i)
+            yt(ii)=y(i)
+          enddo
+        else
+c
+c         lin-log, log-lin, log-log
+c
+          x0=x(ilow)
+          y0=y(ilow)
+          call inc(ii,npmax)
+          xt(ii)=x0
+          yt(ii)=y0
+          do i=ilow+1,iup
+            x1=x(i)
+            y1=y(i)
+            dymax=0.1d0*max(dabs(y0),dabs(y1))
+            k=0
+            nostop=1
+            do while (nostop.eq.1)
+              xm=0.5d0*(x0+x1)
+              ymlin=0.5d0*(y0+y1)
+              call terp1m(x0,y0,x1,y1,xm,ymlaw,ilaw)
+              dy=dabs(ymlin-ymlaw)
+              ymabs=dabs(ymlaw)
+              ylabs=dabs(ymlin)
+              dx=dabs(xm-x0)
+              h0=dabs(edelta(x0,5.0d0)-x0)
+              if ((dy.le.epy*ymabs.and.dabs(y1-y0).le.(ylabs+dymax)).or.
+     &            ymabs.le.ymin.or.dx.le.h0.or.k.eq.ns) then
+                call inc(ii,npmax)
+                xt(ii)=x1
+                yt(ii)=y1
+                if (k.eq.0) then
+                  nostop=0
+                else
+                  x0=x1
+                  y0=y1
+                  x1=xs(k)
+                  y1=ys(k)
+                  k=k-1
+                endif
+              else
+                k=k+1
+                xs(k)=x1
+                ys(k)=y1
+                x1=xm
+                y1=ymlaw
+              endif
+            enddo
+            x0=x1
+            y0=y1
+          enddo
+        endif
+      enddo
+c
+c     back to original array
+c
+      np=ii
+      do i=1,np
+        x(i)=xt(i)
+        y(i)=yt(i)
+      enddo
+      nr=1
+      nbt(nr)=np
+      ibt(nr)=2
+      return
+      end
+C======================================================================
+C      The following subroutines were taken from NJOY2016 and
+C      adapted/modified by D. Lopez Aldama for ACEMAKER:
+C       1. subroutine legndr
+C       2. subroutine terp1 (renamed as terp1m)
+C       3. real*8 function bachaa        
+C       4. subroutine change
+C       5. subroutine typen
+C
+C======================================================================
+C     Copyright (c) 2016, Los Alamos National Security, LLC
+C     All rights reserved.
+C
+C     Copyright 2016. Los Alamos National Security, LLC. This software 
+C     was produced under U.S. Government contract DE-AC52-06NA25396 for
+C     Los Alamos National Laboratory (LANL), which is operated by Los 
+C     Alamos National Security, LLC for the U.S. Department of Energy. 
+C     The U.S. Government has rights to use, reproduce, and distribute 
+C     this software.  NEITHER THE GOVERNMENT NOR LOS ALAMOS NATIONAL 
+C     SECURITY, LLC MAKES ANY WARRANTY, EXPRESS OR IMPLIED, OR ASSUMES 
+C     ANY LIABILITY FOR THE USE OF THIS SOFTWARE.  If software is 
+C     modified to produce derivative works, such modified software 
+C     should be clearly marked, so as not to confuse it with the 
+C     version available from LANL.
+C
+C     Additionally, redistribution and use in source and binary forms, 
+C     with or without modification, are permitted provided that the
+C     following conditions are met:
+C     1. Redistributions of source code must retain the above copyright 
+C        notice, this list of conditions and the following disclaimer.
+C     2. Redistributions in binary form must reproduce the above 
+C        copyright notice, this list of conditions and the following 
+C        disclaimer in the documentation and/or other materials provided
+C        with the distribution.
+C     3. Neither the name of Los Alamos National Security, LLC, 
+C        Los Alamos National Laboratory, LANL, the U.S. Government, 
+C        nor the names of its contributors may be used to endorse or 
+C        promote products derived from this software without specific 
+C        prior written permission.
+C
+C     THIS SOFTWARE IS PROVIDED BY LOS ALAMOS NATIONAL SECURITY, LLC 
+C     AND CONTRIBUTORS "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, 
+C     INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF 
+C     MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE 
+C     DISCLAIMED. IN NO EVENT SHALL LOS ALAMOS NATIONAL SECURITY, LLC 
+C     OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, 
+C     SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT 
+C     LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF 
+C     USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED 
+C     AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT 
+C     LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING 
+C     IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF 
+C     THE POSSIBILITY OF SUCH DAMAGE.
+C
+C======================================================================
+      subroutine legndr(x,p,np)
+c     *****************************************************************
+c       generate legendre polynomials at x by recursion.
+c       place pl in p(l+1).
+c     *****************************************************************
+      implicit real*8 (a-h,o-z)
+      dimension p(*)
+      p(1)=1.0d0
+      p(2)=x
+      if (np.lt.2) return
+      m1=np-1
+      do i=1,m1
+         g=x*p(i+1)
+         h=g-p(i)
+         p(i+2)=h+g-h/(i+1)
+      enddo
+      return
+      end
+C======================================================================
+      subroutine terp1m(x1,y1,x2,y2,x,y,i)
+c
+c      interpolate one point using ENDF-6 interpolation laws
+c      (x1,y1) and (x2,y2) are the end points
+c      (x,y) is the interpolated point
+c      i is the interpolation law (1-5)
+c
+c      Adapted by D. L. Aldama for ACEMAKER
+c
+c     *****************************************************************
+      implicit real*8 (a-h,o-z)
+      parameter (zero=0.0d0)
+c
+c     *** x1=x2
+      if (x2.eq.x1) then
+        y=y1
+        return
+      endif
+c
+c     ***y is constant
+      if (i.eq.1.or.y2.eq.y1.or.x.eq.x1) then
+         y=y1
+c
+c     ***y is linear in x
+      else if (i.eq.2) then
+         y=y1+(x-x1)*(y2-y1)/(x2-x1)
+c
+c     ***y is linear in ln(x)
+      else if (i.eq.3) then
+         y=y1+log(x/x1)*(y2-y1)/log(x2/x1)
+c
+c     ***ln(y) is linear in x
+      else if (i.eq.4) then
+         y=y1*exp((x-x1)*log(y2/y1)/(x2-x1))
+c
+c     ***ln(y) is linear in ln(x)
+      else if (i.eq.5) then
+         if (y1.eq.zero) then
+            y=y1
+         else
+            y=y1*exp(log(x/x1)*log(y2/y1)/log(x2/x1))
+         endif
+c
+c     ***coulomb penetrability law (charged particles only)
+      else
+        write(*,*) ' Interpolation law: ',i,' not allowed'
+        stop
+      endif
+      return
+      end
 C======================================================================
       real*8 function bachaa(iza1i,iza2,izat,e,ep)
+c     Adapted by D. L. Aldama for ACEMAKER
 c     ******************************************************************
 c     compute the kalbach a parameter
 c     ******************************************************************
@@ -3034,10 +3832,8 @@ c
       return
       end
 C======================================================================
-C      Subroutines for writing fast ace-formated files
-C      (Borrowed from NJOY)
-C======================================================================
       subroutine change(nout,mcnpx)
+c     Adapted by D. Lopez Aldama for ACEMAKER      
 c     ******************************************************************
 c     change ace data fields from integer to real or vice versa.
 c     if nout.gt.1, the results are written in type 1 format
@@ -4424,6 +5220,9 @@ c     or (if nout=1) convert integer to real for type-3 input
 c     use iflag.eq.1 to write an integer (i20)
 c     use iflag.eq.2 to write a real number (1pe20.11)
 c     use iflag.eq.3 to write partial line at end of file
+c
+c     Adapted by D. Lopez Aldama for ACEMAKER
+c
 c     ******************************************************************
       implicit real*8 (a-h,o-z)
       common/acedat/xss(200000000),nxss
@@ -4447,79 +5246,3 @@ c
       return
       end
 C======================================================================
-      SUBROUTINE THINXS(XI,YI,N,XO,YO,M,ERR)
-C-Title  : THINXS Subroutine
-C-Purpose: Thin the data to within the specified tolerance
-C-Version: 1996 Original code
-C-V 2002/04 A.Trkov: Fix bug (missing one but last point).
-C-Author : A.Trkov, ENEA, Bologna, 1996
-C-Description:
-C-D  Excessive data points need to be removed such that the remaining
-C-D  points can be linearly interpolated to within the specified
-C-D  tolerance. The formal parameters are:
-C-D    N   number of points on input argument mesh
-C-D   XI   input argument mesh (array of N values in momotonic order)
-C-D   YI   function values corresponding to XI(i)
-C-D    M   number of points in the output mesh
-C-D   XO   output argument mesh (array of M values in monotonic order)
-C-D   YO   interpolated function values corresponding to XO(i) (Output)
-C-D  ERR   fractional tolerance on the interpolated array.
-C-D
-c
-c      borrowed from Andrej Trkov
-c
-      implicit real*8 (a-h, o-z)
-      DIMENSION XI(*), YI(*), XO(*), YO(*)
-      FINT(X,XA,XB,YA,YB)=YA+(YB-YA)*(X-XA)/(XB-XA)
-      K=3
-      M=1
-      I=1
-      XO(M)=XI(I)
-      YO(M)=YI(I)
-C* Begin loop over data points
-   10 IF(K.GT.N) GO TO 60
-   12 L1=I+1
-      L2=K-1
-      DO L=L1,L2
-        IF(XI(K).EQ.XI(I)) CYCLE
-        Y=FINT(XI(L),XI(I),XI(K),YI(I),YI(K))
-        E=DABS(Y-YI(L))
-        IF(YI(L).NE.0.0d0) E=DABS(E/YI(L))
-        IF(E.GT.ERR) GO TO 40
-      END DO
-C* Linear interpolation adequate - increase the test interval
-      K=K+1
-      GO TO 10
-C* Add the previous point at K-1 - lin.interpolation violated
-   40 M=M+1
-      I=K-1
-      K=I+2
-      XO(M)=XI(I)
-      YO(M)=YI(I)
-      IF(K.LE.N) GO TO 12
-C* Add the last point
-   60 M=M+1
-      XO(M)=XI(N)
-      YO(M)=YI(N)
-      RETURN
-      END
-C======================================================================
-      subroutine getdtime(cdate,ctime)
-      character*11  ctime
-      character*10  cdate,time
-      character*8   date
-      call date_and_time(date,time)
-      ctime(1:2)=time(1:2)
-      ctime(3:3)=':'
-      ctime(4:5)=time(3:4)
-      ctime(6:6)=':'
-      ctime(7:8)=time(5:6)
-      ctime(9:9)=':'
-      ctime(10:11)=time(8:9)
-      cdate(1:4)=date(1:4)
-      cdate(5:5)='/'
-      cdate(6:7)=date(5:6)
-      cdate(8:8)='/'
-      cdate(9:10)=date(7:8)
-      return
-      end

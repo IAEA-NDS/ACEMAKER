@@ -8,7 +8,7 @@ c     Input data:
 c
 c     line 1:  input endf-6 formatted filename                     (A72)
 c     line 2:  output dosimetry ace-formatted filename             (A72)
-c     line 3:        mat       imon                               (2I11)
+c     line 3:        mat       imon       idos6                   (3I11)
 c     line 4:        tol       ymin                             (2E11.0)
 c     line 5:       suff      mcnpx                              (7X,A4)
 c
@@ -16,6 +16,9 @@ c     where,
 c        mat: Requested material
 c       imon: Monitor printing trigger (0/1/2) = min/max/max+plt
 c             (Default: imon=0)
+c      idos6: Force to produce dosimetry data from MF6 yields even if
+c             MF8/LMF=6 data are not available
+c             (default: idos6=0) No process if MF8/LMF=6 not available 
 c        tol: linearization tolerance (Default: tol=0.001)
 c       ymin: minimum cross section (Default: ymin=1.0e-20)
 c       suff: ZAID suffix for ACE-formatted file
@@ -29,26 +32,32 @@ c       2. DODOS.LST listing file (fix name)
 c      if imon=2
 c       3. DODOS.PLT PLOTTAB input option file
 c       4. DODOS.CUR PLOTTAB curve file
+c      if imon=3
+c       all yields found in MF6 for all reactions find in MF3 are processed 
 c
 c     MTD numbers for the MTR block in the dosimetry ACE-formatted file:
-c       If the reaction is given in MF3, then the MT number remains the 
+c       If the reaction is given in MF3, then the MT number remains the
 c       same (MTD=MT). If the dosimetry reaction is given in MF10 or
 c       multiplicities are supplied in MF9 or MF6, then the MTD number
 c       is computed as:
-c         MTD=1000000*(50+lfs)+zap,  if MT=5 or
-c         MTD=1000*(10+lfs)+MT,      otherwise
+c         if MT=5
+c           MTD=1000000*(50+lfs)+zap
+c         elseif MT=18
+c           MTD=1000000*(80+lfs)+zap
+c         else
+c           MTD=1000*(10+lfs)+MT
 c
 c       where,
 c         MTD: reaction identifier in the dosimetry ACE-formatted file
 c         zap: ZA number of the product nuclide
 c         lfs: level number of the product nuclide
 c         MT:  reaction identifier according to the ENDF-6 format
-c         
+c
 c     Example of input
 c
 c     \IRDFF-II\IRDFF-II.endf
 c     \DOS\ZA013027.acef
-c             1325          0
+c             1325          0          1
 c            0.001 1.0000E-20
 c              .00          0
 c
@@ -60,9 +69,12 @@ c     allowed is 1.0E-20 barn. They are applied in cases where the files
 c     MF3/MF9 or MF3/MF6 have been used for describing a dosimetry
 c     reaction. The ZAID suffix will be .00y taking into account that
 c     the input values of suff and mcnpx are .00 and 0 respectively.
+c     Dosimetry data from MF6 yields are generated even if MF8/LMF=6
+c     data are not available.
 c
       implicit real*8 (a-h, o-z)
-      parameter (nnxc=300,nnx6=100,npmax=500000,nxssmx=50000000)
+      parameter (nnxc=450,nnx6=2000,npmax=2000000,nxssmx=50000000)
+      parameter (bk=8.6173303d-11)
       character*1 ch
       character*4 suff
       character*10 hd,hm,cdate
@@ -76,7 +88,8 @@ c
       common/acepnt/nxs(16),jxs(32)
       common/acedat/xss(50000000),nxss
       dimension mf3(nnxc),mf9(nnxc),mf10(nnxc)
-      dimension zap6(nnx6),lip6(nnx6),mt6(nnx6),mf6(nnx6)
+      dimension lzap6(nnx6),lip6(nnx6),mt6(nnx6),mf6(nnx6),kip6(nnx6)
+      dimension nzap6(nnx6),nzap(nnx6)
       dimension nbt(20),ibt(20),nbty(20),ibty(20)
       dimension x(npmax),xy(npmax)
       dimension y(npmax),yy(npmax)
@@ -118,8 +131,17 @@ c     read input data from DODOS.INP
 c
       read(in1,'(a)')fin1
       read(in1,'(a)')fout
-      read(in1,'(2i11)')mat,imon
-      if (imon.lt.0) imon=0
+      read(in1,'(3i11)')mat,imon,idos6
+      if (imon.lt.0) then
+        imon=0
+      elseif (imon.gt.3) then
+        imon=2
+      endif
+      if (idos6.gt.0) then
+        idos6=1
+      else
+        idos6=0
+      endif
       read(in1,'(2e11.0)')tol,ymin
       if (tol.le.0.0d0) tol=1.0d-3
       if (ymin.le.0.0d0) ymin=1.0d-30
@@ -139,6 +161,7 @@ c
       write(lou,'(a,a)')' Output file name  = ',fout
       write(lou,'(a,i5)')' ENDF material(MAT)=',mat
       write(lou,'(a,i2)')' Printing option   =',imon
+      write(lou,'(a,i2)')' Force use MF6 data=',idos6
       write(lou,'(a,1pe13.6)')' Tolerance [%]     =',tol*100.0d0
       write(lou,'(a,1pe13.6)')' Minimum XS [barn] =',ymin
       if (mcnpx.eq.1) then
@@ -187,11 +210,11 @@ c
       elseif (nsub.eq.10020) then
         zai=1002.0d0
         izai=1002
-        ch='d'
+        ch='o'
       elseif (nsub.eq.10030) then
         zai=1003.0d0
         izai=1003
-        ch='t'
+        ch='r'
       elseif (nsub.eq.20030) then
         zai=2003.0d0
         izai=2003
@@ -203,11 +226,11 @@ c
       elseif (nsub.eq.0) then
         zai=0.0d0
         izai=0
-        ch='p'
+        ch='u'
       elseif (nsub.eq.3) then
         zai=0.0d0
         izai=0
-        ch='u'
+        ch='p'
       else
         write(lou,*)'  === Error: incident particle is not coded'
         write(lou,*)'  === NSUB=',nsub
@@ -248,7 +271,7 @@ c
         write(hz,'(i6,a3,a4)')matza,suff(1:3),'y   '
       endif
       write(hm,'(a6,i4)')'   mat',mat
-      tz=8.617342d-11*temp
+      tz=bk*temp
       write(*,*)' Material=',mat
       write(lou,*)
       write(lou,'(a,i5,a,i7,a,1pe15.8)')' Material=',mat,' ZA=',matza,
@@ -297,11 +320,7 @@ c
             do i=1,nfs
               call readtab1(nin,c1,c2,izap,lfs,nr,ne,nbt,ibt,x,y)
               nmf10=nmf10+1
-              if (mt.eq.5) then
-                mf10(nmf10)=1000000*(50+lfs)+izap
-              else
-                mf10(nmf10)=1000*(10+lfs)+mt
-              endif
+              mf10(nmf10)=mtdos(mt,izap,lfs)
             enddo
           endif
         enddo
@@ -310,7 +329,7 @@ c
      &      nnxc,' in MF10. Increase the value of nnxc in ',nmf10-nnxc
           write(*,'(2(a,i6))')' Number of reactions greater than',
      &      nnxc,' in MF10. Increase the value of nnxc in ',nmf10-nnxc
-        else        
+        else
           write(lou,'(1x,i6,a)')nmf10,' reactions found on MF10'
           write(*,'(1x,i6,a)')nmf10,' reactions found on MF10'
         endif
@@ -336,11 +355,7 @@ c
               call readcont(nin,c1,c2,l1,l2,nfs,n2,mat0,mf0,mt0,ns0)
               do i=1,nfs
                 call readtab1(nin,c1,c2,izap,lfs,nr,ne,nbt,ibt,x,y)
-                if (mt.eq.5) then
-                  mt9=1000000*(50+lfs)+izap
-                else
-                  mt9=1000*(10+lfs)+mt
-                endif
+                mt9=mtdos(mt,izap,lfs)
                 if (nmf10.gt.0) then
                   i10=iposm(nmf10,mf10,mt9)
                 else
@@ -372,7 +387,7 @@ c
      &        nnxc,' in MF9. Increase the value of nnxc in ',nmf9-nnxc
             write(*,'(2(a,i6))')' Number of reactions greater than',
      &        nnxc,' in MF9. Increase the value of nnxc in ',nmf9-nnxc
-          else        
+          else
             write(lou,'(1x,i6,a)')nmf9,' set of yields found on MF9'
             write(*,'(1x,i6,a)')nmf9,' set of yields found on MF9'
           endif
@@ -386,10 +401,12 @@ c
       if (icod.eq.0) then
         backspace(nin)
         mt=1000
+        ii=0
         do while (mt.gt.0)
           call findnextmt(nin,8,mt)
           if (mt.gt.1) then
             call readcont(nin,c1,c2,l1,l2,nfs,n2,mat0,mf0,mt0,ns0)
+            kzap=-99999
             do i=1,nfs
               if (n2.eq.1) then
                 call readcont(nin,zap,c2,lmf,lfs,n3,n4,mat0,mf0,mt0,ns0)
@@ -403,11 +420,8 @@ c
                   i3=0
                 endif
                 if (i3.gt.0) then
-                  if (mt.eq.5) then
-                    mt8=1000000*(50+lfs)+nint(zap+1.d-6)
-                  else
-                    mt8=1000*(10+lfs)+mt
-                  endif
+                  izap=nint(zap+1.0d-6)
+                  mt8=mtdos(mt,izap,lfs)                
                   if (nmf10.gt.0) then
                     i10=iposm(nmf10,mf10,mt8)
                   else
@@ -422,7 +436,17 @@ c
                     nmf68=nmf68+1
                     mt6(nmf68)=mt
                     lip6(nmf68)=lfs
-                    zap6(nmf68)=zap
+                    lzap=izap
+                    lzap6(nmf68)=lzap
+                    if (kzap.ne.lzap) then                      
+                      kk=0
+                      kzap=lzap
+                      ii=ii+1
+                    else
+                      kk=kk+1
+                    endif
+                    kip6(nmf68)=kk
+                    nzap6(ii)=kk+1
                   endif
                 else
                   write(lou,*)' MF6 yield for mt=',mt,' was specified',
@@ -438,7 +462,7 @@ c
      &        nnx6,' in MF6. Increase the value of nnx6 in ',nmf68-nnx6
             write(*,'(2(a,i6))')' Number of reactions greater than',
      &        nnx6,' in MF6. Increase the value of nnx6 in ',nmf68-nnx6
-          else        
+          else
             write(lou,'(1x,i6,a)')nmf68,
      &        ' set of yields found on MF8 with LMF=6'
             write(*,'(1x,i6,a)')nmf68,
@@ -447,46 +471,167 @@ c
         endif
       endif
 c
+c     Force dosimetry data from MF6 yields if idos6>0 and no data on MF8
+c      
+      if (idos6.gt.0) then
+        call findmf(nin,mat,6,icod)
+        if (icod.eq.0) then
+          backspace(nin)
+          mt=1000
+          ii=0
+          do while (mt.gt.0)
+            call findnextmt(nin,6,mt)
+            if (mt.gt.1) then
+              if (nmf3.gt.0) then
+                i3=iposm(nmf3,mf3,mt)
+              else
+                i3=0
+              endif
+              if (i3.gt.0) then
+                call readcont(nin,c1,awr,jp6,lct,nk,n2,mat1,mf1,mt1,ns1)
+                kzap=-99999
+                do k=1,nk
+                  call readtab1(nin,zap,awp,lfs,law,nr,np,nbt,ibt,x,y)
+                  izap=nint(zap+1.0d-6)
+                  if (izap.gt.2004) then
+                    mt8=mtdos(mt,izap,lfs)                
+                    if (nmf10.gt.0) then
+                      i10=iposm(nmf10,mf10,mt8)
+                    else
+                      i10=0
+                    endif
+                    if (nmf9.gt.0) then
+                      i9=iposm(nmf9,mf9,mt8)
+                    else
+                      i9=0
+                    endif
+                    i68=mtdchk(nmf68,mt6,lzap6,lip6,mt8)
+                    if (i9.eq.0.and.i10.eq.0.and.i68.eq.0) then
+                      nmf68=nmf68+1
+                      mt6(nmf68)=mt
+                      lip6(nmf68)=lfs
+                      lzap=izap
+                      lzap6(nmf68)=lzap
+                      if (kzap.ne.lzap) then                      
+                        kk=0
+                        kzap=lzap
+                        ii=ii+1
+                      else
+                       kk=kk+1
+                      endif
+                      kip6(nmf68)=kk
+                      nzap6(ii)=kk+1
+                    endif
+                  endif
+                  call nextsub6(nin,law,nbt,ibt,y,yy)
+                enddo
+              else
+                write(lou,*)' MF6 yield for mt=',mt,' was specified',
+     &            ' but no MF3 data availble. Data ignored.'                
+              endif
+            endif
+          enddo
+          if (nmf68.gt.0) then
+            if (nmf68.gt.nnx6) then
+              write(lou,'(2(a,i6))')' Number of reactions greater than',
+     &         nnx6,' in MF6. Increase the value of nnx6 in ',nmf68-nnx6
+              write(*,'(2(a,i6))')' Number of reactions greater than',
+     &         nnx6,' in MF6. Increase the value of nnx6 in ',nmf68-nnx6
+            else
+              write(lou,'(1x,i6,a)')nmf68,
+     &         ' set of yields found on MF6 (no data available on MF8)'
+              write(*,'(1x,i6,a)')nmf68,
+     &         ' set of yields found on MF6 (no data available on MF8)'
+            endif
+          endif
+        endif
+      endif            
+c
 c     searching and saving MF6 yields, if required
 c
       nmf6=0
       if (nmf68.gt.0) then
+        kzap=-99999
+        mtk=-999
+        ii=0      
         do i=1,nmf68
           mti=mt6(i)
+          lzapi=lzap6(i)
+          if (mti.ne.mtk.or.lzapi.ne.kzap) then            
+            mtk=mti
+            kzap=lzapi
+            call findmt(nin,mat,6,mti,icod)
+            if (icod.eq.0) then
+              call readcont(nin,c1,c2,jp,lct,nk,n3,mat0,mf0,mt0,ns0)
+              kk=0
+              do k=1,nk
+                call readtab1(nin,zap,c2,lip,law,nr,ne,nbt,ibt,x,y)
+                izap=nint(zap+1.0d-6)
+                if (izap.eq.kzap) kk=kk+1           
+                call nextsub6(nin,law,nbt,ibt,x,y)              
+              enddo
+              ii=ii+1
+              nzap(ii)=kk
+            else
+              write(lou,*)' MF6 yield for mt=',mti,' zap=',lzapi,
+     &          ' lip=',lip6(i),' was specified on MF8, but was not',
+     &          ' found on MF6. Data ignored.'
+            endif
+          endif
+        enddo
+c
+c       save yields in temporary file
+c
+        kzap=-99999
+        mtk=-999
+        ii=0
+        do i=1,nmf68
+          mti=mt6(i)
+          lzap6i=lzap6(i)
+          lip6i=lip6(i)
+          if (mti.ne.mtk.or.lzap6i.ne.kzap) then
+            ii=ii+1
+            if (nzap(ii).eq.nzap6(ii)) then 
+              ktest=1
+            else
+              ktest=0
+            endif
+            write(lou,*)' nzap=',nzap(ii),' nzap6=',nzap6(ii),' ktest=',
+     &       ktest
+            kk=0
+            mtk=mti
+            kzap=lzap6i
+          endif
+          write(lou,*)' mt=',mti,' zap=',lzap6i,' lfs=',lip6i,' kfs=',
+     &     kip6(i)
           call findmt(nin,mat,6,mti,icod)
           if (icod.eq.0) then
             call readcont(nin,c1,c2,jp,lct,nk,n3,mat0,mf0,mt0,ns0)
             ifound=0
             do k=1,nk
               call readtab1(nin,zap,c2,lip,law,nr,ne,nbt,ibt,x,y)
-              if (zap.eq.zap6(i).and.lip.eq.lip6(i)) then
-                if (mti.eq.5) then
-                  mti6=1000000*(50+lip)+nint(zap+1.d-6)
-                else
-                  mti6=1000*(10+lip)+mti
-                endif
+              izap=nint(zap+1.0d-6)
+              if (izap.eq.lzap6i.and.
+     &          (lip.eq.lip6i.or.(ktest.eq.1.and.kk.eq.kip6(i)))) then
+                mti6=mtdos(mti,izap,lip6i)
                 nmf6=nmf6+1
                 mf6(nmf6)=mti6
                 nst=0
                 c1=dble(mti)
                 c2=dble(mti6)
-                izap=nint(zap+1.0d-6)
-                call wrtab1(ntp,mat,6,mti,nst,c1,c2,izap,lip,
+                call wrtab1(ntp,mat,6,mti,nst,c1,c2,izap,lip6i,
      &            nr,nbt,ibt,ne,x,y)
                 ifound=1
+                kk=kk+1
                 exit
               endif
               call nextsub6(nin,law,nbt,ibt,x,y)
             enddo
             if (ifound.eq.0) then
-              write(lou,*)' MF6 yield for mt=',mti,' zap=',zap6(i),
-     &          ' lip=',lip6(i),' was specified on MF8, but was not',
+              write(lou,*)' MF6 yield for mt=',mti,' zap=',lzap6i,
+     &          ' lip=',lip6i,' was specified on MF8, but was not',
      &          ' found on MF6. Data ignored.'
             endif
-          else
-            write(lou,*)' MF6 yield for mt=',mti,' zap=',zap6(i),
-     &        ' lip=',lip6(i),' was specified on MF8, but was not',
-     &        ' found on MF6. Data ignored.'
           endif
         enddo
       endif
@@ -535,7 +680,14 @@ c
             xss(lmt+imt-1)=mti
             xss(lsig+imt-1)=iloc
             call checklaw(nr,ibt,icod)
-            if (icod.eq.0) nr=0
+            if (icod.eq.0) then
+              call remdup(lou,ne,x,y,irem)
+              if (irem.gt.0) then
+                write(lou,*)' Warning: ',irem,' points',
+     &            ' removed from dosimetry reaction ',mti
+              endif
+              nr=0
+            endif
             ll=lxsd+iloc-1
             xss(ll)=nr
             if (nr.gt.0) then
@@ -591,7 +743,14 @@ c
               xss(lmt+imt-1)=mti
               xss(lsig+imt-1)=iloc
               call checklaw(nr,ibt,icod)
-              if (icod.eq.0) nr=0
+              if (icod.eq.0) then
+                call remdup(lou,ne,x,y,irem)
+                if (irem.gt.0) then
+                write(lou,*)' Warning: ',irem,' points',
+     &            ' removed from dosimetry reaction ',mti
+                endif
+                nr=0
+              endif
               ll=lxsd+iloc-1
               xss(ll)=nr
               if (nr.gt.0) then
@@ -827,6 +986,70 @@ c
       return
       end
 C======================================================================
+      subroutine remdup(nerr,n,x,y,irem)
+c
+c     remove duplicate information
+c
+      implicit real*8 (a-h,o-z)
+      dimension x(*),y(*)
+      character*11 x0,x1
+      irem=0
+      call ff2chx(x(1),x0)
+      read(x0,'(e11.0)')x(1)
+      y0=y(1)
+      j=1
+      i=2
+      n0=n
+      do while (i.le.n)
+        call ff2chx(x(i),x1)
+        y1=y(i)
+        if (x0.eq.x1.and.((y0.eq.y1).or.(i.eq.n.and.y1.eq.0.0d0))) then
+          if (nerr.gt.0) then
+            write(nerr,*)' Warning: duplicate point at x=',x1,' y=',y1,
+     &        ' i=',i,' removed'
+          endif
+        elseif (x0.ne.x1.and.y0.eq.y1) then
+          i0=i
+          do while(x0.ne.x1.and.y0.eq.y1.and.i.lt.n)
+            x0=x1
+            y0=y1            
+            i=i+1
+            call ff2chx(x(i),x1)
+            y1=y(i)
+          enddo
+          jrem=i-i0
+          if (i.lt.n.and.((x0.eq.x1).or.(y0.ne.y1))) then
+            j=j+1
+            read(x0,'(e11.0)')x(j)
+            y(j)=y0
+            jrem=jrem-1
+          endif
+          j=j+1
+          read(x1,'(e11.0)')x(j)
+          y(j)=y1
+          if (jrem.gt.0.and.nerr.gt.0) then
+            if (i.lt.n.and.((x0.eq.x1).or.(y0.ne.y1))) then
+              write(nerr,*)' Warning: ',jrem,' points removed between',
+     &          x(j-2),' and ',x(j-1)
+            else
+              write(nerr,*)' Warning: ',jrem,' points removed between',
+     &          x(j-1),' and ',x(j)            
+            endif
+          endif                             
+        else
+          j=j+1
+          read(x1,'(e11.0)')x(j)
+          y(j)=y1
+        endif
+        x0=x1
+        y0=y1
+        i=i+1
+      enddo
+      n=j
+      irem=n0-n
+      return
+      end
+C======================================================================
       subroutine setxsd(nr,nbt,ibt,ne,x,y,nry,nbty,ibty,ney,xy,yy,
      &  tol,ymin,nnmax)
 c
@@ -900,25 +1123,21 @@ c
         y0=y1
       enddo
       ne=j
-      do i=2,ne
-        if(yl(i).gt.0.0d0) then
-          imin=i-1
-          exit
-        endif
+      call remdup(0,ne,xl,yl,irem)
+      if (irem.gt.0) then
+        write(*,*)' Warning: ',irem,' points',
+     &    ' removed from dosimetry reaction' 
+      endif
+      do i=1,ne
+        x(i)=xl(i)
+        y(i)=yl(i)
       enddo
-      j=0
-      do i=imin,ne
-        j=j+1
-        x(j)=xl(i)
-        y(j)=yl(i)
-      enddo
-      ne=j
       nr=1
       nbt(1)=ne
       ibt(1)=2
       return
       end
-C======================================================================      
+C======================================================================
       subroutine checkdis(nerr,n,x,y,icod)
 c
 c     remove duplicate points & discontinuities from the
@@ -928,18 +1147,22 @@ c
       dimension x(*),y(*)
       character*11 x0,x1
       icod=0
-      call chendf(x(1),x0)
+      call ff2chx(x(1),x0)
+      read(x0,'(e11.0)')x(1)
       y0=y(1)
       j=1
       i=2
       do while (i.le.n)
-        call chendf(x(i),x1)
+        call ff2chx(x(i),x1)
         y1=y(i)
         if (x0.eq.x1.and.y0.eq.y1) then
-          write(*,*)' duplicate point at ',x(i),' ', x1,' ',y1
+          write(*,*)' Warning: duplicate point at x=',x1,' y=',y1,
+     &      ' i=',i,' removed'
           if (nerr.gt.0) then
-            write(nerr,*)' duplicate point at ',x(i),' ', x1,' ',y1
+            write(nerr,*)' Warning: duplicate point at x=',x1,' y=',y1,
+     &        ' i=',i,' removed'
           endif
+          icod=icod+1
         else
           j=j+1
           read(x1,'(e11.0)')x(j)
@@ -950,29 +1173,41 @@ c
         i=i+1
       enddo
       n=j
-      call chendf(x(1),x0)
+      call ff2chx(x(1),x0)
       i=2
       j=1
       do while (i.le.n)
-        call chendf(x(i),x1)
+        call ff2chx(x(i),x1)
         if (x0.eq.x1) then
-          do while(x0.eq.x1)
+          if (i.lt.n) then
+            do while(x0.eq.x1.and.i.lt.n)
+              icod=icod+1
+              i=i+1
+              call ff2chx(x(i),x1)
+            enddo
+          endif
+          if (i.lt.n) then
+            i=i-1
+            xx=edelta(x(i),1.0d0)
+            if (xx.ge.x(i+1)) xx=0.5d0*(x(i)+x(i+1))
+            call ff2chx(xx,x1)
+            j=j+1
+            x(j)=xx
+            y(j)=y(i)
+            write(*,*)' Warning: discontinuity at x=',x0,' i=',i,
+     &        ' x(i) set to ',x1
+            if (nerr.gt.0) then
+              write(nerr,*)' Warning: discontinuity at x=',x0,' i=',i,
+     &          ' x(i) set to ',x1
+            endif
+          else
             icod=icod+1
-            i=i+1
-            call chendf(x(i),x1)
-          enddo
-          i=i-1
-          j=j+1
-          xx=edelta(x(i),1.0d0)
-          if (xx.ge.x(i+1)) then xx=0.5d0*(x(i)+x(i+1))
-          x(j)=xx
-          call chendf(x(j),x1)
-          y(j)=y(i)
-          write(*,*)' discontinuity at x=',x(i),' set to ',
-     &                x(j-1),' ',x(j)
-          if (nerr.gt.0) then
-            write(nerr,*)' discontinuity at x=',x(i),' set to ',
-     &                     x(j-1),' ',x(j)
+            write(*,*)' Warning: discontinuity at x=',x0,' i=',i,
+     &        ' x(i) removed'
+            if (nerr.gt.0) then
+              write(nerr,*)' Warning: discontinuity at x=',x0,' i=',i,
+     &          ' x(i) removed'
+            endif
           endif
         else
           j=j+1
@@ -985,7 +1220,140 @@ c
       n=j
       return
       end
-C======================================================================      
+C======================================================================
+      subroutine ff2chx(xx,strxx)
+      implicit real*8 (a-h,o-z)
+c
+c     pack value into 11-character string
+c
+      character*11 strxx
+      character*12 str12
+      character*13 str13
+      character*14 str14
+      character*16 str16
+      write(str16,'(1pe16.9)')xx
+      read(str16,'(e16.0)')ff
+      aff=dabs(ff)
+      if (aff.lt.1.00000d-99) then
+        strxx=' 0.0       '
+      elseif (aff.lt.9.99999d+99) then
+        read(str16,'(13x,i3)')iex
+        select case (iex)
+          case (-9,-8,-7,-6,-5,-4)
+            if (ff.gt.0.0d0) then
+              write(str14,'(1pe14.7)')ff
+              strxx(1:9)=str14(2:10)
+              strxx(10:10)=str14(12:12)
+              strxx(11:11)=str14(14:14)
+            else
+              write(str13,'(1pe13.6)')ff
+              strxx(1:9)=str13(1:9)
+              strxx(10:10)=str13(11:11)
+              strxx(11:11)=str13(13:13)
+            endif
+          case (-3,-2,-1)
+            if (ff.gt.0.0d0) then
+              write(str13,'(f13.10)')ff
+              strxx(1:11)=str13(3:13)
+            else
+              write(str12,'(f12.9)')ff
+              strxx(1:1)=str12(1:1)
+              strxx(2:11)=str12(3:12)
+            endif
+          case (0)
+            if (ff.gt.0.0d0) then
+              write(str12,'(f12.9)')ff
+              strxx(1:11)=str12(2:12)
+            else
+              write(strxx,'(f11.8)')ff
+            endif
+          case (1)
+            if (ff.gt.0.0d0) then
+              write(str12,'(f12.8)')ff
+              strxx(1:11)=str12(2:12)
+            else
+              write(strxx,'(f11.7)')ff
+            endif
+          case (2)
+            if (ff.gt.0.0d0) then
+              write(str12,'(f12.7)')ff
+              strxx(1:11)=str12(2:12)
+            else
+              write(strxx,'(f11.6)')ff
+            endif
+          case (3)
+            if (ff.gt.0.0d0) then
+              write(str12,'(f12.6)')ff
+              strxx(1:11)=str12(2:12)
+            else
+              write(strxx,'(f11.5)')ff
+            endif
+          case (4)
+            if (ff.gt.0.0d0) then
+              write(str12,'(f12.5)')ff
+              strxx(1:11)=str12(2:12)
+            else
+              write(strxx,'(f11.4)')ff
+            endif
+          case (5)
+            if (ff.gt.0.0d0) then
+              write(str12,'(f12.4)')ff
+              strxx(1:11)=str12(2:12)
+            else
+              write(strxx,'(f11.3)')ff
+            endif
+          case (6)
+            if (ff.gt.0.0d0) then
+              write(str12,'(f12.3)')ff
+              strxx(1:11)=str12(2:12)
+            else
+              write(strxx,'(f11.2)')ff
+            endif
+          case (7)
+            if (ff.gt.0.0d0) then
+              write(str12,'(f12.2)')ff
+              strxx(1:11)=str12(2:12)
+            else
+              write(strxx,'(f11.1)')ff
+            endif
+          case (8)
+            if (ff.gt.0.0d0) then
+              write(str12,'(f12.1)')ff
+              strxx(1:11)=str12(2:12)
+            else
+              write(strxx,'(f11.0)')ff
+            endif
+          case (9)
+            if (ff.gt.0.0d0) then
+              write(str12,'(f12.0)')ff
+              strxx(1:11)=str12(2:12)
+            else
+              write(str13,'(1pe13.6)')ff
+              strxx(1:9)=str13(1:9)
+              strxx(10:10)=str13(11:11)
+              strxx(11:11)=str13(13:13)
+            endif
+          case default
+            if (ff.gt.0.0d0) then
+              write(str13,'(1pe13.6)')ff
+              strxx(1:8)=str13(2:9)
+              strxx(9:11)=str13(11:13)
+            else
+              write(str12,'(1pe12.5)')ff
+              strxx(1:8)=str12(1:8)
+              strxx(9:11)=str12(10:12)
+            endif
+        end select
+      else
+        if (ff.gt.0.0d0) then
+          strxx='9.999999+99'
+        else
+          strxx='-9.99999+99'
+        endif
+      endif
+      return
+      end
+C======================================================================
       real*8 function edelta(ffin,fdig)
       implicit real*8 (a-h,o-z)
       character*16 str16
@@ -1080,10 +1448,11 @@ C======================================================================
         end select
       endif
       return
-      end                  
+      end
 C======================================================================
       subroutine union(np1,x1,np2,x2,np3,x3,npmax)
       implicit real*8 (a-h, o-z)
+      parameter(eps=1.0d-9)
 c
 c     Prepare union grid x3 from x1 and x2
 c
@@ -1093,15 +1462,17 @@ c
       k=0
       do while (i.le.np1.and.j.le.np2)
         call inc(k,npmax)
-        if (x1(i).lt.x2(j)) then
-          x3(k)=x1(i)
-          i=i+1
-        elseif (x1(i).eq.x2(j)) then
-          x3(k)=x1(i)
+        xx1=x1(i)
+        xx2=x2(j)
+        if (abs(xx2-xx1).lt.eps*xx2) then
+          x3(k)=xx1
           i=i+1
           j=j+1
+        elseif (xx1.lt.xx2) then
+          x3(k)=xx1
+          i=i+1
         else
-          x3(k)=x2(j)
+          x3(k)=xx2
           j=j+1
         endif
       enddo
@@ -1135,19 +1506,25 @@ c
 C======================================================================
       real*8 function fvalue(nr,nbt,ibt,np,x,y,x0)
 c
-c      Return f(x0): Function f value at x0.
+c      Return f(x0): function value at x0.
 c      Function f is given by an ENDF-6/TAB1 record
 c
         implicit real*8 (a-h, o-z)
         dimension nbt(*),ibt(*),x(*),y(*)
+        character*11 cx0,cx1
         if (x0.lt.x(1).or.x0.gt.x(np)) then
           fvalue=0.0d0
         else
-          i=1
+          call chendf(x0,cx0)
+          i=2
           do while (i.le.np.and.x(i).lt.x0)
             i=i+1
           enddo
-          if (x0.eq.x(i)) then
+          i1=i-1
+          call chendf(x(i1),cx1)
+          if (cx0.eq.cx1) then
+            fvalue=y(i1)
+          elseif (x0.eq.x(i)) then
             fvalue=y(i)
           else
             j=1
@@ -1155,195 +1532,11 @@ c
               j=j+1
             enddo
             ilaw=ibt(j)
-            call terp1m(x(i-1),y(i-1),x(i),y(i),x0,y0,ilaw)
+            call terp1m(x(i1),y(i1),x(i),y(i),x0,y0,ilaw)
             fvalue=y0
           endif
         endif
         return
-      end
-C======================================================================
-      subroutine terp1m(x1,y1,x2,y2,x,y,i)
-c
-c      interpolate one point using ENDF-6 interpolation laws
-c      (borrowed and modified from NJOY)
-c      (x1,y1) and (x2,y2) are the end points
-c      (x,y) is the interpolated point
-c      i is the interpolation law (1-5)
-c
-c     *****************************************************************
-      implicit real*8 (a-h,o-z)
-      parameter (zero=0.0d0)
-c
-c     *** x1=x2
-      if (x2.eq.x1) then
-        y=y1
-        return
-      endif
-c
-c     ***y is constant
-      if (i.eq.1.or.y2.eq.y1.or.x.eq.x1) then
-         y=y1
-c
-c     ***y is linear in x
-      else if (i.eq.2) then
-         y=y1+(x-x1)*(y2-y1)/(x2-x1)
-c
-c     ***y is linear in ln(x)
-      else if (i.eq.3) then
-         y=y1+log(x/x1)*(y2-y1)/log(x2/x1)
-c
-c     ***ln(y) is linear in x
-      else if (i.eq.4) then
-         y=y1*exp((x-x1)*log(y2/y1)/(x2-x1))
-c
-c     ***ln(y) is linear in ln(x)
-      else if (i.eq.5) then
-         if (y1.eq.zero) then
-            y=y1
-         else
-            y=y1*exp(log(x/x1)*log(y2/y1)/log(x2/x1))
-         endif
-c
-c     ***coulomb penetrability law (charged particles only)
-      else
-        write(*,*) ' Interpolation law: ',i,' not allowed'
-        stop
-      endif
-      return
-      end
-C======================================================================
-      subroutine dosout(fout,mcnpx)
-c
-c      Write out a type 1 dosimetry ACE-formatted file.
-c      Borrowed and modified from NJOY2016
-c
-      implicit real*8 (a-h, o-z)
-      character*10 hd,hm
-      character*13 hz
-      character*70 hk
-      character*72 fout,fdir
-      common/acetxt/hz,hd,hm,hk
-      common/acecte/awr0,tz,awn(16),izn(16)
-      common/acepnt/nxs(16),jxs(32)
-      common/acedat/xss(50000000),nxss
-      data nout/30/,ndir/31/
-c
-c       open output ACE-formatted file
-c
-      open(nout,file=fout)
-c
-c      Type 1
-c
-      if (mcnpx.eq.1) then
-        write(nout,'(a13,f12.6,1x,1p,e11.4,1x,a10/a70,a10)')
-     &    hz(1:13),awr0,tz,hd,hk,hm
-      else
-        write(nout,'(a10,f12.6,1x,1p,e11.4,1x,a10/a70,a10)')
-     &    hz(1:10),awr0,tz,hd,hk,hm
-      endif
-      write(nout,'(4(i7,f11.0))') (izn(i),awn(i),i=1,16)
-      len2=nxs(1)
-      ntr=nxs(4)
-      mtr=jxs(3)
-      lsig=jxs(6)
-      lxsd=jxs(7)
-      write(nout,'(8i9)')(nxs(i),i=1,16)
-      write(nout,'(8i9)')(jxs(i),i=1,32)
-c
-c     mtr block
-c
-      l=mtr
-      do i=1,ntr
-        call typen(l,nout,1)
-        l=l+1
-      enddo
-c
-c     lsig block
-c
-      l=lsig
-      do i=1,ntr
-        call typen(l,nout,1)
-        l=l+1
-      enddo
-c
-c     sigd block
-c
-      l=lxsd
-      do i=1,ntr
-        nr=nint(xss(l))
-        call typen(l,nout,1)
-        l=l+1
-        if (nr.ne.0) then
-          n=2*nr
-          do j=1,n
-            call typen(l,nout,1)
-            l=l+1
-          enddo
-        endif
-        ne=nint(xss(l))
-        call typen(l,nout,1)
-        l=l+1
-        n=2*ne
-        do j=1,n
-          call typen(l,nout,2)
-          l=l+1
-        enddo
-      enddo
-      call typen(0,nout,3)
-      close(nout)
-      nern=0
-      lrec=0
-c
-c      write *.xsd file for xsdir
-c
-      i=index(fout,'.',.true.)
-      if (i.le.0) then
-        i=len(trim(fout))
-      else
-        i=i-1
-      endif
-      write(fdir,'(a,a)')trim(fout(1:i)),'.xsd'
-      fdir=trim(fdir)
-      open(ndir,file=fdir)
-      if (mcnpx.eq.1) then
-        write(ndir,'(a13,f12.6,1x,a,1x,a,i9,2i3,1pe11.4)')
-     &    hz(1:13),awr0,trim(fout),'0 1 1 ',len2,lrec,nern,tz
-      else
-        write(ndir,'(a10,f12.6,1x,a,1x,a,i9,2i3,1pe11.4)')
-     &    hz(1:10),awr0,trim(fout),'0 1 1 ',len2,lrec,nern,tz
-      endif
-      close(ndir)
-      return
-      end
-C======================================================================
-      subroutine typen(l,nout,iflag)
-c
-c     -----------------------------------------------------------------
-c      Write an integer or a real number to a Type-1 ACE file,
-c      or (if nout=0) convert real to integer for type-3 output,
-c      or (if nout=1) convert integer to real for type-3 input.
-c      Use iflag.eq.1 to write an integer (i20).
-c      Use iflag.eq.2 to write a real number (1pe20.11).
-c      Use iflag.eq.3 to write partial line at end of file.
-c
-c      Borrowed and adapted from NJOY.
-c      No sense to do something different
-c     -----------------------------------------------------------------
-c
-      implicit real*8 (a-h, o-z)
-      parameter (epsn=1.0d-12)
-      character*20 hl(4)
-      common/acedat/xss(50000000),nxss
-      save hl,i
-      if (iflag.eq.3.and.nout.gt.1.and.i.lt.4) then
-        write(nout,'(4a20)') (hl(j),j=1,i)
-      else
-        i=mod(l-1,4)+1
-        if (iflag.eq.1) write(hl(i),'(i20)') nint(xss(l)+epsn)
-        if (iflag.eq.2) write(hl(i),'(1p,e20.11)') xss(l)
-        if (i.eq.4) write(nout,'(4a20)') (hl(j),j=1,i)
-      endif
-      return
       end
 C======================================================================
 C      General routines for reading ENDF-6 formatted files
@@ -1355,17 +1548,35 @@ c      on return if icod=0, material found
 c                if icod=1, material not found
 c
       character*66 line
-      rewind nin
-      icod=0
-      mat0=-2
-      do while (mat0.ne.mat.and.mat0.ne.-1)
-        call readtext(nin,line,mat0,mf,mt,ns)
-      enddo
-      if (mat0.eq.-1)then
+      read(nin,'(a66,i4,i2,i3,i5)',iostat=iosnin)line,mat0,mf,mt,ns
+      if (iosnin.lt.0.or.mat0.eq.-1.or.mat0.ge.mat) then
+        rewind(nin)
+        read(nin,*)
+        mat0=0
+      elseif (iosnin.gt.0) then
         icod=1
-      else
+        return
+      elseif (mat0.eq.0) then
         backspace nin
+        backspace nin
+        read(nin,'(a66,i4,i2,i3,i5)',err=10,end=10)line,mat0,mf,mt,ns
+        if (mat0.ge.mat) then
+          rewind(nin)
+          read(nin,*)
+          mat0=0
+        endif
       endif
+      do while (mat0.lt.mat.and.mat0.ne.-1)
+        read(nin,'(a66,i4,i2,i3,i5)',err=10,end=10)line,mat0,mf,mt,ns
+      enddo
+      if (mat0.eq.mat)then
+        icod=0
+        backspace nin
+      else
+        icod=1
+      endif
+      return
+   10 icod=1
       return
       end
 C======================================================================
@@ -1376,19 +1587,52 @@ c      on return if icod=0, mat/mf found
 c                if icod=1, mat/mf not found
 c
       character*66 line
-      call findmat(nin,mat,icod)
-      if (icod.eq.0) then
-        mat1=mat
-        mf1=-1
-        do while (mf1.ne.mf.and.mat1.eq.mat)
-          call readtext(nin,line,mat1,mf1,mt1,ns)
-        enddo
-        if (mat1.ne.mat) then
-          icod=1
-        else
+      read(nin,'(a66,i4,i2,i3,i5)',iostat=iosnin)line,mat0,mf0,mt,ns
+      if (mat0.eq.0) then
+        read(nin,'(a66,i4,i2,i3,i5)',iostat=iosnin)line,mat0,mf0,mt,ns
+      endif
+      if (iosnin.ne.0.or.mat0.eq.-1.or.mat0.gt.mat.or.
+     &  (mat0.eq.mat.and.mf0.gt.mf)) then
+        call findmat(nin,mat,icod)
+      elseif (mat0.eq.mat) then
+        if (mf0.eq.0.or.mf0.eq.mf) then
           backspace nin
+          backspace nin
+          read(nin,'(a66,i4,i2,i3,i5)',err=10,end=10)line,mat0,mf0,mt,ns
+          if (mf0.ge.mf) then
+            call findmat(nin,mat,icod)
+          else
+            icod=0
+          endif
+        else
+          icod=0
+        endif
+      elseif (mat0.lt.mat) then
+        do while (mat0.lt.mat.and.mat0.ne.-1)
+          read(nin,'(a66,i4,i2,i3,i5)',err=10,end=10)line,mat0,mf0,mt,ns
+        enddo
+        if (mat0.eq.mat)then
+          icod=0
+          backspace nin
+        else
+          icod=1
         endif
       endif
+      if (icod.eq.0) then
+        mat0=mat
+        mf0=-1
+        do while (mat0.eq.mat.and.mf0.lt.mf)
+          read(nin,'(a66,i4,i2,i3,i5)',err=10,end=10)line,mat0,mf0,mt,ns
+        enddo
+        if (mat0.eq.mat.and.mf0.eq.mf) then
+          icod=0
+          backspace nin
+        else
+          icod=1
+        endif
+      endif
+      return
+   10 icod=1
       return
       end
 C======================================================================
@@ -1399,20 +1643,40 @@ c      tape, on return if icod=0, mat/mf/mt found
 c                      if icod=1, mat/mf/mt not found
 c
       character*66 line
-      rewind nin
-      call findmf(nin,mat,mf,icod)
-      if (icod.eq.0) then
-        mf1=mf
-        mt1=-1
-        do while (mt1.ne.mt.and.mf1.eq.mf)
-          call readtext(nin,line,mat1,mf1,mt1,ns)
-        enddo
-        if (mf1.ne.mf) then
-          icod=1
+      read(nin,'(a66,i4,i2,i3,i5)',iostat=iosnin)line,mat0,mf0,mt0,ns
+      if (iosnin.ne.0.or.mat0.ne.mat.or.
+     &  (mat0.eq.mat.and.mf0.ne.mf).or.
+     &  (mat0.eq.mat.and.mf0.eq.mf.and.mt0.gt.mt)) then
+        call findmf(nin,mat,mf,icod)
+      elseif (mat0.eq.mat.and.mf0.eq.mf) then
+        if (mt0.eq.0.or.mt0.eq.mt) then
+         backspace nin
+         backspace nin
+         read(nin,'(a66,i4,i2,i3,i5)',err=10,end=10)line,mat0,mf0,mt0,ns
+         if (mt0.ge.mt) then
+           call findmf(nin,mat,mf,icod)
+         else
+           icod=0
+         endif
         else
-          backspace nin
+         icod=0
         endif
       endif
+      if (icod.eq.0) then
+        mf0=mf
+        mt0=-1
+        do while (mt0.lt.mt.and.mf0.eq.mf)
+         read(nin,'(a66,i4,i2,i3,i5)',err=10,end=10)line,mat0,mf0,mt0,ns
+        enddo
+        if (mf0.eq.mf.and.mt0.eq.mt) then
+          icod=0
+          backspace nin
+        else
+          icod=1
+        endif
+      endif
+      return
+   10 icod=1
       return
       end
 C======================================================================
@@ -1421,16 +1685,18 @@ c
 c     find next mt on mf file for current material
 c
       character*66 line
-      mt1=-1
-      do while (mt1.ne.0)
-        call readtext(nin,line,mat1,mf1,mt1,ns1)
+      mt0=-1
+      do while (mt0.ne.0)
+        read(nin,'(a66,i4,i2,i3,i5)',err=10,end=10)line,mat0,mf0,mt0,ns
       enddo
-      call readtext(nin,line,mat1,mf1,mt,ns1)
-      if (mt.ne.0.and.mf1.eq.mf) then
+      read(nin,'(a66,i4,i2,i3,i5)',err=10,end=10)line,mat0,mf0,mt,ns
+      if (mt.ne.0.and.mf0.eq.mf) then
         backspace nin
       else
         mt=-1
       endif
+      return
+   10 mt=-2
       return
       end
 C======================================================================
@@ -1690,7 +1956,7 @@ c
      &    ' from MF10. Number of energy points: ',np
       elseif (mfd.eq.9) then
         write(lou,'(i4,a,i9,a,i9)')imtd,'. Dosimetry reaction mtd=',mtd,
-     &    ' from MF9*MF3. Number of energy points: ',np 
+     &    ' from MF9*MF3. Number of energy points: ',np
       elseif (mfd.eq.6) then
         write(lou,'(i4,a,i9,a,i9)')imtd,'. Dosimetry reaction mtd=',mtd,
      &    ' from MF6*MF3. Number of energy points: ',np
@@ -1761,6 +2027,35 @@ c
       return
       end
 C======================================================================
+      function mtdos(mt,izap,lfs)
+      if (mt.eq.5) then
+        mtdos=1000000*(50+lfs)+izap
+      elseif (mt.eq.18) then
+        mtdos=1000000*(80+lfs)+izap
+      else
+        mtdos=1000*(10+lfs)+mt
+      endif
+      return
+      end
+C======================================================================
+      function mtdchk(nmf68,mt6,lzap6,lip6,mt8)
+      dimension mt6(*),lzap6(*),lip6(*)
+      mtdchk=0
+      if (nmf68.gt.0) then
+        do i=1,nmf68
+          mt=mt6(i)
+          izap=lzap6(i)
+          lfs=lip6(i)
+          mt0=mtdos(mt,izap,lfs)
+          if (mt0.eq.mt8) then
+            mtdchk=1
+            exit
+          endif
+        enddo      
+      endif
+      return
+      end      
+C======================================================================
 C     Time routine
 C======================================================================
       subroutine getdtime(cdate,ctime)
@@ -1780,6 +2075,244 @@ C======================================================================
       cdate(6:7)=date(5:6)
       cdate(8:8)='/'
       cdate(9:10)=date(7:8)
+      return
+      end
+C======================================================================
+C      The following subroutines were taken from NJOY and
+C      adapted/modified by D. Lopez Aldama for ACEMAKER:
+C       1. subroutine terp1 (renamed as terp1m)
+c       2. subroutine dosout
+C       3. subroutine typen
+C
+C======================================================================
+C     Copyright (c) 2016, Los Alamos National Security, LLC
+C     All rights reserved.
+C
+C     Copyright 2016. Los Alamos National Security, LLC. This software
+C     was produced under U.S. Government contract DE-AC52-06NA25396 for
+C     Los Alamos National Laboratory (LANL), which is operated by Los
+C     Alamos National Security, LLC for the U.S. Department of Energy.
+C     The U.S. Government has rights to use, reproduce, and distribute
+C     this software.  NEITHER THE GOVERNMENT NOR LOS ALAMOS NATIONAL
+C     SECURITY, LLC MAKES ANY WARRANTY, EXPRESS OR IMPLIED, OR ASSUMES
+C     ANY LIABILITY FOR THE USE OF THIS SOFTWARE.  If software is
+C     modified to produce derivative works, such modified software
+C     should be clearly marked, so as not to confuse it with the
+C     version available from LANL.
+C
+C     Additionally, redistribution and use in source and binary forms,
+C     with or without modification, are permitted provided that the
+C     following conditions are met:
+C     1. Redistributions of source code must retain the above copyright
+C        notice, this list of conditions and the following disclaimer.
+C     2. Redistributions in binary form must reproduce the above
+C        copyright notice, this list of conditions and the following
+C        disclaimer in the documentation and/or other materials provided
+C        with the distribution.
+C     3. Neither the name of Los Alamos National Security, LLC,
+C        Los Alamos National Laboratory, LANL, the U.S. Government,
+C        nor the names of its contributors may be used to endorse or
+C        promote products derived from this software without specific
+C        prior written permission.
+C
+C     THIS SOFTWARE IS PROVIDED BY LOS ALAMOS NATIONAL SECURITY, LLC
+C     AND CONTRIBUTORS "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES,
+C     INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF
+C     MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+C     DISCLAIMED. IN NO EVENT SHALL LOS ALAMOS NATIONAL SECURITY, LLC
+C     OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+C     SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
+C     LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF
+C     USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED
+C     AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT
+C     LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING
+C     IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF
+C     THE POSSIBILITY OF SUCH DAMAGE.
+C
+C======================================================================
+      subroutine terp1m(x1,y1,x2,y2,x,y,i)
+c
+c      interpolate one point using ENDF-6 interpolation laws
+c      (x1,y1) and (x2,y2) are the end points
+c      (x,y) is the interpolated point
+c      i is the interpolation law (1-5)
+c
+c      Adapted by D. Lopez Aldama for ACEMAKER
+c
+c     *****************************************************************
+      implicit real*8 (a-h,o-z)
+      parameter (zero=0.0d0)
+c
+c     *** x1=x2
+      if (x2.eq.x1) then
+        y=y1
+        return
+      endif
+c
+c     ***y is constant
+      if (i.eq.1.or.y2.eq.y1.or.x.eq.x1) then
+         y=y1
+c
+c     ***y is linear in x
+      else if (i.eq.2) then
+         y=y1+(x-x1)*(y2-y1)/(x2-x1)
+c
+c     ***y is linear in ln(x)
+      else if (i.eq.3) then
+         y=y1+log(x/x1)*(y2-y1)/log(x2/x1)
+c
+c     ***ln(y) is linear in x
+      else if (i.eq.4) then
+         y=y1*exp((x-x1)*log(y2/y1)/(x2-x1))
+c
+c     ***ln(y) is linear in ln(x)
+      else if (i.eq.5) then
+         if (y1.eq.zero) then
+            y=y1
+         else
+            y=y1*exp(log(x/x1)*log(y2/y1)/log(x2/x1))
+         endif
+c
+c     ***coulomb penetrability law (charged particles only)
+      else
+        write(*,*) ' Interpolation law: ',i,' not allowed'
+        stop
+      endif
+      return
+      end
+C======================================================================
+      subroutine dosout(fout,mcnpx)
+c
+c      Write out a type 1 dosimetry ACE-formatted file.
+c
+c      Adapted by D. Lopez Aldama for ACEMAKER
+c
+      implicit real*8 (a-h, o-z)
+      character*10 hd,hm
+      character*13 hz
+      character*70 hk
+      character*72 fout,fdir
+      common/acetxt/hz,hd,hm,hk
+      common/acecte/awr0,tz,awn(16),izn(16)
+      common/acepnt/nxs(16),jxs(32)
+      common/acedat/xss(50000000),nxss
+      data nout/30/,ndir/31/
+c
+c       open output ACE-formatted file
+c
+      open(nout,file=fout)
+c
+c      Type 1
+c
+      if (mcnpx.eq.1) then
+        write(nout,'(a13,f12.6,1x,1p,e11.4,1x,a10/a70,a10)')
+     &    hz(1:13),awr0,tz,hd,hk,hm
+      else
+        write(nout,'(a10,f12.6,1x,1p,e11.4,1x,a10/a70,a10)')
+     &    hz(1:10),awr0,tz,hd,hk,hm
+      endif
+      write(nout,'(4(i7,f11.0))') (izn(i),awn(i),i=1,16)
+      len2=nxs(1)
+      ntr=nxs(4)
+      mtr=jxs(3)
+      lsig=jxs(6)
+      lxsd=jxs(7)
+      write(nout,'(8i9)')(nxs(i),i=1,16)
+      write(nout,'(8i9)')(jxs(i),i=1,32)
+c
+c     mtr block
+c
+      l=mtr
+      do i=1,ntr
+        call typen(l,nout,1)
+        l=l+1
+      enddo
+c
+c     lsig block
+c
+      l=lsig
+      do i=1,ntr
+        call typen(l,nout,1)
+        l=l+1
+      enddo
+c
+c     sigd block
+c
+      l=lxsd
+      do i=1,ntr
+        nr=nint(xss(l))
+        call typen(l,nout,1)
+        l=l+1
+        if (nr.ne.0) then
+          n=2*nr
+          do j=1,n
+            call typen(l,nout,1)
+            l=l+1
+          enddo
+        endif
+        ne=nint(xss(l))
+        call typen(l,nout,1)
+        l=l+1
+        n=2*ne
+        do j=1,n
+          call typen(l,nout,2)
+          l=l+1
+        enddo
+      enddo
+      call typen(0,nout,3)
+      close(nout)
+      nern=0
+      lrec=0
+c
+c      write *.xsd file for xsdir
+c
+      i=index(fout,'.',.true.)
+      if (i.le.0) then
+        i=len(trim(fout))
+      else
+        i=i-1
+      endif
+      write(fdir,'(a,a)')trim(fout(1:i)),'.xsd'
+      fdir=trim(fdir)
+      open(ndir,file=fdir)
+      if (mcnpx.eq.1) then
+        write(ndir,'(a13,f12.6,1x,a,1x,a,i9,2i3,1pe11.4)')
+     &    hz(1:13),awr0,trim(fout),'0 1 1 ',len2,lrec,nern,tz
+      else
+        write(ndir,'(a10,f12.6,1x,a,1x,a,i9,2i3,1pe11.4)')
+     &    hz(1:10),awr0,trim(fout),'0 1 1 ',len2,lrec,nern,tz
+      endif
+      close(ndir)
+      return
+      end
+C======================================================================
+      subroutine typen(l,nout,iflag)
+c
+c     -----------------------------------------------------------------
+c      Write an integer or a real number to a Type-1 ACE file,
+c      or (if nout=0) convert real to integer for type-3 output,
+c      or (if nout=1) convert integer to real for type-3 input.
+c      Use iflag.eq.1 to write an integer (i20).
+c      Use iflag.eq.2 to write a real number (1pe20.11).
+c      Use iflag.eq.3 to write partial line at end of file.
+c
+c      Adapted by D. Lopez Aldama for ACEMAKER
+c
+c     -----------------------------------------------------------------
+c
+      implicit real*8 (a-h, o-z)
+      parameter (epsn=1.0d-12)
+      character*20 hl(4)
+      common/acedat/xss(50000000),nxss
+      save hl,i
+      if (iflag.eq.3.and.nout.gt.1.and.i.lt.4) then
+        write(nout,'(4a20)') (hl(j),j=1,i)
+      else
+        i=mod(l-1,4)+1
+        if (iflag.eq.1) write(hl(i),'(i20)') nint(xss(l)+epsn)
+        if (iflag.eq.2) write(hl(i),'(1p,e20.11)') xss(l)
+        if (i.eq.4) write(nout,'(4a20)') (hl(j),j=1,i)
+      endif
       return
       end
 C======================================================================
