@@ -5,7 +5,7 @@
 A code package to produce ACE-formatted files for MCNP calculations. This updated version allows preparing fast, dosimetry, thermal and photonuclear data for Monte Carlo simulations.
 
 The ACEMAKER driver relies on specific versions of LINEAR, RECENT, LEGEND, SPECTRA, SIGMA1, FIXUP, GROUPIE, MERGER, and DICTIN from the [PREPRO] code suite.
-The modules SIXLIN, DOACE, DODOS, and DOTSL prepare the required ACE-formatted files.
+The modules SIXLIN, GAMLIN, DOACE, DODOS, DOTSL and DOPHN prepare the required ACE-formatted files.
 Please consult the [installation instructions](#installation) for guidance on how to set up this package including its dependencies.
 
 The user should be aware that the comment lines within the source codes should always be considered as the most recent documentation and may supersede any earlier published report.
