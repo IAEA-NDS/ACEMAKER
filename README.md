@@ -12,15 +12,6 @@ The user should be aware that the comment lines within the source codes should a
 
 [PREPRO]: https://github.com/iaea-nds/prepro
 
-## Authors
-
-* **Daniel López Aldama** - Consultant, International Atomic Energy Agency, IAEA/NDS, Vienna, Austria
-* **Andrej Trkov** - International Atomic Energy Agency, IAEA/NDS, Vienna, Austria
-
-## PREPRO Package's Author
-
-* **Dermott E. Cullen** - 1466 Hudson Way, Livermore, CA 94550, U.S.A.
-
 ## Installation
 
 You can download the latest released (stable) version of ACEMAKER, either as `zip` or as `tar.gz`, from the releases page:
@@ -83,6 +74,30 @@ Copy these binaries and the ones of PREPRO created above to a common directory.
 Copy all the binaries in `bin/windows` (or `bin/linux`) if you are using the precompiled versions
 to a new folder where the calculation should be performed. If you have compiled the binaries yourself
 according to the instructions in the previous section, copy those files instead to the calculation directory.
+
+
+## Authors
+
+* **Daniel López Aldama** - Consultant, International Atomic Energy Agency, IAEA/NDS, Vienna, Austria
+* **Andrej Trkov** - International Atomic Energy Agency, IAEA/NDS, Vienna, Austria
+
+## PREPRO Package's Author
+
+* **Dermott E. Cullen** - 1466 Hudson Way, Livermore, CA 94550, U.S.A.
+
+## Contributors
+
+- Georg Schnabel: help with acemaker verification as well as git repository preparation and maintenance.
+
+## Giving feedback
+
+If you want to give feedback or encounter any issues, please create
+an issue for this repository at GitHub. If not possible, you can
+write an email to <mailto:nds.contact-point@iaea.org>.
+For specific questions about the repository or code distribution, you can also
+contact <mailto:g.schnabel@iaea.org>. If you have specific questions about
+the acemaker source code, development or processing, you can contact the
+package developer at his personal email address <mailto:dlopezaldama@gmail.com>.
 
 
 ## References
