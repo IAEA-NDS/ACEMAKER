@@ -4430,7 +4430,7 @@ c
                 den=pow-1.0d0
                 xy1(k+1)=xy1(k)+(xy1(k)-xy0(k))/den
                 y1(k+1)=y1(k)+(y1(k)-y0(k))/den
-                pow=4.0d0
+                pow=4.0d0*pow
               enddo
               i1=i+1
               if ((abs(xy1(i1)-xy1(i)).le.eps*abs(xy1(i1)).and.

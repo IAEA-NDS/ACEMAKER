@@ -90,7 +90,7 @@ c
       common/acetxt/hz,hd,hm,hk
       common/acecte/awrth,tmev,awm(16),izam(16)
       common/acepnt/nxs(16),jxs(32)
-      common/acexss/xss(50000000),nxss
+      common/acexss/xss(100000000),nxss
       allocatable ei(:)
       data nin/1/,in2/2/,lst/20/
       data thzaid/'      '/,thsuff/.00/,suff/'    '/
@@ -98,7 +98,7 @@ c
 c
 c     Initialization (nxss should be set to xss dimension)
 c
-      nxss=50000000
+      nxss=100000000
       do i=1,16
         nxs(i)=0
         izam(i)=0
@@ -187,8 +187,8 @@ c     Printing input data
 c
       write(lst,'(a)')' Input options'
       write(lst,'(a)')' ============='
-      write(lst,'(a,a)')' Input TSL-ENDF file name =',fin2
-      write(lst,'(a,a)')' Output TSL-ACE file name =',fout
+      write(lst,'(a,a)')' TSL-ENDF file =',fin2
+      write(lst,'(a,a)')' TSL-ACE  file =',fout
       write(lst,'(a,i4)')' TSL-ENDF MAT =',matsl
       write(lst,'(a,1pe12.5)')' Temperature [K] =',temp
       write(lst,'(a,i3)')' Number of atom types in mixed moderator =',
@@ -392,14 +392,14 @@ c
 c      processing of inelastic thermal scattering
 c
       implicit real*8(a-h, o-z)
-      parameter (nemax=1000,nmax=6000, nkks=20)
+      parameter (nemax=2000,nmax=7000, nkks=20)
       parameter (slgmin=-228.0d0)
       parameter (epmin=0.0d0, tolde=1.0d-6)
       parameter (tzref=0.0253d0, bk=8.6173303d-5)
       dimension ei(*)
       common/acecte/awrth,tmev,awm(16),izam(16)
       common/acepnt/nxs(16),jxs(32)
-      common/acexss/xss(50000000),nxss
+      common/acexss/xss(100000000),nxss
       dimension nbt(20),ibt(20)
       character*1 lin130(130)
       allocatable sigb(:),xat(:),aws(:),isl(:),teff(:)
@@ -456,12 +456,12 @@ c
         close(lst)
         stop
       endif
-      ehigh=y(2)
-      elim=y(4)
+      allocate(sigb(nsa),xat(nsa),aws(nsa),isl(nsa),teff(nsa))
       if (y(1).gt.0.0d0) then
-        allocate(sigb(nsa),xat(nsa),aws(nsa),isl(nsa),teff(nsa))
         isl(1)=-1
+        ehigh=y(2)
         aws(1)=y(3)
+        elim=y(4)
         xat(1)=y(6)
         awrth=aws(1)
         xnatom=xat(1)
@@ -469,21 +469,27 @@ c
         sigb(1)=y(1)*fb*fb/xnatom
         i0=1
       else
-        nsa=ns
-        allocate(sigb(nsa),xat(nsa),aws(nsa),isl(nsa),teff(nsa))
+        isl(1)=0
+        aws(1)=y(3)
+        xat(1)=y(6)
         xnatom=1.0d0
-        i0=0
+        fb=(aws(1)+1.0d0)/aws(1)
+        sigb(1)=y(2)*fb*fb/xat(1)
       endif
       if (ns.gt.0) then
         do k=1,ns
           j0=6*k
-          i=i0+k
+          i=k+1
           isl(i)=nint(y(j0+1)+1.0d-5)
           aws(i)=y(j0+3)
           xat(i)=y(j0+6)
           fb=(aws(i)+1.0d0)/aws(i)
           sigb(i)=y(j0+2)*fb*fb
-          if (isl(1).lt.0) sigb(i)=sigb(i)/xnatom
+          if (isl(1).lt.0.and.isl(i).eq.0) then
+            sigb(i)=sigb(i)/xnatom
+          else
+            sigb(i)=sigb(i)/xat(i)
+          endif          
         enddo
       endif
       if (isl(1).lt.0) then
@@ -1148,7 +1154,7 @@ C======================================================================
       implicit real*8 (a-h, o-z)
       real*16 fbin,fbinlo,sf0,sf1,sf0i,sf1i,u1,v1,u2,v2,v0,du,dv,slope
       real*16 dsf0,p1,pm,sd,d2,one,one3
-      parameter(nmumax=6000,nmu00=4,one=1.0d0,one3=1.0d0/3.0d0)
+      parameter(nmumax=7000,nmu00=4,one=1.0d0,one3=1.0d0/3.0d0)
       parameter(tolmu=1.0d-5, rtolmu=1.0d-8, d2min=1.0d-9)
       parameter(vtol=1.0d-6, vtol2=vtol/(0.5d0+vtol))
       parameter(f0min=1.0d-30, tollow=0.999999999d0)
@@ -1681,12 +1687,12 @@ c
       character*1 lin130(130)
       allocatable cdf(:),icdf(:)
       dimension xs1(*),ys1(*),us1(nbin,*)
-      common/acexss/xss(50000000),nxss
+      common/acexss/xss(100000000),nxss
       data lin130/130*'='/
       if (je.ge.nemax) then
         write(lst,*)
         write(lst,*)' Fatal error: Too many incident energy points'
-        write(lst,*)' Current nemax for inelastc:',nemax
+        write(lst,*)' Current nemax for inelastic:',nemax
         stop
       endif
       allocate(cdf(nep1),icdf(nep1))
@@ -1803,6 +1809,17 @@ c
 c
 c      Inelastic itxe block (energy/angle distribution)
 c
+      if ((ixss+(3+nbin)*mcdf).gt.nxss) then
+        write(*,*)' Fatal error in thrload: increase xss dimension'
+        write(*,*)' xss array dimension: ',nxss
+        write(*,*)' min.  required size: ',(ixss+3+nbin)*mcdf
+        write(*,*)' je=',je,' e=',es1,' sigs=',sigs
+        write(lst,*)' Fatal error in thrload: increase xss dimension'
+        write(lst,*)' xss array dimension: ',nxss
+        write(lst,*)' min.  required size: ',(ixss+3+nbin)*mcdf
+        write(lst,*)' je=',je,' e=',es1,' sigs=',sigs        
+        stop
+      endif
       xss(itxe+je-1)=ixss
       xss(itnep+je-1)=nnep
       do i=2,mcdf
@@ -1828,13 +1845,13 @@ C======================================================================
       subroutine sigela(in2,lst,matsl,temp,nmix,nbin,tole,ei,nei,
      &  xnatom,imon)
       implicit real*8 (a-h, o-z)
-      parameter (nemax=1000, nkks=20)
+      parameter (nemax=2000, nkks=20)
       parameter (tolbrg=5.0d-7, tolde=1.0d-6, tolwrt=1.0005d0)
       parameter (ev2mev=1.0d-6)
       character*1 line115(115)
       dimension ei(*)
       common/acepnt/nxs(16),jxs(32)
-      common/acexss/xss(50000000),nxss
+      common/acexss/xss(100000000),nxss
       dimension nbt(20),ibt(20)
       allocatable eb(:),s(:),w(:),t(:)
       allocatable ee(:),xse(:),uus(:),ue(:,:)
@@ -2052,7 +2069,7 @@ c
         allocate(ee(nemax),xse(nemax),ue(nbin,nemax))
         allocate(ees(nkks),xses(nkks),uus(nkks),ues(nbin,nkks))
         allocate(uei(nbin),ue2(nbin))
-        sb2=0.5d0*sb/(dnmix*xnatom)
+        sb2=0.5d0*sb/(xnatom*dnmix)
         w2=2.0d0*wp
         dbin=dble(nbin)
         j=0
@@ -2771,7 +2788,7 @@ c
       common/acetxt/hz,hd,hm,hk
       common/acecte/awrth,tmev,awm(16),izam(16)
       common/acepnt/nxs(16),jxs(32)
-      common/acexss/xss(50000000),nxss
+      common/acexss/xss(100000000),nxss
       allocatable uave(:), eu1(:), eu2(:)
       data nplt/40/,ncur/41/
 c
@@ -3396,7 +3413,7 @@ c
       common/acetxt/hz,hd,hm,hk
       common/acecte/awrth,tmev,awm(16),izam(16)
       common/acepnt/nxs(16),jxs(32)
-      common/acexss/xss(50000000),nxss
+      common/acexss/xss(100000000),nxss
       data nout/30/,ndir/31/
 c
 c       open output ACE-formatted file
@@ -3563,7 +3580,7 @@ c
       implicit real*8 (a-h, o-z)
       parameter (epsn=1.0d-12)
       character*20 hl(4)
-      common/acexss/xss(50000000),nxss
+      common/acexss/xss(100000000),nxss
       save hl,i
       if (iflag.eq.3.and.nout.gt.1.and.i.lt.4) then
         write(nout,'(4a20)') (hl(j),j=1,i)

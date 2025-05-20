@@ -18,7 +18,7 @@ c       imon: Monitor printing trigger (0/1/2) = min/max/max+plt
 c             (Default: imon=0)
 c      idos6: Force to produce dosimetry data from MF6 yields even if
 c             MF8/LMF=6 data are not available
-c             (default: idos6=0) No process if MF8/LMF=6 not available 
+c             (default: idos6=0) No process if MF8/LMF=6 not available
 c        tol: linearization tolerance (Default: tol=0.001)
 c       ymin: minimum cross section (Default: ymin=1.0e-20)
 c       suff: ZAID suffix for ACE-formatted file
@@ -33,7 +33,7 @@ c      if imon=2
 c       3. DODOS.PLT PLOTTAB input option file
 c       4. DODOS.CUR PLOTTAB curve file
 c      if imon=3
-c       all yields found in MF6 for all reactions find in MF3 are processed 
+c       all yields found in MF6 for all reactions find in MF3 are processed
 c
 c     MTD numbers for the MTR block in the dosimetry ACE-formatted file:
 c       If the reaction is given in MF3, then the MT number remains the
@@ -290,7 +290,7 @@ c
         mt=1000
         do while (mt.gt.0)
           call findnextmt(nin,3,mt)
-          if (mt.gt.1) then
+          if (mt.gt.2) then
             nmf3=nmf3+1
             mf3(nmf3)=mt
           endif
@@ -315,7 +315,7 @@ c
         mt=1000
         do while (mt.gt.0)
           call findnextmt(nin,10,mt)
-          if (mt.gt.1) then
+          if (mt.gt.2) then
             call readcont(nin,c1,c2,l1,l2,nfs,n2,mat0,mf0,mt0,ns0)
             do i=1,nfs
               call readtab1(nin,c1,c2,izap,lfs,nr,ne,nbt,ibt,x,y)
@@ -345,7 +345,7 @@ c
         mt=1000
         do while (mt.gt.0)
           call findnextmt(nin,9,mt)
-          if (mt.gt.1) then
+          if (mt.gt.2) then
             if (nmf3.gt.0) then
               i3=iposm(nmf3,mf3,mt)
             else
@@ -404,7 +404,7 @@ c
         ii=0
         do while (mt.gt.0)
           call findnextmt(nin,8,mt)
-          if (mt.gt.1) then
+          if (mt.gt.2) then
             call readcont(nin,c1,c2,l1,l2,nfs,n2,mat0,mf0,mt0,ns0)
             kzap=-99999
             do i=1,nfs
@@ -421,7 +421,7 @@ c
                 endif
                 if (i3.gt.0) then
                   izap=nint(zap+1.0d-6)
-                  mt8=mtdos(mt,izap,lfs)                
+                  mt8=mtdos(mt,izap,lfs)
                   if (nmf10.gt.0) then
                     i10=iposm(nmf10,mf10,mt8)
                   else
@@ -438,7 +438,7 @@ c
                     lip6(nmf68)=lfs
                     lzap=izap
                     lzap6(nmf68)=lzap
-                    if (kzap.ne.lzap) then                      
+                    if (kzap.ne.lzap) then
                       kk=0
                       kzap=lzap
                       ii=ii+1
@@ -472,7 +472,7 @@ c
       endif
 c
 c     Force dosimetry data from MF6 yields if idos6>0 and no data on MF8
-c      
+c
       if (idos6.gt.0) then
         call findmf(nin,mat,6,icod)
         if (icod.eq.0) then
@@ -481,7 +481,7 @@ c
           ii=0
           do while (mt.gt.0)
             call findnextmt(nin,6,mt)
-            if (mt.gt.1) then
+            if (mt.gt.2) then
               if (nmf3.gt.0) then
                 i3=iposm(nmf3,mf3,mt)
               else
@@ -494,7 +494,7 @@ c
                   call readtab1(nin,zap,awp,lfs,law,nr,np,nbt,ibt,x,y)
                   izap=nint(zap+1.0d-6)
                   if (izap.gt.2004) then
-                    mt8=mtdos(mt,izap,lfs)                
+                    mt8=mtdos(mt,izap,lfs)
                     if (nmf10.gt.0) then
                       i10=iposm(nmf10,mf10,mt8)
                     else
@@ -512,7 +512,7 @@ c
                       lip6(nmf68)=lfs
                       lzap=izap
                       lzap6(nmf68)=lzap
-                      if (kzap.ne.lzap) then                      
+                      if (kzap.ne.lzap) then
                         kk=0
                         kzap=lzap
                         ii=ii+1
@@ -527,7 +527,7 @@ c
                 enddo
               else
                 write(lou,*)' MF6 yield for mt=',mt,' was specified',
-     &            ' but no MF3 data availble. Data ignored.'                
+     &            ' but no MF3 data availble. Data ignored.'
               endif
             endif
           enddo
@@ -545,7 +545,7 @@ c
             endif
           endif
         endif
-      endif            
+      endif
 c
 c     searching and saving MF6 yields, if required
 c
@@ -553,11 +553,11 @@ c
       if (nmf68.gt.0) then
         kzap=-99999
         mtk=-999
-        ii=0      
+        ii=0
         do i=1,nmf68
           mti=mt6(i)
           lzapi=lzap6(i)
-          if (mti.ne.mtk.or.lzapi.ne.kzap) then            
+          if (mti.ne.mtk.or.lzapi.ne.kzap) then
             mtk=mti
             kzap=lzapi
             call findmt(nin,mat,6,mti,icod)
@@ -567,8 +567,8 @@ c
               do k=1,nk
                 call readtab1(nin,zap,c2,lip,law,nr,ne,nbt,ibt,x,y)
                 izap=nint(zap+1.0d-6)
-                if (izap.eq.kzap) kk=kk+1           
-                call nextsub6(nin,law,nbt,ibt,x,y)              
+                if (izap.eq.kzap) kk=kk+1
+                call nextsub6(nin,law,nbt,ibt,x,y)
               enddo
               ii=ii+1
               nzap(ii)=kk
@@ -591,7 +591,7 @@ c
           lip6i=lip6(i)
           if (mti.ne.mtk.or.lzap6i.ne.kzap) then
             ii=ii+1
-            if (nzap(ii).eq.nzap6(ii)) then 
+            if (nzap(ii).eq.nzap6(ii)) then
               ktest=1
             else
               ktest=0
@@ -1012,7 +1012,7 @@ c
           i0=i
           do while(x0.ne.x1.and.y0.eq.y1.and.i.lt.n)
             x0=x1
-            y0=y1            
+            y0=y1
             i=i+1
             call ff2chx(x(i),x1)
             y1=y(i)
@@ -1033,9 +1033,9 @@ c
      &          x(j-2),' and ',x(j-1)
             else
               write(nerr,*)' Warning: ',jrem,' points removed between',
-     &          x(j-1),' and ',x(j)            
+     &          x(j-1),' and ',x(j)
             endif
-          endif                             
+          endif
         else
           j=j+1
           read(x1,'(e11.0)')x(j)
@@ -1126,7 +1126,7 @@ c
       call remdup(0,ne,xl,yl,irem)
       if (irem.gt.0) then
         write(*,*)' Warning: ',irem,' points',
-     &    ' removed from dosimetry reaction' 
+     &    ' removed from dosimetry reaction'
       endif
       do i=1,ne
         x(i)=xl(i)
@@ -2051,10 +2051,10 @@ C======================================================================
             mtdchk=1
             exit
           endif
-        enddo      
+        enddo
       endif
       return
-      end      
+      end
 C======================================================================
 C     Time routine
 C======================================================================

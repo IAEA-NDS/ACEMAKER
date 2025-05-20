@@ -1104,9 +1104,9 @@ c
            write(nou,'(a5,i4,a7,1pe11.4)')'MAT= ',mati,' TEMP= ',tempi
            write(*,'(1x,a5,i4,a7,1pe11.4)')'MAT= ',mati,' TEMP= ',tempi
            if (mcnpx.eq.1) then
-             xsuff=xsuff+0.001d0*dble(it-1)
+             xsuff=xsuff0+0.001d0*(it-1)
            else
-             xsuff=xsuff+0.01d0*dble(it-1)
+             xsuff=xsuff0+0.01d0*(it-1)
            endif
            nsuff=nint(1000.0d0*xsuff+1.0d-5)
            if (nsuff.ge.1000) nsuff=nsuff-(nsuff/1000)*1000
