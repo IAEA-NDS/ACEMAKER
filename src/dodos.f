@@ -733,11 +733,7 @@ c
           call readcont(nin,c1,c2,l1,l2,nfs,n2,mat0,mf0,mt0,ns0)
           do k=1,nfs
             call readtab1(nin,c1,c2,izap,lfs,nr,ne,nbt,ibt,x,y)
-            if (mt.eq.5) then
-              mti=1000000*(50+lfs)+izap
-            else
-              mti=1000*(10+lfs)+mt
-            endif
+            mti=mtdos(mt,izap,lfs)
             if (mti.eq.mf10(i)) then
               imt=imt+1
               xss(lmt+imt-1)=mti
@@ -2031,7 +2027,11 @@ C======================================================================
       if (mt.eq.5) then
         mtdos=1000000*(50+lfs)+izap
       elseif (mt.eq.18) then
-        mtdos=1000000*(80+lfs)+izap
+        if (izap.eq.-1) then
+          mtdos=18
+        else
+          mtdos=1000000*(80+lfs)+izap
+        endif
       else
         mtdos=1000*(10+lfs)+mt
       endif
