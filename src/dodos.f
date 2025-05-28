@@ -1,5 +1,5 @@
       program dodos
-c     version 1.0
+c     version 2.0
 c
 c     prepare dosimetry ace-formatted files for MCNP
 c     the code belong to the ACEMAKER code system
@@ -32,26 +32,34 @@ c       2. DODOS.LST listing file (fix name)
 c      if imon=2
 c       3. DODOS.PLT PLOTTAB input option file
 c       4. DODOS.CUR PLOTTAB curve file
-c      if imon=3
-c       all yields found in MF6 for all reactions find in MF3 are processed
 c
-c     MTD numbers for the MTR block in the dosimetry ACE-formatted file:
+c     MTD: MT numbers for the MTR block in the dosimetry ACE-file
 c       If the reaction is given in MF3, then the MT number remains the
 c       same (MTD=MT). If the dosimetry reaction is given in MF10 or
 c       multiplicities are supplied in MF9 or MF6, then the MTD number
 c       is computed as:
-c         if MT=5
+c         if MT==5 then
 c           MTD=1000000*(50+lfs)+zap
-c         elseif MT=18
-c           MTD=1000000*(80+lfs)+zap
+c         elseif MT==18
+c           if (izap==-1) then
+c             MTD=18
+c           else
+c             MTD=1000000*(80+lfs)+zap
+c           endif
 c         else
 c           MTD=1000*(10+lfs)+MT
+c         endif
 c
 c       where,
 c         MTD: reaction identifier in the dosimetry ACE-formatted file
 c         zap: ZA number of the product nuclide
 c         lfs: level number of the product nuclide
 c         MT:  reaction identifier according to the ENDF-6 format
+c
+c       For MT=5 and (MT=18 with zap!=-1) the zap is codified in MTD,
+c       but for the rest of reactions the recoil is implicitly given
+c       according to the reaction MT number
+c
 c
 c     Example of input
 c
@@ -117,13 +125,13 @@ c
       open(in1, file='DODOS.INP')
       open(lou, file='DODOS.LST')
       call getdtime(cdate,ctime)
-      write(lou,'(a)')' PROGRAM DODOS: Prepare dosimetry ACE-files'
-      write(lou,'(a)')' =========================================='
+      write(lou,'(a)')' PROGRAM DODOS v2.0: Prepare dosimetry ACE-files'
+      write(lou,'(a)')' ==============================================='
       write(lou,*)
       write(lou,'(a,a11,a,a10)')' Started at ',ctime,' on ',cdate
       write(lou,*)
-      write(*,'(a)')' PROGRAM DODOS: Prepare dosimetry ACE-files'
-      write(*,'(a)')' =========================================='
+      write(*,'(a)')' PROGRAM DODOS v2.0: Prepare dosimetry ACE-files'
+      write(*,'(a)')' ==============================================='
       write(*,'(a,a11,a,a10)')' Started at ',ctime,' on ',cdate
       write(*,'(a)')
 c
@@ -134,7 +142,7 @@ c
       read(in1,'(3i11)')mat,imon,idos6
       if (imon.lt.0) then
         imon=0
-      elseif (imon.gt.3) then
+      elseif (imon.gt.2) then
         imon=2
       endif
       if (idos6.gt.0) then
@@ -636,7 +644,7 @@ c
         enddo
       endif
 c
-c     Setting triggers and main pointers for ACE file
+c     Setting triggers and main pointers for ACE-formatted file
 c
       nmtr=nmf3+nmf10+nmf9+nmf6
       write(lou,*)
@@ -703,16 +711,18 @@ c
               xss(ll+ne+j)=y(j)
             enddo
             iloc=iloc+2*(1+nr+ne)
+            izap=0
+            lfs=0
             if (imon.gt.0) then
               call prtxsd(lou,imt,mti,3,nr,nbt,ibt,
-     &          ne,xss(ll+1),xss(ll+ne+1))
+     &          ne,xss(ll+1),xss(ll+ne+1),mti,izap,lfs)
             else
               write(lou,'(i4,a,i9,a)')imt,'. Dosimetry reaction mtd=',
      &          mti,' from MF3'
             endif
             if (imon.eq.2) then
               call plotxsd(ncur,nplt,hk,nmtr,imt,mti,3,
-     &          ne,xss(ll+1),xss(ll+ne+1))
+     &          ne,xss(ll+1),xss(ll+ne+1),mti,izap,lfs)
             endif
             write(*,'(i4,a,i9,a)')imt,'. Dosimetry reaction mtd=',
      &        mti,' from MF3'
@@ -764,14 +774,14 @@ c
               iloc=iloc+2*(1+nr+ne)
               if (imon.gt.0) then
                 call prtxsd(lou,imt,mti,10,nr,nbt,ibt,
-     &            ne,xss(ll+1),xss(ll+ne+1))
+     &            ne,xss(ll+1),xss(ll+ne+1),mt,izap,lfs)
               else
                 write(lou,'(i4,a,i9,a)')imt,'. Dosimetry reaction mtd=',
      &            mti,' from MF10'
               endif
               if (imon.eq.2) then
                 call plotxsd(ncur,nplt,hk,nmtr,imt,mti,10,
-     &            ne,xss(ll+1),xss(ll+ne+1))
+     &            ne,xss(ll+1),xss(ll+ne+1),mt,izap,lfs)
               endif
               write(*,'(i4,a,i9,a)')imt,'. Dosimetry reaction mtd=',
      &          mti,' from MF10'
@@ -787,7 +797,7 @@ c
       rewind(ntp)
       if (nmf9.gt.0) then
         do i=1,nmf9
-          call readtab1(ntp,c1,c2,l1,l2,nry,ney,nbty,ibty,xy,yy)
+          call readtab1(ntp,c1,c2,izap,lfs,nry,ney,nbty,ibty,xy,yy)
           mt3=nint(c1+1.0d-6)
           mti=nint(c2+1.0d-6)
           if (mti.eq.mf9(i)) then
@@ -811,14 +821,14 @@ c
             iloc=iloc+2*(1+ne)
             if (imon.gt.0) then
               call prtxsd(lou,imt,mti,9,nr,nbt,ibt,
-     &          ne,xss(ll+1),xss(ll+ne+1))
+     &          ne,xss(ll+1),xss(ll+ne+1),mt3,izap,lfs)
             else
               write(lou,'(i4,a,i9,a)')imt,'. Dosimetry reaction mtd=',
      &          mti,' from MF9*MF3'
             endif
             if (imon.eq.2) then
               call plotxsd(ncur,nplt,hk,nmtr,imt,mti,9,
-     &          ne,xss(ll+1),xss(ll+ne+1))
+     &          ne,xss(ll+1),xss(ll+ne+1),mt3,izap,lfs)
             endif
             write(*,'(i4,a,i9,a)')imt,'. Dosimetry reaction mtd=',
      &        mti,' from MF9*MF3'
@@ -837,7 +847,7 @@ c      XSD=YLD(MF6)*XS(MF3)
 c
       if (nmf6.gt.0) then
         do i=1,nmf6
-          call readtab1(ntp,c1,c2,l1,l2,nry,ney,nbty,ibty,xy,yy)
+          call readtab1(ntp,c1,c2,izap,lfs,nry,ney,nbty,ibty,xy,yy)
           mt3=nint(c1+1.0d-6)
           mti=nint(c2+1.0d-6)
           if (mti.eq.mf6(i)) then
@@ -861,14 +871,14 @@ c
             iloc=iloc+2*(1+ne)
             if (imon.gt.0) then
               call prtxsd(lou,imt,mti,6,nr,nbt,ibt,
-     &          ne,xss(ll+1),xss(ll+ne+1))
+     &          ne,xss(ll+1),xss(ll+ne+1),mt3,izap,lfs)
             else
               write(lou,'(i4,a,i9,a)')imt,'. Dosimetry reaction mtd=',
      &          mti,' from MF6*MF3'
             endif
             if (imon.eq.2) then
               call plotxsd(ncur,nplt,hk,nmtr,imt,mti,6,
-     &          ne,xss(ll+1),xss(ll+ne+1))
+     &          ne,xss(ll+1),xss(ll+ne+1),mt3,izap,lfs)
             endif
             write(*,'(i4,a,i9,a)')imt,'. Dosimetry reaction mtd=',
      &        mti,' from MF6*MF3'
@@ -1935,7 +1945,7 @@ c
 C======================================================================
 C     Printing and plotting routines for dosimetry cross sections
 C======================================================================
-      subroutine prtxsd(lou,imtd,mtd,mfd,nr,nbt,ibt,np,x,y)
+      subroutine prtxsd(lou,imtd,mtd,mfd,nr,nbt,ibt,np,x,y,mt,izap,l)
 c
 c     print the dosimetry cross section mtd from file mfd
 c
@@ -1948,19 +1958,23 @@ c
       data ei/'      ENERGY      '/,xsd/' DOSIMETRY X-SEC. '/
       data ui/'==============='/,uu/'=================='/
       if (mfd.eq.10) then
-        write(lou,'(i4,a,i9,a,i9)')imtd,'. Dosimetry reaction mtd=',mtd,
-     &    ' from MF10. Number of energy points: ',np
+        write(lou,'(i4,a,i9,a,i4,a,i8,a,i4,a)')imtd,
+     &    '. Dosimetry reaction mtd=',mtd,' from MF10. ( MT=',
+     &    mt,', ZAP=',izap,', LFS=',l,' )'
       elseif (mfd.eq.9) then
-        write(lou,'(i4,a,i9,a,i9)')imtd,'. Dosimetry reaction mtd=',mtd,
-     &    ' from MF9*MF3. Number of energy points: ',np
+        write(lou,'(i4,a,i9,a,i4,a,i8,a,i4,a)')imtd,
+     &    '. Dosimetry reaction mtd=',mtd,' from MF09. ( MT=',
+     &    mt,', ZAP=',izap,', LFS=',l,' )'
       elseif (mfd.eq.6) then
-        write(lou,'(i4,a,i9,a,i9)')imtd,'. Dosimetry reaction mtd=',mtd,
-     &    ' from MF6*MF3. Number of energy points: ',np
+        write(lou,'(i4,a,i9,a,i4,a,i8,a,i4,a)')imtd,
+     &    '. Dosimetry reaction mtd=',mtd,' from MF06. ( MT=',
+     &    mt,', ZAP=',izap,', LFS=',l,' )'
       else
-        write(lou,'(i4,a,i9,a,i9)')imtd,'. Dosimetry reaction mtd=',mtd,
-     &    ' from MF3. Number of energy points: ',np
+        write(lou,'(i4,a,i9,a)')imtd,
+     &    '. Dosimetry reaction mtd=',mtd,' from MF03.'
       endif
       write(lou,*)
+      write(lou,'(1x,a,i9)')' number of energy points: ',np
       if (nr.gt.0) then
         write(lou,'(1x,a,3(1x,a15))')' interpolation law:',ii,ni,li
         write(lou,'(1x,a,3(1x,a15))')'===================',ui,ui,ui
@@ -1979,7 +1993,8 @@ c
       return
       end
 C======================================================================
-      subroutine plotxsd(ncur,nplt,hk,nmtr,imtd,mtd,mfd,np,x,y)
+      subroutine plotxsd(ncur,nplt,hk,nmtr,imtd,mtd,mfd,np,x,y,
+     &                   mt,izap,l)
 c
 c     Add dosimetry cross section mtd from mfd to PLOTTAB files
 c
@@ -1988,14 +2003,15 @@ c
       dimension x(*),y(*)
       character*11 chx,chy
       character*70 hk
+
       if (mfd.eq.10) then
-        write(ncur,'(a,i9)')'MF10/MT=',mtd
+        write(ncur,'(a9,i9,11x,i4,i8,i4)')'MF10/MTD=',mtd,mt,izap,l
       elseif (mfd.eq.9) then
-        write(ncur,'(a,i9)')'MF09/MT=',mtd
+        write(ncur,'(a9,i9,11x,i4,i8,i4)')'MF09/MTD=',mtd,mt,izap,l
       elseif (mfd.eq.6) then
-        write(ncur,'(a,i9)')'MF06/MT=',mtd
+        write(ncur,'(a9,i9,11x,i4,i8,i4)')'MF06/MTD=',mtd,mt,izap,l
       else
-        write(ncur,'(a,i9)')'MF03/MT=',mtd
+        write(ncur,'(a9,i9,11x,i4)')'MF03/MTD=',mtd,mt
       endif
       do i=1,np
         call chendf(x(i),chx)
