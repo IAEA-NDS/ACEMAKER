@@ -198,7 +198,20 @@ c
         close(iou)
         stop
       endif
-      matza=nint(za0)
+      matza=nint(za0+1.0d-6)
+      if (liso.gt.0) then
+        if (matza.eq.95242) then
+          izaid=matza
+        else
+          izaid=matza+300+100*liso
+        endif
+      else
+        if (matza.eq.95242) then
+          izaid=matza+400
+        else
+          izaid=matza
+        endif
+      endif
       call readtext(nin,line,mat,mf,mt,nsi)
       zsymam=line(1:11)
       call readtext(nin,line,mat,mf,mt,nsi)
@@ -221,9 +234,9 @@ c
       hk(43+k:53+k)=' (ACEMAKER)'
       str11=' '
       if (mcnpx.eq.1) then
-        write(hz,'(i6,a4,a3)')matza,suff(1:4),'nu '
+        write(hz,'(i6,a4,a3)')izaid,suff(1:4),'nu '
       else
-        write(hz,'(i6,a3,a4)')matza,suff(1:3),'u   '
+        write(hz,'(i6,a3,a4)')izaid,suff(1:3),'u   '
       endif
       write(hm,'(a6,i4)')'   mat',mat0
       tz=bk*temp
@@ -236,6 +249,9 @@ c
       write(iou,'(a,1p,e15.8,a,e13.6,a,e13.6,a)')' EMAX [eV]=', emax,
      &  ' Temperature=',temp,' K = ',tz,' MeV'
       nxs(2)=matza
+      nxs(9)=liso
+      nxs(10)=matza/1000
+      nxs(11)=mod(matza,1000)
 c
 c      Open ACE summary information file for the final user
 c
@@ -3020,7 +3036,7 @@ c
                      do iep=1,nep
                        xss(lxsd+nep3+iep)=lxscd-kdlw+1
                        i0=na2*(iep-1)+2
-                       if (na.gt.0.and.b(i0).gt.0.0d0) then                         
+                       if (na.gt.0.and.b(i0).gt.0.0d0) then
                          if (lang.eq.1) then
                            call leg2lin(na,b(i0),nmu,x,y,tol,ymin,npmax)
                          else
@@ -5166,13 +5182,13 @@ c
           stop
         endif
       else
-        if (mt.eq.5) then            
+        if (mt.eq.5) then
           mtdos=1000000*(50+lfs)+izap
-        elseif (mt.eq.18) then       
+        elseif (mt.eq.18) then
           mtdos=1000000*(80+lfs)+izap
-        else                         
-          mtdos=1000*(10+lfs)+mt     
-        endif                        
+        else
+          mtdos=1000*(10+lfs)+mt
+        endif
       endif
       return
       end

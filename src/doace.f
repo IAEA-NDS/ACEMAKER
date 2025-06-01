@@ -154,7 +154,20 @@ c
         close(iou)
         stop
       endif
-      matza=nint(za0)
+      matza=nint(za0+1.0d-6)
+      if (liso.gt.0) then
+        if (matza.eq.95242) then
+          izaid=matza
+        else
+          izaid=matza+300+100*liso
+        endif
+      else
+        if (matza.eq.95242) then
+          izaid=matza+400
+        else
+          izaid=matza
+        endif
+      endif
       call readtext(nin,line,mat,mf,mt,nsi)
       zsymam=line(1:11)
       call readtext(nin,line,mat,mf,mt,nsi)
@@ -177,21 +190,27 @@ c
       hk(43+k:53+k)=' (ACEMAKER)'
       str11=' '
       if (mcnpx.eq.1) then
-        write(hz,'(i6,a4,a3)')matza,suff(1:4),'nc '
+        write(hz,'(i6,a4,a3)')izaid,suff(1:4),'nc '
       else
-        write(hz,'(i6,a3,a4)')matza,suff(1:3),'c   '
+        write(hz,'(i6,a3,a4)')izaid,suff(1:3),'c   '
       endif
       write(hm,'(a6,i4)')'   mat',mat0
       tz=bk*temp
       write(*,*)' Material=',mat0,' read'
       write(iou,*)
-      write(iou,'(a,i5,a,i7,a,1pe15.8)')' Material=',mat0,' ZA=',matza,
-     &  ' AWR=',awr0
-      write(iou,'(a,a,a,i4,a,i7,a,1pe15.8)')' SYM=',zsymam,' LFI=',lfi,
-     &  ' ZAI=',izai,' AWI=',awi
+      write(iou,'(a,i7,a,1pe15.8)')' ZAI=',izai,' AWI=',awi
+      write(iou,'(a,i5,a,i7,a,i3,a,i7,a,1pe15.8)')' Material=',mat,
+     &  ' ZA=',matza,' LISO=',liso,' ZAID=',izaid,' AWR=',awr0
+      write(iou,'(a,a,a,i3,a,1pe15.8)')' SYM=',zsymam,
+     &  ' LFI=',lfi,' ELIS=',elis
       write(iou,'(a,1p,e15.8,a,e13.6,a,e13.6,a)')' EMAX=', emax,
      &  ' Temperature=',temp,' K = ',tz,' MeV'
+      izt=matza/1000
+      iat=mod(matza,1000)
       nxs(2)=matza
+      nxs(9)=liso
+      nxs(10)=izt
+      nxs(11)=iat
 c
 c      Explore endf-6 formatted input file
 c
@@ -987,7 +1006,7 @@ c             iso=isochk(np,y)
                         enddo
                         jj=2
                         c=1.0d0
-                        call renorm(np,x,y,jj,c,fn)                        
+                        call renorm(np,x,y,jj,c,fn)
                       endif
                     else
                       write(iou,*)' MF6/LAW=2 LANG=',lang,' not allowed'
@@ -1174,7 +1193,7 @@ c
                 write(iou,*)' Use SPECTRA'
                 stop
               endif
-              if (icod.eq.0)icod=2              
+              if (icod.eq.0)icod=2
               if (qi.lt.0.0d0) then
                 iep=0
                 i=1
@@ -1199,8 +1218,8 @@ c
               endif
               call cdfcal(nep,x,y,icod,y2)
               xss(lxs+j)=e*ev2mev
-              xss(lxsn+j)=lxsd-kdlw+1              
-              xss(lxsd)=icod                            
+              xss(lxsn+j)=lxsd-kdlw+1
+              xss(lxsd)=icod
               lxsd=lxsd+1
               xss(lxsd)=nep
               if (imon.gt.0) then
@@ -1456,10 +1475,10 @@ c
                     do ip=1,nep
                       xss(lxsd+nep3+ip)=lxscd-kdlw+1
                       ip0=na2*(ip-1)+2
-                      if (na.gt.0.and.b(ip0).gt.0.0d0) then                                              
+                      if (na.gt.0.and.b(ip0).gt.0.0d0) then
                         if (lang.eq.1) then
                           call leg2lin(na,b(ip0),nmu,x,y,tol,ymin,npmax)
-                        else                        
+                        else
                           im0=ip0
                           nmu=na/2
                           do im=1,nmu
@@ -1476,10 +1495,10 @@ c
      &                         npmax)
                             do im=1,nmu
                               if (y(im).lt.0.0d0) y(im)=1.0d-30
-                            enddo                          
+                            enddo
                             c=b(i0)
-                            ilaw=2                          
-                            call renorm(nmu,x,y,ilaw,c,fn)                                                        
+                            ilaw=2
+                            call renorm(nmu,x,y,ilaw,c,fn)
                           endif
                         endif
                         call cdfcal(nmu,x,y,intmu,y1)
@@ -1568,7 +1587,8 @@ c
       enddo
       nxs(6)=0
       nxs(7)=0
-      do jx=9,15
+      nxs(8)=0
+      do jx=12,15
         nxs(jx)=0
       enddo
       nxs(16)=-1
@@ -1593,10 +1613,10 @@ c
           lssf0=1
           write(*,*)' PTABLE changed to self-shielding factors(LSSF=1)'
           write(iou,*)' PTABLE changed to self-shielding factors',
-     &                '(LSSF=1)'      
+     &                '(LSSF=1)'
         else
           lssf0=0
-        endif        
+        endif
         if (mtinel.ne.0) then
           ilf=mtinel
         else
@@ -1691,7 +1711,7 @@ c
                 xss(lx+nbin5+ibin)=b(je+nbin5+ibin)
               else
                 xss(lx+nbin5+ibin)=b(je+nbin5+ibin)*ev2mev
-              endif            
+              endif
             endif
           enddo
           xss(lx+nbin)=1.0d0
@@ -2007,7 +2027,7 @@ c
           endif
           if (i.lt.n) then
             i=i-1
-            xx=edelta(x(i),1.0d0) 
+            xx=edelta(x(i),1.0d0)
             if (xx.ge.x(i+1)) xx=0.5d0*(x(i)+x(i+1))
             call ff2chx(xx,x1)
             j=j+1
@@ -2026,7 +2046,7 @@ c
             if (nerr.gt.0) then
               write(nerr,*)' Warning: discontinuity at x=',x0,' i=',i,
      &          ' x(i) removed'
-            endif            
+            endif
           endif
         else
           j=j+1
@@ -2172,7 +2192,7 @@ c
       endif
       return
       end
-C======================================================================      
+C======================================================================
       subroutine chendf(ffin,str11)
       implicit real*8 (a-h,o-z)
 c
@@ -2231,7 +2251,7 @@ c
         endif
       endif
       return
-      end            
+      end
 C======================================================================
       real*8 function edelta(ffin,fdig)
       implicit real*8 (a-h,o-z)
@@ -2756,7 +2776,7 @@ c
             y2=y(j)
             yr=y2-y1
             ay1=abs(y1)
-            ayr=abs(yr)            
+            ayr=abs(yr)
             if (y1*y2.gt.zero.and.ayr.gt.eps*ay1) then
               sum=sum+xr*yr/log(y2/y1)
             else
@@ -2765,24 +2785,24 @@ c
           endif
           cdf(j)=sum
         enddo
-      elseif (lep.eq.3) then                                  
-        do j=2,np                                            
-          j1=j-1                                              
-          x1=x(j1)                                                                                         
-          x2=x(j)                                            
-          xr=x2-x1                                           
+      elseif (lep.eq.3) then
+        do j=2,np
+          j1=j-1
+          x1=x(j1)
+          x2=x(j)
+          xr=x2-x1
           if (xr.gt.zero) then
-            y1=y(j1)                                                                                         
+            y1=y(j1)
             y2=y(j)
-            ax1=abs(x1)                                              
-            if (x1*x2.gt.zero.and.xr.gt.eps*ax1) then    
-              sum=sum+x2*y2-x1*y1-xr*(y2-y1)/log(x2/x1)  
-            else                                              
-              sum=sum+0.5d0*(y1+y2)*xr                   
-            endif                                             
+            ax1=abs(x1)
+            if (x1*x2.gt.zero.and.xr.gt.eps*ax1) then
+              sum=sum+x2*y2-x1*y1-xr*(y2-y1)/log(x2/x1)
+            else
+              sum=sum+0.5d0*(y1+y2)*xr
+            endif
           endif
-          cdf(j)=sum                                               
-        enddo                                                 
+          cdf(j)=sum
+        enddo
       elseif (lep.eq.5) then
         do j=2,np
           j1=j-1
@@ -2791,7 +2811,7 @@ c
           xr=x2-x1
           if (xr.gt.zero) then
             y1=y(j1)
-            y2=y(j)            
+            y2=y(j)
             yr=y2-y1
             ax1=abs(x1)
             ay1=abs(y1)
@@ -2875,7 +2895,7 @@ c
               y2=y(j)
               yr=y2-y1
               ay1=abs(y1)
-              ayr=abs(yr)            
+              ayr=abs(yr)
               if (y1*y2.gt.zero.and.ayr.gt.eps*ay1) then
                 sum=sum+xr*yr/log(y2/y1)
               else
@@ -2884,24 +2904,24 @@ c
             endif
             cdf(j)=sum
           enddo
-        elseif (lep.eq.3) then                                  
-          do j=j0,np                                            
-            j1=j-1                                              
-            x1=x(j1)                                                                                         
-            x2=x(j)                                            
-            xr=x2-x1                                           
+        elseif (lep.eq.3) then
+          do j=j0,np
+            j1=j-1
+            x1=x(j1)
+            x2=x(j)
+            xr=x2-x1
             if (xr.gt.zero) then
-              y1=y(j1)                                                                                         
+              y1=y(j1)
               y2=y(j)
-              ax1=abs(x1)                                              
-              if (x1*x2.gt.zero.and.xr.gt.eps*ax1) then    
-                sum=sum+x2*y2-x1*y1-xr*(y2-y1)/log(x2/x1)  
-              else                                              
-                sum=sum+0.5d0*(y1+y2)*xr                   
-              endif                                             
+              ax1=abs(x1)
+              if (x1*x2.gt.zero.and.xr.gt.eps*ax1) then
+                sum=sum+x2*y2-x1*y1-xr*(y2-y1)/log(x2/x1)
+              else
+                sum=sum+0.5d0*(y1+y2)*xr
+              endif
             endif
-            cdf(j)=sum                                               
-          enddo                                                 
+            cdf(j)=sum
+          enddo
         elseif (lep.eq.5) then
           do j=j0,np
             j1=j-1
@@ -2910,7 +2930,7 @@ c
             xr=x2-x1
             if (xr.gt.zero) then
               y1=y(j1)
-              y2=y(j)            
+              y2=y(j)
               yr=y2-y1
               ax1=abs(x1)
               ay1=abs(y1)
@@ -3001,7 +3021,7 @@ c
       endif
       return
       end
-C======================================================================      
+C======================================================================
       subroutine renorm(np,x,y,ilaw,c,fn)
 c
 c     renormalize tabulated data with interpolation law = ilaw to a
@@ -3317,7 +3337,7 @@ c
       endif
       return
    10 mt=-2
-      return   
+      return
       end
 C======================================================================
       subroutine nextsub6(nin,law,nbt,ibt,x,b)
@@ -3606,7 +3626,7 @@ C      The following subroutines were taken from NJOY2016 and
 C      adapted/modified by D. Lopez Aldama for ACEMAKER:
 C       1. subroutine legndr
 C       2. subroutine terp1 (renamed as terp1m)
-C       3. real*8 function bachaa        
+C       3. real*8 function bachaa
 C       4. subroutine change
 C       5. subroutine typen
 C
@@ -3614,45 +3634,45 @@ C======================================================================
 C     Copyright (c) 2016, Los Alamos National Security, LLC
 C     All rights reserved.
 C
-C     Copyright 2016. Los Alamos National Security, LLC. This software 
+C     Copyright 2016. Los Alamos National Security, LLC. This software
 C     was produced under U.S. Government contract DE-AC52-06NA25396 for
-C     Los Alamos National Laboratory (LANL), which is operated by Los 
-C     Alamos National Security, LLC for the U.S. Department of Energy. 
-C     The U.S. Government has rights to use, reproduce, and distribute 
-C     this software.  NEITHER THE GOVERNMENT NOR LOS ALAMOS NATIONAL 
-C     SECURITY, LLC MAKES ANY WARRANTY, EXPRESS OR IMPLIED, OR ASSUMES 
-C     ANY LIABILITY FOR THE USE OF THIS SOFTWARE.  If software is 
-C     modified to produce derivative works, such modified software 
-C     should be clearly marked, so as not to confuse it with the 
+C     Los Alamos National Laboratory (LANL), which is operated by Los
+C     Alamos National Security, LLC for the U.S. Department of Energy.
+C     The U.S. Government has rights to use, reproduce, and distribute
+C     this software.  NEITHER THE GOVERNMENT NOR LOS ALAMOS NATIONAL
+C     SECURITY, LLC MAKES ANY WARRANTY, EXPRESS OR IMPLIED, OR ASSUMES
+C     ANY LIABILITY FOR THE USE OF THIS SOFTWARE.  If software is
+C     modified to produce derivative works, such modified software
+C     should be clearly marked, so as not to confuse it with the
 C     version available from LANL.
 C
-C     Additionally, redistribution and use in source and binary forms, 
+C     Additionally, redistribution and use in source and binary forms,
 C     with or without modification, are permitted provided that the
 C     following conditions are met:
-C     1. Redistributions of source code must retain the above copyright 
+C     1. Redistributions of source code must retain the above copyright
 C        notice, this list of conditions and the following disclaimer.
-C     2. Redistributions in binary form must reproduce the above 
-C        copyright notice, this list of conditions and the following 
+C     2. Redistributions in binary form must reproduce the above
+C        copyright notice, this list of conditions and the following
 C        disclaimer in the documentation and/or other materials provided
 C        with the distribution.
-C     3. Neither the name of Los Alamos National Security, LLC, 
-C        Los Alamos National Laboratory, LANL, the U.S. Government, 
-C        nor the names of its contributors may be used to endorse or 
-C        promote products derived from this software without specific 
+C     3. Neither the name of Los Alamos National Security, LLC,
+C        Los Alamos National Laboratory, LANL, the U.S. Government,
+C        nor the names of its contributors may be used to endorse or
+C        promote products derived from this software without specific
 C        prior written permission.
 C
-C     THIS SOFTWARE IS PROVIDED BY LOS ALAMOS NATIONAL SECURITY, LLC 
-C     AND CONTRIBUTORS "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, 
-C     INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF 
-C     MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE 
-C     DISCLAIMED. IN NO EVENT SHALL LOS ALAMOS NATIONAL SECURITY, LLC 
-C     OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, 
-C     SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT 
-C     LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF 
-C     USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED 
-C     AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT 
-C     LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING 
-C     IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF 
+C     THIS SOFTWARE IS PROVIDED BY LOS ALAMOS NATIONAL SECURITY, LLC
+C     AND CONTRIBUTORS "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES,
+C     INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF
+C     MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+C     DISCLAIMED. IN NO EVENT SHALL LOS ALAMOS NATIONAL SECURITY, LLC
+C     OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+C     SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
+C     LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF
+C     USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED
+C     AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT
+C     LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING
+C     IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF
 C     THE POSSIBILITY OF SUCH DAMAGE.
 C
 C======================================================================
@@ -3833,7 +3853,7 @@ c
       end
 C======================================================================
       subroutine change(nout,mcnpx)
-c     Adapted by D. Lopez Aldama for ACEMAKER      
+c     Adapted by D. Lopez Aldama for ACEMAKER
 c     ******************************************************************
 c     change ace data fields from integer to real or vice versa.
 c     if nout.gt.1, the results are written in type 1 format
@@ -3851,7 +3871,8 @@ c     ******************************************************************
       character*70 hk
       common/acetxt/hz,hd,hm,hk
       common/acecte/awr0,tz,awn(16),izn(16)
-      common/acepnt/len2,izaid,nes,ntr,nrx,ntrp,ntype,ndnf,nxsd(8),
+      common/acepnt/len2,mzaid,nes,ntr,nrx,ntrp,ntype,ndnf,
+     &              liso,izt,iat,nxsd(5),
      &              esz,nu,mtr,lqr,tyr,lsig,sig,land,and,ldlw,dlw,gpd,
      &              mtrp,lsigp,sigp,landp,andp,ldlwp,dlwp,yp,fis,end,
      &              iurpt,nud,dndat,ldnd,dnd,jxsd(2),ptype,ntro,ploct

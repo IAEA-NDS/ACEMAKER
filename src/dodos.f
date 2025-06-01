@@ -250,6 +250,19 @@ c
 c     Prepare ACE-file heading information
 c
       matza=nint(za0+1.0d-6)
+      if (liso.gt.0) then
+        if (matza.eq.95242) then
+          izaid=matza
+        else
+          izaid=matza+300+100*liso
+        endif
+      else
+        if (matza.eq.95242) then
+          izaid=matza+400
+        else
+          izaid=matza
+        endif
+      endif
       call readtext(nin,line,mat0,mf0,mt0,ns0)
       zsymam=line(1:11)
       call readtext(nin,line,mat0,mf0,mt0,ns0)
@@ -274,17 +287,19 @@ c
       hk(70:70)=ch
       str11=' '
       if (mcnpx.eq.1) then
-        write(hz,'(i6,a4,a1,a2)')matza,suff(1:4),ch,'y '
+        write(hz,'(i6,a4,a1,a2)')izaid,suff(1:4),ch,'y '
       else
-        write(hz,'(i6,a3,a4)')matza,suff(1:3),'y   '
+        write(hz,'(i6,a3,a4)')izaid,suff(1:3),'y   '
       endif
       write(hm,'(a6,i4)')'   mat',mat
       tz=bk*temp
       write(*,*)' Material=',mat
       write(lou,*)
-      write(lou,'(a,i5,a,i7,a,1pe15.8)')' Material=',mat,' ZA=',matza,
-     &  ' AWR=',awr0
-      write(lou,'(a,a,a,i7)')' SYM=',zsymam,' ZAI=',izai
+      write(lou,'(a,i7,a,1pe15.8)')' ZAI=',izai,' AWI=',awi
+      write(lou,'(a,i5,a,i7,a,i3,a,i7,a,1pe15.8)')' Material=',mat,
+     &  ' ZA=',matza,' LISO=',liso,' ZAID=',izaid,' AWR=',awr0
+      write(lou,'(a,a,a,i3,a,1pe15.8)')' SYM=',zsymam,
+     &  ' LFI=',lfi,' ELIS=',elis
       write(lou,'(a,1p,e15.8,a,e13.6,a,e13.6,a)')' EMAX=', emax,
      &  ' Temperature=',temp,' K = ',tz,' MeV'
       write(lou,*)
@@ -655,6 +670,9 @@ c
       write(*,*)
       nxs(2)=matza
       nxs(4)=nmtr
+      nxs(9)=liso
+      nxs(10)=matza/1000
+      nxs(11)=mod(matza,1000)
       jxs(1)=1
       lmt=1
       jxs(3)=lmt
@@ -1963,15 +1981,15 @@ c
      &    mt,', ZAP=',izap,', LFS=',l,' )'
       elseif (mfd.eq.9) then
         write(lou,'(i4,a,i9,a,i4,a,i8,a,i4,a)')imtd,
-     &    '. Dosimetry reaction mtd=',mtd,' from MF09. ( MT=',
+     &    '. Dosimetry reaction mtd=',mtd,' from MF9*MF3. ( MT=',
      &    mt,', ZAP=',izap,', LFS=',l,' )'
       elseif (mfd.eq.6) then
         write(lou,'(i4,a,i9,a,i4,a,i8,a,i4,a)')imtd,
-     &    '. Dosimetry reaction mtd=',mtd,' from MF06. ( MT=',
+     &    '. Dosimetry reaction mtd=',mtd,' from MF6*MF3. ( MT=',
      &    mt,', ZAP=',izap,', LFS=',l,' )'
       else
         write(lou,'(i4,a,i9,a)')imtd,
-     &    '. Dosimetry reaction mtd=',mtd,' from MF03.'
+     &    '. Dosimetry reaction mtd=',mtd,' from MF3.'
       endif
       write(lou,*)
       write(lou,'(1x,a,i9)')' number of energy points: ',np

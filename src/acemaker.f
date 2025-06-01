@@ -611,9 +611,9 @@ c
       character*80 fendf,fnurr(ntempx),furr
       character*66 title
       character*62 preprod,acemakerd
-      character*11 ctime
+      character*11 ctime,zsymam
       character*10 cdate
-      character*8  fza
+      character*9  fza
       character*6  thzaid(nmatx)
       character*4  suff
       character*1  ch
@@ -860,10 +860,17 @@ c
          call readcont(nin,elis,sta,lis,liso,n1,nfor,matj,mf,mt,nsi)
          call readcont(nin,awi,emax,lrel,l2,nsub,nver,matj,mf,mt,nsi)
          call readcont(nin,temp0,c2,ldrv,l2,nwd,nxc,matj,mf,mt,nsi)
+         read (nin,'(a11)')zsymam
          close(nin)
-         nza=za
+         nza=nint(za+1.0d-6)
          fza=' '
-         write(fza,'(a2,i6)')'ZA',nza
+         if (liso.gt.0) then
+           isom=ichar('m')
+           if (zsymam(11:11).eq.' ') zsymam(11:11)=char(isom+liso-1)
+         else
+           zsymam(11:11)=' '
+         endif
+         write(fza,'(a2,i6,a1)')'ZA',nza,zsymam(11:11)
          do ii=3,8
            if (fza(ii:ii).eq.' ') fza(ii:ii)='0'
          enddo
@@ -1119,19 +1126,20 @@ c
            if (iace.eq.0.or.iace.eq.2) then
              if (iace.eq.0) then
                if (mcnpx.eq.1) then
-                 write(cmd,'(a8,a4,a1,a5)')fza,suff(1:4),ch,'c.lst'
+                 write(cmd,'(a,a4,a1,a5)')trim(fza),suff(1:4),ch,'c.lst'
                else
                  if (ch.eq.'n') then
-                   write(cmd,'(a8,a3,a5)')fza,suff(1:3),'c.lst'
+                   write(cmd,'(a,a3,a5)')trim(fza),suff(1:3),'c.lst'
                  else
-                   write(cmd,'(a8,a3,a1,a4)')fza,suff(1:3),ch,'.lst'
+                   write(cmd,'(a,a3,a1,a4)')trim(fza),suff(1:3),ch,
+     &               '.lst'
                  endif
                endif
              elseif(iace.eq.2) then
                if (mcnpx.eq.1) then
-                 write(cmd,'(a8,a4,a1,a5)')fza,suff(1:4),ch,'y.lst'
+                 write(cmd,'(a,a4,a1,a5)')trim(fza),suff(1:4),ch,'y.lst'
                else
-                 write(cmd,'(a8,a3,a5)')fza,suff(1:3),'y.lst'
+                 write(cmd,'(a,a3,a5)')trim(fza),suff(1:3),'y.lst'
                endif
              endif
              title=trim(cmd)
@@ -1201,7 +1209,7 @@ c
              write(nin,'(a)')'FIXUP.PENDF'
              close(nin)
              call setcmd(nou,preprod,'fixup',cmd)
-             call system(cmd)
+             call system(trim(cmd))
              if (ikeep.ne.1) then
                call delfile('FIXUP.INP')
                call delfile('SIGMA1.PENDF')
@@ -1214,19 +1222,19 @@ c            Get probability tables
 c
              if (iptab.gt.0) then
                if (iurr.ne.2) then
-                 write(cmd,'(a8,a)')fza,'.URR.ENDF'
+                 write(cmd,'(a,a)')trim(fza),'.URR.ENDF'
                  furr=trim(cmd)
-                 call delfile(furr)
-                 write(cmd,'(a8,a)')fza,'.SHIELD.LST'
-                 call delfile(cmd)
-                 write(cmd,'(a8,a)')fza,'.UNSHIELD.LST'
-                 call delfile(cmd)
-                 write(cmd,'(a8,a)')fza,'.MULTBAND.LST'
-                 call delfile(cmd)
-                 write(cmd,'(a8,a)')fza,'.MULTBAND.TAB'
-                 call delfile(cmd)
-                 write(cmd,'(a8,a)')fza,'.PLOT.CUR'
-                 call delfile(cmd)
+                 call delfile(trim(furr))
+                 write(cmd,'(a,a)')trim(fza),'.SHIELD.LST'
+                 call delfile(trim(cmd))
+                 write(cmd,'(a,a)')trim(fza),'.UNSHIELD.LST'
+                 call delfile(trim(cmd))
+                 write(cmd,'(a,a)')trim(fza),'.MULTBAND.LST'
+                 call delfile(trim(cmd))
+                 write(cmd,'(a,a)')trim(fza),'.MULTBAND.TAB'
+                 call delfile(trim(cmd))
+                 write(cmd,'(a,a)')trim(fza),'.PLOT.CUR'
+                 call delfile(trim(cmd))
 c
 c                GROUPIE: Generate 2-bands probability tables in URR
 c
@@ -1241,22 +1249,22 @@ c
                  write(nin,*)
                  close(nin)
                  call setcmd(nou,preprod,'groupie',cmd)
-                 call system(cmd)
+                 call system(trim(cmd))
                  if (ikeep.ne.1) then
                    call delfile('GROUPIE.INP')
                    call delfile('GROUPIE.ENDF')
-                   write(cmd,'(a8,a)')fza,'.SHIELD.LST'
-                   call delfile(cmd)
-                   write(cmd,'(a8,a)')fza,'.UNSHIELD.LST'
-                   call delfile(cmd)
-                   write(cmd,'(a8,a)')fza,'.MULTBAND.LST'
-                   call delfile(cmd)
-                   write(cmd,'(a8,a)')fza,'.MULTBAND.TAB'
-                   call delfile(cmd)
-                   write(cmd,'(a8,a)')fza,'.PLOT.CUR'
-                   call delfile(cmd)
-                   write(cmd,'(a8,a)')fza,'.PLOT.PLT'
-                   call delfile(cmd)
+                   write(cmd,'(a,a)')trim(fza),'.SHIELD.LST'
+                   call delfile(trim(cmd))
+                   write(cmd,'(a,a)')trim(fza),'.UNSHIELD.LST'
+                   call delfile(trim(cmd))
+                   write(cmd,'(a,a)')trim(fza),'.MULTBAND.LST'
+                   call delfile(trim(cmd))
+                   write(cmd,'(a,a)')trim(fza),'.MULTBAND.TAB'
+                   call delfile(trim(cmd))
+                   write(cmd,'(a,a)')trim(fza),'.PLOT.CUR'
+                   call delfile(trim(cmd))
+                   write(cmd,'(a,a)')trim(fza),'.PLOT.PLT'
+                   call delfile(trim(cmd))
                  endif
                  write(nlst,*)
                  call cpfile(nlst,'GROUPIE.LST')
@@ -1275,7 +1283,7 @@ c
 c              Checking furr file containing PTABLE array
 c
                ichk=1
-               open(nin,file=furr,status='old',err=20)
+               open(nin,file=trim(furr),status='old',err=20)
                read(nin,'(a)',err=20,end=20)cmd
                read(nin,'(a)',err=20,end=20)cmd
                ichk=0
@@ -1297,7 +1305,7 @@ c
                  write(nin,*)
                  close(nin)
                  call setcmd(nou,preprod,'merger',cmd)
-                 call system(cmd)
+                 call system(trim(cmd))
                  if (ikeep.ne.1) then
                    call delfile('MERGER.INP')
                    if (iurr.eq.0) call delfile(furr)
@@ -1326,7 +1334,7 @@ c
              write(nin,'(a)')'ENDF6.PENDF'
              close(nin)
              call setcmd(nou,preprod,'dictin',cmd)
-             call system(cmd)
+             call system(trim(cmd))
              if (ikeep.ne.1) then
                call delfile('DICTIN.INP')
                call delfile('FIXUP.PENDF')
@@ -1340,12 +1348,12 @@ c            DOACE: Prepare fast ACE-formatted file for MC
 c                   (Filename: ZAzzzaaa.xxc.acef)
 c
              if (mcnpx.eq.1) then
-               write(cmd,'(a8,a4,a1,a6)')fza,suff(1:4),ch,'c.acef'
+               write(cmd,'(a,a4,a1,a6)')trim(fza),suff(1:4),ch,'c.acef'
              else
                if (ch.eq.'n') then
-                 write(cmd,'(a8,a3,a6)')fza,suff(1:3),'c.acef'
+                 write(cmd,'(a,a3,a6)')trim(fza),suff(1:3),'c.acef'
                else
-                 write(cmd,'(a8,a3,a1,a5)')fza,suff(1:3),ch,'.acef'
+                 write(cmd,'(a,a3,a1,a5)')trim(fza),suff(1:3),ch,'.acef'
                endif
              endif
              title=trim(cmd)
@@ -1362,7 +1370,7 @@ c
              endif
              close(nin)
              call setcmd(nou,acemakerd,'doace',cmd)
-             call system(cmd)
+             call system(trim(cmd))
              if (ikeep.ne.1) call delfile('DOACE.INP')
              write(nlst,*)
              call cpfile(nlst,'DOACE.LST')
@@ -1371,7 +1379,7 @@ c
 c            Simple file access checking
 c
              ichk=1
-             open(nin,file=title,status='old',err=30)
+             open(nin,file=trim(title),status='old',err=30)
              read(nin,'(a)',err=30,end=30)cmd
              read(nin,'(a)',err=30,end=30)cmd
              ichk=0
@@ -1394,17 +1402,19 @@ c            Save pendf tape as ZAzzzaaa.xxc.pendf, if ipndf=1
 c
              if (ipndf.gt.0.or.ikeep.eq.1) then
                if (mcnpx.eq.1) then
-                 write(cmd,'(a8,a4,a1,a7)')fza,suff(1:4),ch,'c.pendf'
+                 write(cmd,'(a,a4,a1,a7)')trim(fza),suff(1:4),ch,
+     &             'c.pendf'
                else
                  if (ch.eq.'n') then
-                   write(cmd,'(a8,a3,a7)')fza,suff(1:3),'c.pendf'
+                   write(cmd,'(a,a3,a7)')trim(fza),suff(1:3),'c.pendf'
                  else
-                   write(cmd,'(a8,a3,a1,a6)')fza,suff(1:3),ch,'.pendf'
+                   write(cmd,'(a,a3,a1,a6)')trim(fza),suff(1:3),ch,
+     &               '.pendf'
                  endif
                endif
                title=trim(cmd)
-               call delfile(title)
-               open(nin,file=title)
+               call delfile(trim(title))
+               open(nin,file=trim(title))
                call cpfile(nin,'ENDF6.PENDF')
                close(nin)
              endif
@@ -1524,7 +1534,7 @@ c
            elseif (iace.eq.2) then
 c
 c            Dosimetry ACE-formatted file
-c            (Filename: ZAzzzaaa.xxy.acef)
+c            (Filename: ZAzzzaaaM.xxy.acef)
 c
              if (mcnpx.eq.1) then
                write(cmd,'(a,a4,a1,a6)')trim(fza),suff(1:4),ch,'y.acef'
@@ -1532,7 +1542,7 @@ c
                write(cmd,'(a,a3,a6)')trim(fza),suff(1:3),'y.acef'
              endif
              title=trim(cmd)
-             call delfile(title)
+             call delfile(trim(title))
              open(nin,file='DODOS.INP')
              write(nin,'(a)')'SIGMA1.PENDF'
              write(nin,'(a)')trim(title)
@@ -1545,7 +1555,7 @@ c
              endif
              close(nin)
              call setcmd(nou,acemakerd,'dodos',cmd)
-             call system(cmd)
+             call system(trim(cmd))
              write(nou,'(a,a,a,i4,a,1pe11.4)')' ACE-file: ',
      &         trim(title),' saved for MAT= ',mati,' TEMP= ',tempi
              write(*,'(1x,a,a,a,i4,a,1pe11.4)')' ACE-file: ',
@@ -1594,9 +1604,10 @@ c            Save pendf tape as ZAzzzaaa.xxc.pendf, if ipndf=1
 c
              if (ipndf.gt.0.or.ikeep.eq.1) then
                if (mcnpx.eq.1) then
-                 write(cmd,'(a8,a4,a1,a7)')fza,suff(1:4),ch,'y.pendf'
+                 write(cmd,'(a,a4,a1,a7)')trim(fza),suff(1:4),ch,
+     &             'y.pendf'
                else
-                 write(cmd,'(a8,a3,a7)')fza,suff(1:3),'y.pendf'
+                 write(cmd,'(a,a3,a7)')trim(fza),suff(1:3),'y.pendf'
                endif
                title=trim(cmd)
                call delfile(title)
@@ -1651,9 +1662,11 @@ c
              call delfile('DOPHN.LST')
              if (ipndf.gt.0.or.ikeep.eq.1) then
                if (mcnpx.eq.1) then
-                 write(cmd,'(a8,a4,a1,a7)')fza,suff(1:4),ch,'c.pendf'
+                 write(cmd,'(a,a4,a1,a7)')trim(fza),suff(1:4),ch,
+     &             'c.pendf'
                else
-                 write(cmd,'(a8,a3,a1,a6)')fza,suff(1:3),ch,'.pendf'
+                 write(cmd,'(a,a3,a1,a6)')trim(fza),suff(1:3),ch,
+     &             '.pendf'
                endif
                title=trim(cmd)
                call delfile(title)
