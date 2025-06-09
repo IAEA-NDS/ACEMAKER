@@ -494,9 +494,9 @@ c
         endif
       endif
 c
-c     Force dosimetry data from MF6 yields if idos6>0 and no data on MF8
+c     Force dosimetry data from MF6 yields if idos6>0 and none MF8/LMF=6
 c
-      if (idos6.gt.0) then
+      if (idos6.gt.0.and.nmf68.eq.0) then
         call findmf(nin,mat,6,icod)
         if (icod.eq.0) then
           backspace(nin)
@@ -528,8 +528,7 @@ c
                     else
                       i9=0
                     endif
-                    i68=mtdchk(nmf68,mt6,lzap6,lip6,mt8)
-                    if (i9.eq.0.and.i10.eq.0.and.i68.eq.0) then
+                    if (i9.eq.0.and.i10.eq.0) then
                       nmf68=nmf68+1
                       mt6(nmf68)=mt
                       lip6(nmf68)=lfs
