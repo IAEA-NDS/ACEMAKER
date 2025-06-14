@@ -22,7 +22,7 @@ c             (default: idos6=0) No process if MF8/LMF=6 not available
 c        tol: linearization tolerance (Default: tol=0.001)
 c       ymin: minimum cross section (Default: ymin=1.0e-20)
 c       suff: ZAID suffix for ACE-formatted file
-c             Examples: .00, .32, .80, .067, the dot '.' is required
+c             Examples: .00, .32, .80, .67, the dot '.' is required
 c             (Default: suff=.00)
 c      mcnpx: MCNP trigger (0/1) = MCNP/MCNPX (Default mcnpx=0)
 c
@@ -728,8 +728,7 @@ c
               xss(ll+ne+j)=y(j)
             enddo
             iloc=iloc+2*(1+nr+ne)
-            izap=0
-            lfs=0
+            call recoil(mti,izai,matza,izap,lfs)
             if (imon.gt.0) then
               call prtxsd(lou,imt,mti,3,nr,nbt,ibt,
      &          ne,xss(ll+1),xss(ll+ne+1),mti,izap,lfs)
@@ -1987,8 +1986,9 @@ c
      &    '. Dosimetry reaction mtd=',mtd,' from MF6*MF3. ( MT=',
      &    mt,', ZAP=',izap,', LFS=',l,' )'
       else
-        write(lou,'(i4,a,i9,a)')imtd,
-     &    '. Dosimetry reaction mtd=',mtd,' from MF3.'
+        write(lou,'(i4,a,i9,a,i4,a,i8,a,i4,a)')imtd,
+     &    '. Dosimetry reaction mtd=',mtd,' from MF3. ( MT=',
+     &    mt,', ZAP=',izap,', LFS=',l,' )'
       endif
       write(lou,*)
       write(lou,'(1x,a,i9)')' number of energy points: ',np
@@ -2028,7 +2028,7 @@ c
       elseif (mfd.eq.6) then
         write(ncur,'(a9,i9,11x,i4,i8,i4)')'MF06/MTD=',mtd,mt,izap,l
       else
-        write(ncur,'(a9,i9,11x,i4)')'MF03/MTD=',mtd,mt
+        write(ncur,'(a9,i9,11x,i4,i8,i4)')'MF03/MTD=',mtd,mt,izap,l
       endif
       do i=1,np
         call chendf(x(i),chx)
@@ -2086,6 +2086,261 @@ C======================================================================
           endif
         enddo
       endif
+      return
+      end
+C======================================================================
+      subroutine recoil(mt,izai,iza,izar,lfs)
+c
+c     Return the ZA number (izar) and the lfs of the recoil nuclide for
+c     reaction MT
+c
+c     Input parameters:
+c       mt: reaction MT number (16, 28, ...)
+c       izai: ZA value of the incident particle (izai=int(zai))
+c       iza:  ZA value of the target nuclide (iza=int(za))
+c
+c     Output parameters
+c       izar: ZA number of the recoil nuclide (integer)
+c       lfs: excited level of the recoil nuclide (integer)
+c
+c       izar=-1, if the ZA number of the recoil is undetermined
+c       lfs=-99, if the excited level of the recoil nuclide is
+c                undetermined or not applicable
+c
+      data izan/1/
+      data izah/1001/,izad/1002/,izat/1003/
+      data izahe3/2003/,izaa/2004/
+      izac=izai+iza
+      izar=-1
+      lfs=-99
+      if (mt.eq.2) then
+        izar=izac-izai
+        lfs=0
+      elseif (mt.eq.4) then
+        izar=izac-izan
+      elseif (mt.eq.11) then
+        izar=izac-2*izan-izad
+      elseif (mt.eq.16) then
+        izar=izac-2*izan
+      elseif (mt.eq.17) then
+        izar=izac-3*izan
+      elseif (mt.eq.22) then
+        izar=izac-izan-izaa
+      elseif (mt.eq.23) then
+        izar=izac-izan-3*izaa
+      elseif (mt.eq.24) then
+        izar=izac-2*izan-izaa
+      elseif (mt.eq.25) then
+        izar=izac-3*izan-izaa
+      elseif (mt.eq.28) then
+        izar=izac-izan-izah
+      elseif (mt.eq.29) then
+        izar=izac-izan-2*izaa
+      elseif (mt.eq.30) then
+        izar=izac-2*(izan+izaa)
+      elseif (mt.eq.32) then
+        izar=izac-izan-izad
+      elseif (mt.eq.33) then
+        izar=izac-izan-izat
+      elseif (mt.eq.34) then
+        izar=izac-izan-izahe3
+      elseif (mt.eq.35) then
+        izar=izac-izan-izad-2*izaa
+      elseif (mt.eq.36) then
+        izar=izac-izan-izat-2*izaa
+      elseif (mt.eq.37) then
+        izar=izac-4*izan
+      elseif (mt.eq.41) then
+        izar=izac-2*izan-izah
+      elseif (mt.eq.42) then
+        izar=izac-3*izan-izah
+      elseif (mt.eq.44) then
+        izar=izac-izan-2*izah
+      elseif (mt.eq.45) then
+        izar=izac-izan-izah-izaa
+      elseif (mt.eq.50.and.izai.ne.izan) then
+        izar=izac-izan
+        lfs=0
+      elseif (mt.ge.51.and.mt.le.90) then
+        izar=izac-izan
+        lfs=mt-50
+      elseif (mt.eq.91) then
+        izar=izac-izan
+      elseif (mt.eq.102) then
+        izar=izac
+      elseif (mt.eq.103) then
+        izar=izac-izah
+      elseif (mt.eq.104) then
+        izar=izac-izad
+      elseif (mt.eq.105) then
+        izar=izac-izat
+      elseif (mt.eq.106) then
+        izar=izac-izahe3
+      elseif (mt.eq.107) then
+        izar=izac-izaa
+      elseif (mt.eq.108) then
+        izar=izac-2*izaa
+      elseif (mt.eq.109) then
+        izar=izac-3*izaa
+      elseif (mt.eq.111) then
+        izar=izac-2*izah
+      elseif (mt.eq.112) then
+        izar=izac-izah-izaa
+      elseif (mt.eq.113) then
+        izar=izac-izat-2*izaa
+      elseif (mt.eq.114) then
+        izar=izac-izad-2*izaa
+      elseif (mt.eq.115) then
+        izar=izac-izah-izad
+      elseif (mt.eq.116) then
+        izar=izac-izah-izat
+      elseif (mt.eq.117) then
+        izar=izac-izad-izaa
+      elseif (mt.eq.152) then
+        izar=izac-5*izan
+      elseif (mt.eq.153) then
+        izar=izac-6*izan
+      elseif (mt.eq.154) then
+        izar=izac-2*izan-izat
+      elseif (mt.eq.155) then
+        izar=izac-izat-izaa
+      elseif (mt.eq.156) then
+        izar=izac-4*izan-izah
+      elseif (mt.eq.157) then
+        izar=izac-3*izan-izad
+      elseif (mt.eq.158) then
+        izar=izac-izan-izad-izaa
+      elseif (mt.eq.159) then
+        izar=izac-2*izan-izah-izaa
+      elseif (mt.eq.160) then
+        izar=izac-7*izan
+      elseif (mt.eq.161) then
+        izar=izac-8*izan
+      elseif (mt.eq.162) then
+        izar=izac-5*izan-izah
+      elseif (mt.eq.163) then
+        izar=izac-6*izan-izah
+      elseif (mt.eq.164) then
+        izar=izac-7*izan-izah
+      elseif (mt.eq.165) then
+        izar=izac-4*izan-izaa
+      elseif (mt.eq.166) then
+        izar=izac-5*izan-izaa
+      elseif (mt.eq.167) then
+        izar=izac-6*izan-izaa
+      elseif (mt.eq.168) then
+        izar=izac-7*izan-izaa
+      elseif (mt.eq.169) then
+        izar=izac-4*izan-izad
+      elseif (mt.eq.170) then
+        izar=izac-5*izan-izad
+      elseif (mt.eq.171) then
+        izar=izac-6*izan-izad
+      elseif (mt.eq.172) then
+        izar=izac-3*izan-izat
+      elseif (mt.eq.173) then
+        izar=izac-4*izan-izat
+      elseif (mt.eq.174) then
+        izar=izac-5*izan-izat
+      elseif (mt.eq.175) then
+        izar=izac-6*izan-izat
+      elseif (mt.eq.176) then
+        izar=izac-2*izan-izahe3
+      elseif (mt.eq.177) then
+        izar=izac-3*izan-izahe3
+      elseif (mt.eq.178) then
+        izar=izac-4*izan-izahe3
+      elseif (mt.eq.179) then
+        izar=izac-3*izan-2*izah
+      elseif (mt.eq.180) then
+        izar=izac-3*izan-2*izaa
+      elseif (mt.eq.181) then
+        izar=izac-3*izan-izah-izaa
+      elseif (mt.eq.182) then
+        izar=izac-izad-izat
+      elseif (mt.eq.183) then
+        izar=izac-izan-izah-izad
+      elseif (mt.eq.184) then
+        izar=izac-izan-izah-izat
+      elseif (mt.eq.185) then
+        izar=izac-izan-izad-izat
+      elseif (mt.eq.186) then
+        izar=izac-izan-izah-izahe3
+      elseif (mt.eq.187) then
+        izar=izac-izan-izad-izahe3
+      elseif (mt.eq.188) then
+        izar=izac-izan-izat-izahe3
+      elseif (mt.eq.189) then
+        izar=izac-izan-izat-izaa
+      elseif (mt.eq.190) then
+        izar=izac-2*(izan+izah)
+      elseif (mt.eq.191) then
+        izar=izac-izah-izahe3
+      elseif (mt.eq.192) then
+        izar=izac-izad-izahe3
+      elseif (mt.eq.193) then
+        izar=izac-izahe3-izaa
+      elseif (mt.eq.194) then
+        izar=izac-4*izan-2*izah
+      elseif (mt.eq.195) then
+        izar=izac-4*izan-2*izaa
+      elseif (mt.eq.196) then
+        izar=izac-4*izan-izah-izaa
+      elseif (mt.eq.197) then
+        izar=izac-3*izah
+      elseif (mt.eq.198) then
+        izar=izac-izan-3*izah
+      elseif (mt.eq.199) then
+        izar=izac-3*izan-2*izah-izaa
+      elseif (mt.eq.200) then
+        izar=izac-5*izan-2*izah
+      elseif (mt.eq.600.and.izai.ne.izah) then
+        izar=izac-izah
+        lfs=0
+      elseif (mt.ge.601.and.mt.le.648) then
+        izar=izac-izah
+        lfs=mt-600
+      elseif (mt.eq.649) then
+        izar=izac-izah
+      elseif (mt.eq.650.and.izai.ne.izad) then
+        izar=izac-izad
+        lfs=0
+      elseif (mt.ge.651.and.mt.le.698) then
+        izar=izac-izad
+        lfs=mt-650
+      elseif (mt.eq.699) then
+        izar=izac-izad
+      elseif (mt.eq.700.and.izai.ne.izat) then
+        izar=izac-izat
+        lfs=0
+      elseif (mt.ge.701.and.mt.le.748) then
+        izar=izac-izat
+        lfs=mt-700
+      elseif (mt.eq.749) then
+        izar=izac-izat
+      elseif (mt.eq.750.and.izai.ne.izahe3) then
+        izar=izac-izahe3
+        lfs=0
+      elseif (mt.ge.751.and.mt.le.798) then
+        izar=izac-izahe3
+        lfs=mt-750
+      elseif (mt.eq.799) then
+        izar=izac-izahe3
+      elseif (mt.eq.800.and.izai.ne.izaa) then
+        izar=izac-izaa
+        lfs=0
+      elseif (mt.ge.801.and.mt.le.848) then
+        izar=izac-izaa
+        lfs=mt-800
+      elseif (mt.eq.849) then
+        izar=izac-izaa
+      elseif (mt.ge.875.and.mt.le.890) then
+        izar=izac-2*izan
+        lfs=mt-875
+      elseif (mt.eq.891) then
+        izar=izac-2*izan
+      endif
+      if (izar.lt.1000) izar=-1
       return
       end
 C======================================================================
