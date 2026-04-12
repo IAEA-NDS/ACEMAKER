@@ -1,5 +1,5 @@
       program dodos
-c     version 1.0
+c     version 2.0
 c
 c     prepare dosimetry ace-formatted files for MCNP
 c     the code belong to the ACEMAKER code system
@@ -18,11 +18,11 @@ c       imon: Monitor printing trigger (0/1/2) = min/max/max+plt
 c             (Default: imon=0)
 c      idos6: Force to produce dosimetry data from MF6 yields even if
 c             MF8/LMF=6 data are not available
-c             (default: idos6=0) No process if MF8/LMF=6 not available 
+c             (default: idos6=0) No process if MF8/LMF=6 not available
 c        tol: linearization tolerance (Default: tol=0.001)
 c       ymin: minimum cross section (Default: ymin=1.0e-20)
 c       suff: ZAID suffix for ACE-formatted file
-c             Examples: .00, .32, .80, .067, the dot '.' is required
+c             Examples: .00, .32, .80, .67, the dot '.' is required
 c             (Default: suff=.00)
 c      mcnpx: MCNP trigger (0/1) = MCNP/MCNPX (Default mcnpx=0)
 c
@@ -32,26 +32,34 @@ c       2. DODOS.LST listing file (fix name)
 c      if imon=2
 c       3. DODOS.PLT PLOTTAB input option file
 c       4. DODOS.CUR PLOTTAB curve file
-c      if imon=3
-c       all yields found in MF6 for all reactions find in MF3 are processed 
 c
-c     MTD numbers for the MTR block in the dosimetry ACE-formatted file:
+c     MTD: MT numbers for the MTR block in the dosimetry ACE-file
 c       If the reaction is given in MF3, then the MT number remains the
 c       same (MTD=MT). If the dosimetry reaction is given in MF10 or
 c       multiplicities are supplied in MF9 or MF6, then the MTD number
 c       is computed as:
-c         if MT=5
+c         if MT==5 then
 c           MTD=1000000*(50+lfs)+zap
-c         elseif MT=18
-c           MTD=1000000*(80+lfs)+zap
+c         elseif MT==18
+c           if (izap==-1) then
+c             MTD=18
+c           else
+c             MTD=1000000*(80+lfs)+zap
+c           endif
 c         else
 c           MTD=1000*(10+lfs)+MT
+c         endif
 c
 c       where,
 c         MTD: reaction identifier in the dosimetry ACE-formatted file
 c         zap: ZA number of the product nuclide
 c         lfs: level number of the product nuclide
 c         MT:  reaction identifier according to the ENDF-6 format
+c
+c       For MT=5 and (MT=18 with zap!=-1) the zap is codified in MTD,
+c       but for the rest of reactions the recoil is implicitly given
+c       according to the reaction MT number
+c
 c
 c     Example of input
 c
@@ -117,13 +125,13 @@ c
       open(in1, file='DODOS.INP')
       open(lou, file='DODOS.LST')
       call getdtime(cdate,ctime)
-      write(lou,'(a)')' PROGRAM DODOS: Prepare dosimetry ACE-files'
-      write(lou,'(a)')' =========================================='
+      write(lou,'(a)')' PROGRAM DODOS v2.0: Prepare dosimetry ACE-files'
+      write(lou,'(a)')' ==============================================='
       write(lou,*)
       write(lou,'(a,a11,a,a10)')' Started at ',ctime,' on ',cdate
       write(lou,*)
-      write(*,'(a)')' PROGRAM DODOS: Prepare dosimetry ACE-files'
-      write(*,'(a)')' =========================================='
+      write(*,'(a)')' PROGRAM DODOS v2.0: Prepare dosimetry ACE-files'
+      write(*,'(a)')' ==============================================='
       write(*,'(a,a11,a,a10)')' Started at ',ctime,' on ',cdate
       write(*,'(a)')
 c
@@ -134,7 +142,7 @@ c
       read(in1,'(3i11)')mat,imon,idos6
       if (imon.lt.0) then
         imon=0
-      elseif (imon.gt.3) then
+      elseif (imon.gt.2) then
         imon=2
       endif
       if (idos6.gt.0) then
@@ -242,6 +250,19 @@ c
 c     Prepare ACE-file heading information
 c
       matza=nint(za0+1.0d-6)
+      if (liso.gt.0) then
+        if (matza.eq.95242) then
+          izaid=matza
+        else
+          izaid=matza+300+100*liso
+        endif
+      else
+        if (matza.eq.95242) then
+          izaid=matza+400
+        else
+          izaid=matza
+        endif
+      endif
       call readtext(nin,line,mat0,mf0,mt0,ns0)
       zsymam=line(1:11)
       call readtext(nin,line,mat0,mf0,mt0,ns0)
@@ -266,17 +287,19 @@ c
       hk(70:70)=ch
       str11=' '
       if (mcnpx.eq.1) then
-        write(hz,'(i6,a4,a1,a2)')matza,suff(1:4),ch,'y '
+        write(hz,'(i6,a4,a1,a2)')izaid,suff(1:4),ch,'y '
       else
-        write(hz,'(i6,a3,a4)')matza,suff(1:3),'y   '
+        write(hz,'(i6,a3,a4)')izaid,suff(1:3),'y   '
       endif
       write(hm,'(a6,i4)')'   mat',mat
       tz=bk*temp
       write(*,*)' Material=',mat
       write(lou,*)
-      write(lou,'(a,i5,a,i7,a,1pe15.8)')' Material=',mat,' ZA=',matza,
-     &  ' AWR=',awr0
-      write(lou,'(a,a,a,i7)')' SYM=',zsymam,' ZAI=',izai
+      write(lou,'(a,i7,a,1pe15.8)')' ZAI=',izai,' AWI=',awi
+      write(lou,'(a,i5,a,i7,a,i3,a,i7,a,1pe15.8)')' Material=',mat,
+     &  ' ZA=',matza,' LISO=',liso,' ZAID=',izaid,' AWR=',awr0
+      write(lou,'(a,a,a,i3,a,1pe15.8)')' SYM=',zsymam,
+     &  ' LFI=',lfi,' ELIS=',elis
       write(lou,'(a,1p,e15.8,a,e13.6,a,e13.6,a)')' EMAX=', emax,
      &  ' Temperature=',temp,' K = ',tz,' MeV'
       write(lou,*)
@@ -290,7 +313,7 @@ c
         mt=1000
         do while (mt.gt.0)
           call findnextmt(nin,3,mt)
-          if (mt.gt.1) then
+          if (mt.gt.2) then
             nmf3=nmf3+1
             mf3(nmf3)=mt
           endif
@@ -315,7 +338,7 @@ c
         mt=1000
         do while (mt.gt.0)
           call findnextmt(nin,10,mt)
-          if (mt.gt.1) then
+          if (mt.gt.2) then
             call readcont(nin,c1,c2,l1,l2,nfs,n2,mat0,mf0,mt0,ns0)
             do i=1,nfs
               call readtab1(nin,c1,c2,izap,lfs,nr,ne,nbt,ibt,x,y)
@@ -345,7 +368,7 @@ c
         mt=1000
         do while (mt.gt.0)
           call findnextmt(nin,9,mt)
-          if (mt.gt.1) then
+          if (mt.gt.2) then
             if (nmf3.gt.0) then
               i3=iposm(nmf3,mf3,mt)
             else
@@ -404,7 +427,7 @@ c
         ii=0
         do while (mt.gt.0)
           call findnextmt(nin,8,mt)
-          if (mt.gt.1) then
+          if (mt.gt.2) then
             call readcont(nin,c1,c2,l1,l2,nfs,n2,mat0,mf0,mt0,ns0)
             kzap=-99999
             do i=1,nfs
@@ -421,7 +444,7 @@ c
                 endif
                 if (i3.gt.0) then
                   izap=nint(zap+1.0d-6)
-                  mt8=mtdos(mt,izap,lfs)                
+                  mt8=mtdos(mt,izap,lfs)
                   if (nmf10.gt.0) then
                     i10=iposm(nmf10,mf10,mt8)
                   else
@@ -438,7 +461,7 @@ c
                     lip6(nmf68)=lfs
                     lzap=izap
                     lzap6(nmf68)=lzap
-                    if (kzap.ne.lzap) then                      
+                    if (kzap.ne.lzap) then
                       kk=0
                       kzap=lzap
                       ii=ii+1
@@ -471,9 +494,9 @@ c
         endif
       endif
 c
-c     Force dosimetry data from MF6 yields if idos6>0 and no data on MF8
-c      
-      if (idos6.gt.0) then
+c     Force dosimetry data from MF6 yields if idos6>0 and none MF8/LMF=6
+c
+      if (idos6.gt.0.and.nmf68.eq.0) then
         call findmf(nin,mat,6,icod)
         if (icod.eq.0) then
           backspace(nin)
@@ -481,7 +504,7 @@ c
           ii=0
           do while (mt.gt.0)
             call findnextmt(nin,6,mt)
-            if (mt.gt.1) then
+            if (mt.gt.2) then
               if (nmf3.gt.0) then
                 i3=iposm(nmf3,mf3,mt)
               else
@@ -494,7 +517,7 @@ c
                   call readtab1(nin,zap,awp,lfs,law,nr,np,nbt,ibt,x,y)
                   izap=nint(zap+1.0d-6)
                   if (izap.gt.2004) then
-                    mt8=mtdos(mt,izap,lfs)                
+                    mt8=mtdos(mt,izap,lfs)
                     if (nmf10.gt.0) then
                       i10=iposm(nmf10,mf10,mt8)
                     else
@@ -505,14 +528,13 @@ c
                     else
                       i9=0
                     endif
-                    i68=mtdchk(nmf68,mt6,lzap6,lip6,mt8)
-                    if (i9.eq.0.and.i10.eq.0.and.i68.eq.0) then
+                    if (i9.eq.0.and.i10.eq.0) then
                       nmf68=nmf68+1
                       mt6(nmf68)=mt
                       lip6(nmf68)=lfs
                       lzap=izap
                       lzap6(nmf68)=lzap
-                      if (kzap.ne.lzap) then                      
+                      if (kzap.ne.lzap) then
                         kk=0
                         kzap=lzap
                         ii=ii+1
@@ -527,7 +549,7 @@ c
                 enddo
               else
                 write(lou,*)' MF6 yield for mt=',mt,' was specified',
-     &            ' but no MF3 data availble. Data ignored.'                
+     &            ' but no MF3 data availble. Data ignored.'
               endif
             endif
           enddo
@@ -545,7 +567,7 @@ c
             endif
           endif
         endif
-      endif            
+      endif
 c
 c     searching and saving MF6 yields, if required
 c
@@ -553,11 +575,11 @@ c
       if (nmf68.gt.0) then
         kzap=-99999
         mtk=-999
-        ii=0      
+        ii=0
         do i=1,nmf68
           mti=mt6(i)
           lzapi=lzap6(i)
-          if (mti.ne.mtk.or.lzapi.ne.kzap) then            
+          if (mti.ne.mtk.or.lzapi.ne.kzap) then
             mtk=mti
             kzap=lzapi
             call findmt(nin,mat,6,mti,icod)
@@ -567,8 +589,8 @@ c
               do k=1,nk
                 call readtab1(nin,zap,c2,lip,law,nr,ne,nbt,ibt,x,y)
                 izap=nint(zap+1.0d-6)
-                if (izap.eq.kzap) kk=kk+1           
-                call nextsub6(nin,law,nbt,ibt,x,y)              
+                if (izap.eq.kzap) kk=kk+1
+                call nextsub6(nin,law,nbt,ibt,x,y)
               enddo
               ii=ii+1
               nzap(ii)=kk
@@ -591,7 +613,7 @@ c
           lip6i=lip6(i)
           if (mti.ne.mtk.or.lzap6i.ne.kzap) then
             ii=ii+1
-            if (nzap(ii).eq.nzap6(ii)) then 
+            if (nzap(ii).eq.nzap6(ii)) then
               ktest=1
             else
               ktest=0
@@ -636,7 +658,7 @@ c
         enddo
       endif
 c
-c     Setting triggers and main pointers for ACE file
+c     Setting triggers and main pointers for ACE-formatted file
 c
       nmtr=nmf3+nmf10+nmf9+nmf6
       write(lou,*)
@@ -647,6 +669,9 @@ c
       write(*,*)
       nxs(2)=matza
       nxs(4)=nmtr
+      nxs(9)=liso
+      nxs(10)=matza/1000
+      nxs(11)=mod(matza,1000)
       jxs(1)=1
       lmt=1
       jxs(3)=lmt
@@ -703,16 +728,17 @@ c
               xss(ll+ne+j)=y(j)
             enddo
             iloc=iloc+2*(1+nr+ne)
+            call recoil(mti,izai,matza,izap,lfs)
             if (imon.gt.0) then
               call prtxsd(lou,imt,mti,3,nr,nbt,ibt,
-     &          ne,xss(ll+1),xss(ll+ne+1))
+     &          ne,xss(ll+1),xss(ll+ne+1),mti,izap,lfs)
             else
               write(lou,'(i4,a,i9,a)')imt,'. Dosimetry reaction mtd=',
      &          mti,' from MF3'
             endif
             if (imon.eq.2) then
               call plotxsd(ncur,nplt,hk,nmtr,imt,mti,3,
-     &          ne,xss(ll+1),xss(ll+ne+1))
+     &          ne,xss(ll+1),xss(ll+ne+1),mti,izap,lfs)
             endif
             write(*,'(i4,a,i9,a)')imt,'. Dosimetry reaction mtd=',
      &        mti,' from MF3'
@@ -733,11 +759,7 @@ c
           call readcont(nin,c1,c2,l1,l2,nfs,n2,mat0,mf0,mt0,ns0)
           do k=1,nfs
             call readtab1(nin,c1,c2,izap,lfs,nr,ne,nbt,ibt,x,y)
-            if (mt.eq.5) then
-              mti=1000000*(50+lfs)+izap
-            else
-              mti=1000*(10+lfs)+mt
-            endif
+            mti=mtdos(mt,izap,lfs)
             if (mti.eq.mf10(i)) then
               imt=imt+1
               xss(lmt+imt-1)=mti
@@ -768,14 +790,14 @@ c
               iloc=iloc+2*(1+nr+ne)
               if (imon.gt.0) then
                 call prtxsd(lou,imt,mti,10,nr,nbt,ibt,
-     &            ne,xss(ll+1),xss(ll+ne+1))
+     &            ne,xss(ll+1),xss(ll+ne+1),mt,izap,lfs)
               else
                 write(lou,'(i4,a,i9,a)')imt,'. Dosimetry reaction mtd=',
      &            mti,' from MF10'
               endif
               if (imon.eq.2) then
                 call plotxsd(ncur,nplt,hk,nmtr,imt,mti,10,
-     &            ne,xss(ll+1),xss(ll+ne+1))
+     &            ne,xss(ll+1),xss(ll+ne+1),mt,izap,lfs)
               endif
               write(*,'(i4,a,i9,a)')imt,'. Dosimetry reaction mtd=',
      &          mti,' from MF10'
@@ -791,7 +813,7 @@ c
       rewind(ntp)
       if (nmf9.gt.0) then
         do i=1,nmf9
-          call readtab1(ntp,c1,c2,l1,l2,nry,ney,nbty,ibty,xy,yy)
+          call readtab1(ntp,c1,c2,izap,lfs,nry,ney,nbty,ibty,xy,yy)
           mt3=nint(c1+1.0d-6)
           mti=nint(c2+1.0d-6)
           if (mti.eq.mf9(i)) then
@@ -815,14 +837,14 @@ c
             iloc=iloc+2*(1+ne)
             if (imon.gt.0) then
               call prtxsd(lou,imt,mti,9,nr,nbt,ibt,
-     &          ne,xss(ll+1),xss(ll+ne+1))
+     &          ne,xss(ll+1),xss(ll+ne+1),mt3,izap,lfs)
             else
               write(lou,'(i4,a,i9,a)')imt,'. Dosimetry reaction mtd=',
      &          mti,' from MF9*MF3'
             endif
             if (imon.eq.2) then
               call plotxsd(ncur,nplt,hk,nmtr,imt,mti,9,
-     &          ne,xss(ll+1),xss(ll+ne+1))
+     &          ne,xss(ll+1),xss(ll+ne+1),mt3,izap,lfs)
             endif
             write(*,'(i4,a,i9,a)')imt,'. Dosimetry reaction mtd=',
      &        mti,' from MF9*MF3'
@@ -841,7 +863,7 @@ c      XSD=YLD(MF6)*XS(MF3)
 c
       if (nmf6.gt.0) then
         do i=1,nmf6
-          call readtab1(ntp,c1,c2,l1,l2,nry,ney,nbty,ibty,xy,yy)
+          call readtab1(ntp,c1,c2,izap,lfs,nry,ney,nbty,ibty,xy,yy)
           mt3=nint(c1+1.0d-6)
           mti=nint(c2+1.0d-6)
           if (mti.eq.mf6(i)) then
@@ -865,14 +887,14 @@ c
             iloc=iloc+2*(1+ne)
             if (imon.gt.0) then
               call prtxsd(lou,imt,mti,6,nr,nbt,ibt,
-     &          ne,xss(ll+1),xss(ll+ne+1))
+     &          ne,xss(ll+1),xss(ll+ne+1),mt3,izap,lfs)
             else
               write(lou,'(i4,a,i9,a)')imt,'. Dosimetry reaction mtd=',
      &          mti,' from MF6*MF3'
             endif
             if (imon.eq.2) then
               call plotxsd(ncur,nplt,hk,nmtr,imt,mti,6,
-     &          ne,xss(ll+1),xss(ll+ne+1))
+     &          ne,xss(ll+1),xss(ll+ne+1),mt3,izap,lfs)
             endif
             write(*,'(i4,a,i9,a)')imt,'. Dosimetry reaction mtd=',
      &        mti,' from MF6*MF3'
@@ -1012,7 +1034,7 @@ c
           i0=i
           do while(x0.ne.x1.and.y0.eq.y1.and.i.lt.n)
             x0=x1
-            y0=y1            
+            y0=y1
             i=i+1
             call ff2chx(x(i),x1)
             y1=y(i)
@@ -1033,9 +1055,9 @@ c
      &          x(j-2),' and ',x(j-1)
             else
               write(nerr,*)' Warning: ',jrem,' points removed between',
-     &          x(j-1),' and ',x(j)            
+     &          x(j-1),' and ',x(j)
             endif
-          endif                             
+          endif
         else
           j=j+1
           read(x1,'(e11.0)')x(j)
@@ -1126,7 +1148,7 @@ c
       call remdup(0,ne,xl,yl,irem)
       if (irem.gt.0) then
         write(*,*)' Warning: ',irem,' points',
-     &    ' removed from dosimetry reaction' 
+     &    ' removed from dosimetry reaction'
       endif
       do i=1,ne
         x(i)=xl(i)
@@ -1939,7 +1961,7 @@ c
 C======================================================================
 C     Printing and plotting routines for dosimetry cross sections
 C======================================================================
-      subroutine prtxsd(lou,imtd,mtd,mfd,nr,nbt,ibt,np,x,y)
+      subroutine prtxsd(lou,imtd,mtd,mfd,nr,nbt,ibt,np,x,y,mt,izap,l)
 c
 c     print the dosimetry cross section mtd from file mfd
 c
@@ -1952,19 +1974,24 @@ c
       data ei/'      ENERGY      '/,xsd/' DOSIMETRY X-SEC. '/
       data ui/'==============='/,uu/'=================='/
       if (mfd.eq.10) then
-        write(lou,'(i4,a,i9,a,i9)')imtd,'. Dosimetry reaction mtd=',mtd,
-     &    ' from MF10. Number of energy points: ',np
+        write(lou,'(i4,a,i9,a,i4,a,i8,a,i4,a)')imtd,
+     &    '. Dosimetry reaction mtd=',mtd,' from MF10. ( MT=',
+     &    mt,', ZAP=',izap,', LFS=',l,' )'
       elseif (mfd.eq.9) then
-        write(lou,'(i4,a,i9,a,i9)')imtd,'. Dosimetry reaction mtd=',mtd,
-     &    ' from MF9*MF3. Number of energy points: ',np
+        write(lou,'(i4,a,i9,a,i4,a,i8,a,i4,a)')imtd,
+     &    '. Dosimetry reaction mtd=',mtd,' from MF9*MF3. ( MT=',
+     &    mt,', ZAP=',izap,', LFS=',l,' )'
       elseif (mfd.eq.6) then
-        write(lou,'(i4,a,i9,a,i9)')imtd,'. Dosimetry reaction mtd=',mtd,
-     &    ' from MF6*MF3. Number of energy points: ',np
+        write(lou,'(i4,a,i9,a,i4,a,i8,a,i4,a)')imtd,
+     &    '. Dosimetry reaction mtd=',mtd,' from MF6*MF3. ( MT=',
+     &    mt,', ZAP=',izap,', LFS=',l,' )'
       else
-        write(lou,'(i4,a,i9,a,i9)')imtd,'. Dosimetry reaction mtd=',mtd,
-     &    ' from MF3. Number of energy points: ',np
+        write(lou,'(i4,a,i9,a,i4,a,i8,a,i4,a)')imtd,
+     &    '. Dosimetry reaction mtd=',mtd,' from MF3. ( MT=',
+     &    mt,', ZAP=',izap,', LFS=',l,' )'
       endif
       write(lou,*)
+      write(lou,'(1x,a,i9)')' number of energy points: ',np
       if (nr.gt.0) then
         write(lou,'(1x,a,3(1x,a15))')' interpolation law:',ii,ni,li
         write(lou,'(1x,a,3(1x,a15))')'===================',ui,ui,ui
@@ -1983,7 +2010,8 @@ c
       return
       end
 C======================================================================
-      subroutine plotxsd(ncur,nplt,hk,nmtr,imtd,mtd,mfd,np,x,y)
+      subroutine plotxsd(ncur,nplt,hk,nmtr,imtd,mtd,mfd,np,x,y,
+     &                   mt,izap,l)
 c
 c     Add dosimetry cross section mtd from mfd to PLOTTAB files
 c
@@ -1992,14 +2020,15 @@ c
       dimension x(*),y(*)
       character*11 chx,chy
       character*70 hk
+
       if (mfd.eq.10) then
-        write(ncur,'(a,i9)')'MF10/MT=',mtd
+        write(ncur,'(a9,i9,11x,i4,i8,i4)')'MF10/MTD=',mtd,mt,izap,l
       elseif (mfd.eq.9) then
-        write(ncur,'(a,i9)')'MF09/MT=',mtd
+        write(ncur,'(a9,i9,11x,i4,i8,i4)')'MF09/MTD=',mtd,mt,izap,l
       elseif (mfd.eq.6) then
-        write(ncur,'(a,i9)')'MF06/MT=',mtd
+        write(ncur,'(a9,i9,11x,i4,i8,i4)')'MF06/MTD=',mtd,mt,izap,l
       else
-        write(ncur,'(a,i9)')'MF03/MT=',mtd
+        write(ncur,'(a9,i9,11x,i4,i8,i4)')'MF03/MTD=',mtd,mt,izap,l
       endif
       do i=1,np
         call chendf(x(i),chx)
@@ -2031,7 +2060,11 @@ C======================================================================
       if (mt.eq.5) then
         mtdos=1000000*(50+lfs)+izap
       elseif (mt.eq.18) then
-        mtdos=1000000*(80+lfs)+izap
+        if (izap.eq.-1) then
+          mtdos=18
+        else
+          mtdos=1000000*(80+lfs)+izap
+        endif
       else
         mtdos=1000*(10+lfs)+mt
       endif
@@ -2051,10 +2084,265 @@ C======================================================================
             mtdchk=1
             exit
           endif
-        enddo      
+        enddo
       endif
       return
-      end      
+      end
+C======================================================================
+      subroutine recoil(mt,izai,iza,izar,lfs)
+c
+c     Return the ZA number (izar) and the lfs of the recoil nuclide for
+c     reaction MT
+c
+c     Input parameters:
+c       mt: reaction MT number (16, 28, ...)
+c       izai: ZA value of the incident particle (izai=int(zai))
+c       iza:  ZA value of the target nuclide (iza=int(za))
+c
+c     Output parameters
+c       izar: ZA number of the recoil nuclide (integer)
+c       lfs: excited level of the recoil nuclide (integer)
+c
+c       izar=-1, if the ZA number of the recoil is undetermined
+c       lfs=-99, if the excited level of the recoil nuclide is
+c                undetermined or not applicable
+c
+      data izan/1/
+      data izah/1001/,izad/1002/,izat/1003/
+      data izahe3/2003/,izaa/2004/
+      izac=izai+iza
+      izar=-1
+      lfs=-99
+      if (mt.eq.2) then
+        izar=izac-izai
+        lfs=0
+      elseif (mt.eq.4) then
+        izar=izac-izan
+      elseif (mt.eq.11) then
+        izar=izac-2*izan-izad
+      elseif (mt.eq.16) then
+        izar=izac-2*izan
+      elseif (mt.eq.17) then
+        izar=izac-3*izan
+      elseif (mt.eq.22) then
+        izar=izac-izan-izaa
+      elseif (mt.eq.23) then
+        izar=izac-izan-3*izaa
+      elseif (mt.eq.24) then
+        izar=izac-2*izan-izaa
+      elseif (mt.eq.25) then
+        izar=izac-3*izan-izaa
+      elseif (mt.eq.28) then
+        izar=izac-izan-izah
+      elseif (mt.eq.29) then
+        izar=izac-izan-2*izaa
+      elseif (mt.eq.30) then
+        izar=izac-2*(izan+izaa)
+      elseif (mt.eq.32) then
+        izar=izac-izan-izad
+      elseif (mt.eq.33) then
+        izar=izac-izan-izat
+      elseif (mt.eq.34) then
+        izar=izac-izan-izahe3
+      elseif (mt.eq.35) then
+        izar=izac-izan-izad-2*izaa
+      elseif (mt.eq.36) then
+        izar=izac-izan-izat-2*izaa
+      elseif (mt.eq.37) then
+        izar=izac-4*izan
+      elseif (mt.eq.41) then
+        izar=izac-2*izan-izah
+      elseif (mt.eq.42) then
+        izar=izac-3*izan-izah
+      elseif (mt.eq.44) then
+        izar=izac-izan-2*izah
+      elseif (mt.eq.45) then
+        izar=izac-izan-izah-izaa
+      elseif (mt.eq.50.and.izai.ne.izan) then
+        izar=izac-izan
+        lfs=0
+      elseif (mt.ge.51.and.mt.le.90) then
+        izar=izac-izan
+        lfs=mt-50
+      elseif (mt.eq.91) then
+        izar=izac-izan
+      elseif (mt.eq.102) then
+        izar=izac
+      elseif (mt.eq.103) then
+        izar=izac-izah
+      elseif (mt.eq.104) then
+        izar=izac-izad
+      elseif (mt.eq.105) then
+        izar=izac-izat
+      elseif (mt.eq.106) then
+        izar=izac-izahe3
+      elseif (mt.eq.107) then
+        izar=izac-izaa
+      elseif (mt.eq.108) then
+        izar=izac-2*izaa
+      elseif (mt.eq.109) then
+        izar=izac-3*izaa
+      elseif (mt.eq.111) then
+        izar=izac-2*izah
+      elseif (mt.eq.112) then
+        izar=izac-izah-izaa
+      elseif (mt.eq.113) then
+        izar=izac-izat-2*izaa
+      elseif (mt.eq.114) then
+        izar=izac-izad-2*izaa
+      elseif (mt.eq.115) then
+        izar=izac-izah-izad
+      elseif (mt.eq.116) then
+        izar=izac-izah-izat
+      elseif (mt.eq.117) then
+        izar=izac-izad-izaa
+      elseif (mt.eq.152) then
+        izar=izac-5*izan
+      elseif (mt.eq.153) then
+        izar=izac-6*izan
+      elseif (mt.eq.154) then
+        izar=izac-2*izan-izat
+      elseif (mt.eq.155) then
+        izar=izac-izat-izaa
+      elseif (mt.eq.156) then
+        izar=izac-4*izan-izah
+      elseif (mt.eq.157) then
+        izar=izac-3*izan-izad
+      elseif (mt.eq.158) then
+        izar=izac-izan-izad-izaa
+      elseif (mt.eq.159) then
+        izar=izac-2*izan-izah-izaa
+      elseif (mt.eq.160) then
+        izar=izac-7*izan
+      elseif (mt.eq.161) then
+        izar=izac-8*izan
+      elseif (mt.eq.162) then
+        izar=izac-5*izan-izah
+      elseif (mt.eq.163) then
+        izar=izac-6*izan-izah
+      elseif (mt.eq.164) then
+        izar=izac-7*izan-izah
+      elseif (mt.eq.165) then
+        izar=izac-4*izan-izaa
+      elseif (mt.eq.166) then
+        izar=izac-5*izan-izaa
+      elseif (mt.eq.167) then
+        izar=izac-6*izan-izaa
+      elseif (mt.eq.168) then
+        izar=izac-7*izan-izaa
+      elseif (mt.eq.169) then
+        izar=izac-4*izan-izad
+      elseif (mt.eq.170) then
+        izar=izac-5*izan-izad
+      elseif (mt.eq.171) then
+        izar=izac-6*izan-izad
+      elseif (mt.eq.172) then
+        izar=izac-3*izan-izat
+      elseif (mt.eq.173) then
+        izar=izac-4*izan-izat
+      elseif (mt.eq.174) then
+        izar=izac-5*izan-izat
+      elseif (mt.eq.175) then
+        izar=izac-6*izan-izat
+      elseif (mt.eq.176) then
+        izar=izac-2*izan-izahe3
+      elseif (mt.eq.177) then
+        izar=izac-3*izan-izahe3
+      elseif (mt.eq.178) then
+        izar=izac-4*izan-izahe3
+      elseif (mt.eq.179) then
+        izar=izac-3*izan-2*izah
+      elseif (mt.eq.180) then
+        izar=izac-3*izan-2*izaa
+      elseif (mt.eq.181) then
+        izar=izac-3*izan-izah-izaa
+      elseif (mt.eq.182) then
+        izar=izac-izad-izat
+      elseif (mt.eq.183) then
+        izar=izac-izan-izah-izad
+      elseif (mt.eq.184) then
+        izar=izac-izan-izah-izat
+      elseif (mt.eq.185) then
+        izar=izac-izan-izad-izat
+      elseif (mt.eq.186) then
+        izar=izac-izan-izah-izahe3
+      elseif (mt.eq.187) then
+        izar=izac-izan-izad-izahe3
+      elseif (mt.eq.188) then
+        izar=izac-izan-izat-izahe3
+      elseif (mt.eq.189) then
+        izar=izac-izan-izat-izaa
+      elseif (mt.eq.190) then
+        izar=izac-2*(izan+izah)
+      elseif (mt.eq.191) then
+        izar=izac-izah-izahe3
+      elseif (mt.eq.192) then
+        izar=izac-izad-izahe3
+      elseif (mt.eq.193) then
+        izar=izac-izahe3-izaa
+      elseif (mt.eq.194) then
+        izar=izac-4*izan-2*izah
+      elseif (mt.eq.195) then
+        izar=izac-4*izan-2*izaa
+      elseif (mt.eq.196) then
+        izar=izac-4*izan-izah-izaa
+      elseif (mt.eq.197) then
+        izar=izac-3*izah
+      elseif (mt.eq.198) then
+        izar=izac-izan-3*izah
+      elseif (mt.eq.199) then
+        izar=izac-3*izan-2*izah-izaa
+      elseif (mt.eq.200) then
+        izar=izac-5*izan-2*izah
+      elseif (mt.eq.600.and.izai.ne.izah) then
+        izar=izac-izah
+        lfs=0
+      elseif (mt.ge.601.and.mt.le.648) then
+        izar=izac-izah
+        lfs=mt-600
+      elseif (mt.eq.649) then
+        izar=izac-izah
+      elseif (mt.eq.650.and.izai.ne.izad) then
+        izar=izac-izad
+        lfs=0
+      elseif (mt.ge.651.and.mt.le.698) then
+        izar=izac-izad
+        lfs=mt-650
+      elseif (mt.eq.699) then
+        izar=izac-izad
+      elseif (mt.eq.700.and.izai.ne.izat) then
+        izar=izac-izat
+        lfs=0
+      elseif (mt.ge.701.and.mt.le.748) then
+        izar=izac-izat
+        lfs=mt-700
+      elseif (mt.eq.749) then
+        izar=izac-izat
+      elseif (mt.eq.750.and.izai.ne.izahe3) then
+        izar=izac-izahe3
+        lfs=0
+      elseif (mt.ge.751.and.mt.le.798) then
+        izar=izac-izahe3
+        lfs=mt-750
+      elseif (mt.eq.799) then
+        izar=izac-izahe3
+      elseif (mt.eq.800.and.izai.ne.izaa) then
+        izar=izac-izaa
+        lfs=0
+      elseif (mt.ge.801.and.mt.le.848) then
+        izar=izac-izaa
+        lfs=mt-800
+      elseif (mt.eq.849) then
+        izar=izac-izaa
+      elseif (mt.ge.875.and.mt.le.890) then
+        izar=izac-2*izan
+        lfs=mt-875
+      elseif (mt.eq.891) then
+        izar=izac-2*izan
+      endif
+      if (izar.lt.1000) izar=-1
+      return
+      end
 C======================================================================
 C     Time routine
 C======================================================================
