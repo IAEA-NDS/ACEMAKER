@@ -1,5 +1,5 @@
       program dotsl
-c     version 1.0
+c     version 3.0
 c
 c     Process thermal scattering data for neutrons to prepare ACE files
 c     for Monte Carlo simulations
@@ -18,7 +18,7 @@ c
 c     line  1: Input ENDF-6 formatted filename containing TSL(MF7) (a72)
 c     line  2: Output ACE-formatted filename                       (a72)
 c     line  3: MAT     TEMP    NMIX   IMON              (i11,e11.0,2i11)
-c     line  4: NBIN    ETHMAX  TOL    TOLE                  (i11,3e11.0)
+c     line  4: NBIN    ETHMAX  TOL    TOLE      METHOD  (i11,3e11.0,i11)
 c     line  5: THZAID  SUFF    MCNPX   NZA            (5x,a6,f11.0,2I11)
 c     line 6a: (IZA(i),i=1, min(8,NZA))                            (8i7)
 c     line 6a: (IZA(i),i=9, NZA)   required if NZA>8               (8i7)
@@ -39,7 +39,19 @@ c               (Default = 4 eV)
 c          TOL: Fractional tolerance for linearization/reconstruction
 c               (Default = 0.001 = 0.1%)
 c         TOLE: Fractional tolerance for preparing incident energy grid
-c               (Default = 0.001 = 0.1%)
+c               (Default = 0.003 = 0.3%)
+c               Note: tole<0.0d0 -> no adaptive reconstruction
+c               of the incident energy grid
+c       METHOD: Thinning method for secondary CDF (0/1/2/3)
+c                METHOD=0 : thinned PDF -> PDF(NNEP)=0.0
+c                METHOD=1 : thinned PDF -> PDF(1)=pdf(1)
+c                METHOD=2 : Least Squares -> sum((PDF(I)-pdf(i))**2)=min
+c                METHOD=3 : NJOY-like thinning -> PDF(I)=pdf(i)
+c               (Default = 0)
+c                Note: methods 0-2 try to conserve the average PDF by
+c                      thinned interval
+c                      method 3 keeps pointwise values at thinned
+c                      boundaries, but not the average PDF by interval
 c       THZAID: Thermal ZAID name on the ACE-formatted file
 c               (Default = ZA number)
 c         SUFF: Thermal suffix for THID (thsuff)
@@ -60,7 +72,7 @@ c     -----------------------------------------------------------------
 c     \TSL\tsl-HinH2O.endf
 c     \ACE\HinH2O.acef
 c               1      293.6          1          2
-c              64        4.0      0.001      0.003
+c              64        4.0      0.001      0.003           0
 c            lwtr        .00          0          1
 c        1001
 c     -----------------------------------------------------------------
@@ -74,9 +86,9 @@ c       4. DOTSL.CUR PLOTTAB curve file
 c
       implicit real*8(a-h, o-z)
       parameter (bk=8.6173303d-5,ev2mev=1.0d-6)
-      parameter (nfixx=150, nei0=nfixx+1 )
+      parameter (nfixx=118, nei0=nfixx+1 )
       parameter (ethmin=1.0d-5, ethmaxd=4.0d0, tempd=296.0d0)
-      parameter (nbind=16, told=0.001d0, toled=0.001d0)
+      parameter (nbind=16, told=0.001d0, toled=0.003d0)
       character*1  lin130(130)
       character*3  tht
       character*4  suff
@@ -90,15 +102,16 @@ c
       common/acetxt/hz,hd,hm,hk
       common/acecte/awrth,tmev,awm(16),izam(16)
       common/acepnt/nxs(16),jxs(32)
-      common/acexss/xss(50000000),nxss
+      common/acexss/xss(100000000),nxss
       allocatable ei(:)
       data nin/1/,in2/2/,lst/20/
-      data thzaid/'      '/,thsuff/.00/,suff/'    '/
+      data thsuff/.00/
+      data suff/'    '/,thzaid/'      '/
       data lin130/130*'='/
 c
 c     Initialization (nxss should be set to xss dimension)
 c
-      nxss=50000000
+      nxss=100000000
       do i=1,16
         nxs(i)=0
         izam(i)=0
@@ -106,6 +119,13 @@ c
       enddo
       do i=1,32
         jxs(i)=0
+      enddo
+      do i=1,10
+        hd(i:i)=' '
+        hm(i:i)=' '
+      enddo
+      do i=1,13
+        hz(i:i)=' '
       enddo
       do i=1,70
         hk(i:i)=' '
@@ -132,7 +152,7 @@ c
       read(nin,'(a)')fin2
       read(nin,'(a)')fout
       read(nin,'(i11,e11.0,2i11)')matsl,temp,nmix,imon
-      read(nin,'(i11,3e11.0)')nbin,ethmax,tol,tole
+      read(nin,'(i11,3e11.0,i11)')nbin,ethmax,tol,tole,method
       read(nin,'(5x,a6,f11.0,2i11)')thzaid,thsuff,mcnpx,nza
       if (nza.ge.1.and.nza.le.8) then
         read(nin,'(8i7)')(izam(i),i=1,nza)
@@ -177,7 +197,8 @@ c
       if (nbin.lt.4) nbin=nbind
       if (ethmax.le.0.0d0) ethmax=ethmaxd
       if (tol.le.0.0d0) tol=told
-      if (tole.le.0.0d0) tole=toled
+      if (tole.eq.0.0d0) tole=toled
+      if (method.lt.0.or.method.gt.3) method=0
       if (thzaid.eq.''.or.thzaid.eq.'      ') write(thzaid,'(i6)')izath
       if (thsuff.lt.0.0d0.or.thsuff.ge.1.0d0) thsuff=0.0d0
       if (mcnpx.ne.1) mcnpx=0
@@ -187,8 +208,8 @@ c     Printing input data
 c
       write(lst,'(a)')' Input options'
       write(lst,'(a)')' ============='
-      write(lst,'(a,a)')' Input TSL-ENDF file name =',fin2
-      write(lst,'(a,a)')' Output TSL-ACE file name =',fout
+      write(lst,'(a,a)')' TSL-ENDF file =',fin2
+      write(lst,'(a,a)')' TSL-ACE  file =',fout
       write(lst,'(a,i4)')' TSL-ENDF MAT =',matsl
       write(lst,'(a,1pe12.5)')' Temperature [K] =',temp
       write(lst,'(a,i3)')' Number of atom types in mixed moderator =',
@@ -200,6 +221,7 @@ c
      &  ' linearization =',tol
       write(lst,'(a,a,1pe12.5)')' Fractional tolerance for',
      &  ' incident energy grid =',tole
+      write(lst,'(a,i2)')' Thinning method for secondary CDF =',method
       write(lst,'(a,a)')' Thermal ZAID name = ',thzaid
       write(suff,'(a1,i3)')'.',nint(1000*thsuff)
       if (suff(2:2).eq.' ') suff(2:2)='0'
@@ -274,9 +296,9 @@ c
       str11=' '
       call getdtime(hd,str11)
       if (mcnpx.eq.1) then
-        write(hz,'(a6,a4,a3)')thzaid,suff(1:4),tht
+        write(hz,'(a6,a4,a3)')trim(thzaid),suff(1:4),tht
       else
-        write(hz,'(a6,a3,a3,a1)')thzaid,suff(1:3),tht,' '
+        write(hz,'(a6,a3,a3,a1)')trim(thzaid),suff(1:3),tht,' '
       endif
       write(hm,'(a6,i4)')'   mat',matsl
 c
@@ -287,8 +309,8 @@ c
 c
 c     Thermal inelastic scattering (always present)
 c
-      call sigine(in2,lst,matsl,temp,nmix,nbin,ethmax,tol,tole,ei,nei,
-     &  xnatom,imon)
+      call sigine(in2,lst,matsl,temp,nmix,nbin,ethmax,tol,tole,method,
+     &  ei,nei,xnatom,imon)
 c
 c     Thermal elastic scattering
 c
@@ -333,35 +355,30 @@ c
 c      Generate the initial incident energy grid
 c
       implicit real*8(a-h, o-z)
-      parameter (nfixx=150,temp0=293.6d0,thigh=3000.0d0)
+      parameter (nfixx=118,temp0=293.6d0,thigh=3000.0d0)
       dimension e(*)
       dimension efix(nfixx)
       data efix/
      &   1.00d-5,   1.78d-5,   2.50d-5,   3.50d-5,   5.00d-5,   7.00d-5,
      &   1.00d-4,   1.26d-4,   1.60d-4,   2.00d-4, .000253d0, .000297d0,
      & .000350d0, .000420d0, .000506d0, .000615d0, .000750d0, .000870d0,
-     & .001000d0, .001012d0, .001230d0, .001500d0, .001800d0, .002030d0,
-     & .002277d0, .002600d0, .003000d0, .003500d0, .004048d0, .004500d0,
-     & .005000d0, .005600d0, .006325d0, .007200d0, .008100d0, .009108d0,
-     & .010000d0, .010630d0, .011500d0, .012397d0, .013300d0, .014170d0,
-     & .015000d0, .016192d0, .018200d0, .019900d0, .020493d0, .021500d0,
-     & .022800d0, .025300d0, .028000d0, .030613d0, .033800d0, .036500d0,
-     & .039500d0, .042757d0, .046500d0, .050000d0, .056925d0, .062500d0,
-     & .069000d0, .075000d0, .081972d0, .090000d0, .096000d0, .100000d0,
-     & .103500d0, .107000d0, .111573d0, .120000d0, .128000d0, .135500d0,
-     & .145728d0, .152000d0, .160000d0, .172000d0, .184437d0, .190000d0,
-     &.2000000d0,.2277000d0,.2400000d0,.2510392d0,.2600000d0,.2705304d0,
-     &.2907501d0,.3011332d0,.3206421d0,.3576813d0,.3750000d0,.3900000d0,
-     &.4170351d0,.4350000d0,.4500000d0,.4750000d0,.5032575d0,.5350000d0,
-     &.5600000d0,.5800000d0,.6000000d0,.6250000d0,.7000000d0,.7400000d0,
-     &.7800000d0,.8200000d0,.8600000d0,.9000000d0,.9500000d0,1.000000d0,
-     &1.050000d0,1.100000d0,1.160000d0,1.220000d0,1.280000d0,1.350000d0,
-     &1.420000d0,1.480000d0,1.550000d0,1.620000d0,1.700000d0,1.800000d0,
-     &1.855000d0,1.900000d0,1.950000d0,2.020000d0,2.100000d0,2.180000d0,
-     &2.250000d0,2.360000d0,2.450000d0,2.590000d0,2.700000d0,2.855000d0,
-     &2.920000d0,3.000000d0,3.120000d0,3.270000d0,3.420000d0,3.750000d0,
-     &4.070000d0,4.460000d0,4.900000d0,5.350000d0,5.850000d0,6.400000d0,
-     &7.000000d0,7.650000d0,8.400000d0,9.150000d0,9.850000d0,10.00000d0/
+     & .001012d0, .001230d0, .001500d0, .001800d0, .002030d0, .002277d0,
+     & .002600d0, .003000d0, .003500d0, .004048d0, .004500d0, .005000d0,
+     & .005600d0, .006325d0, .007200d0, .008100d0, .009108d0, .010000d0,
+     & .010630d0, .011500d0, .012397d0, .013300d0, .014170d0, .015000d0,
+     & .016192d0, .018200d0, .019900d0, .020493d0, .021500d0, .022800d0,
+     & .025300d0, .028000d0, .030613d0, .033800d0, .036500d0, .039500d0,
+     & .042757d0, .046500d0, .050000d0, .056925d0, .062500d0, .069000d0,
+     & .075000d0, .081972d0, .090000d0, .096000d0, .103500d0, .111573d0,
+     & .120000d0, .128000d0, .135500d0, .145728d0, .160000d0, .172000d0,
+     & .184437d0,.2000000d0,.2277000d0,.2510392d0,.2705304d0,.2907501d0,
+     &.3011332d0,.3206421d0,.3576813d0,.3900000d0,.4170351d0,.4500000d0,
+     &.5032575d0,.5600000d0,.6250000d0,.7000000d0,.7800000d0,.8600000d0,
+     &.9500000d0,1.050000d0,1.160000d0,1.280000d0,1.420000d0,1.550000d0,
+     &1.700000d0,1.855000d0,2.020000d0,2.180000d0,2.360000d0,2.590000d0,
+     &2.855000d0,3.120000d0,3.420000d0,3.750000d0,4.070000d0,4.460000d0,
+     &4.900000d0,5.350000d0,5.850000d0,6.400000d0,7.000000d0,7.650000d0,
+     &8.400000d0,9.150000d0,9.850000d0,10.00000d0/
       if (temp.gt.thigh) then
         e1=efix(1)
         re=efix(nfixx)/e1
@@ -387,20 +404,21 @@ c
       end
 C======================================================================
       subroutine sigine(in2,lst,matsl,temp,nmix,nbin,ethmax,tol,tole,
-     &  ei,nei,xnatom,imon)
+     &  method,ei,nei,xnatom,imon)
 c
 c      processing of inelastic thermal scattering
 c
       implicit real*8(a-h, o-z)
-      parameter (nemax=1000,nmax=6000, nkks=20)
-      parameter (slgmin=-228.0d0)
-      parameter (epmin=0.0d0, tolde=1.0d-6)
+      integer is_accepted, accept_interval
+      parameter (nemax=2000, nmax=7000, nkks=20)
+      parameter (slgmin=-230.26d0, ymin=1.0d-30)
+      parameter (epmin=0.0d0)
       parameter (tzref=0.0253d0, bk=8.6173303d-5)
       dimension ei(*)
       common/acecte/awrth,tmev,awm(16),izam(16)
       common/acepnt/nxs(16),jxs(32)
-      common/acexss/xss(50000000),nxss
-      dimension nbt(20),ibt(20)
+      common/acexss/xss(100000000),nxss
+      dimension nbt(20),ibt(20),n_accept(8)
       character*1 lin130(130)
       allocatable sigb(:),xat(:),aws(:),isl(:),teff(:)
       allocatable alpha(:),beta(:),sab(:,:)
@@ -410,8 +428,9 @@ c
       allocatable es(:),sigss(:),uus(:),neps(:)
       allocatable w0(:),w1(:)
       data lin130/130*'='/
+      data n_accept/0,0,0,0,0,0,0,0/
 c
-c     Initio (the order of smin is 1.0e-99)
+c     Initialization (smin = 9.98510e-101)
 c
       smin=exp(slgmin)
       allocate(x(nmax),y(nmax),ubar(nbin,nmax))
@@ -456,12 +475,12 @@ c
         close(lst)
         stop
       endif
-      ehigh=y(2)
-      elim=y(4)
+      allocate(sigb(nsa),xat(nsa),aws(nsa),isl(nsa),teff(nsa))
       if (y(1).gt.0.0d0) then
-        allocate(sigb(nsa),xat(nsa),aws(nsa),isl(nsa),teff(nsa))
         isl(1)=-1
+        ehigh=y(2)
         aws(1)=y(3)
+        elim=y(4)
         xat(1)=y(6)
         awrth=aws(1)
         xnatom=xat(1)
@@ -469,21 +488,27 @@ c
         sigb(1)=y(1)*fb*fb/xnatom
         i0=1
       else
-        nsa=ns
-        allocate(sigb(nsa),xat(nsa),aws(nsa),isl(nsa),teff(nsa))
+        isl(1)=0
+        aws(1)=y(3)
+        xat(1)=y(6)
         xnatom=1.0d0
-        i0=0
+        fb=(aws(1)+1.0d0)/aws(1)
+        sigb(1)=y(2)*fb*fb/xat(1)
       endif
       if (ns.gt.0) then
         do k=1,ns
           j0=6*k
-          i=i0+k
+          i=k+1
           isl(i)=nint(y(j0+1)+1.0d-5)
           aws(i)=y(j0+3)
           xat(i)=y(j0+6)
           fb=(aws(i)+1.0d0)/aws(i)
           sigb(i)=y(j0+2)*fb*fb
-          if (isl(1).lt.0) sigb(i)=sigb(i)/xnatom
+          if (isl(1).lt.0.and.isl(i).eq.0) then
+            sigb(i)=sigb(i)/xnatom
+          else
+            sigb(i)=sigb(i)/xat(i)
+          endif
         enddo
       endif
       if (isl(1).lt.0) then
@@ -739,7 +764,8 @@ c
         nbb=2*nb-1
       endif
       je=0
-      tolu=2.0d0*tol
+      if (tole.gt.0.0d0) tole=tole+1.0d-14
+      tolu=max(2.0d0*tol+1.0d-6,tole)
       do ie=1,nei
 c
 c       Initial incident energies cycle
@@ -815,6 +841,7 @@ c
               exit
             endif
           enddo
+          if (y(iep0).lt.0.0d0) y(iep0)=0.0d0
           if (iep0.lt.nep) then
 c
 c           Removing trailing zeros, if any
@@ -826,13 +853,21 @@ c
                 exit
               endif
             enddo
+            if (y(nep).lt.0.0d0) y(nep)=0.0d0
             iep0=iep0-1
             nep=nep-iep0
             do i=1,nep
-              x(i)=x(iep0+i)
-              y(i)=y(iep0+i)
+              iep0i=iep0+i
+              x(i)=x(iep0i)
+              y(i)=y(iep0i)
+              if (y(i).le.0.0d0.and.i.gt.1.and.i.lt.nep) then
+                 y(i)=ymin
+                 iep0ij=iep0i-1
+              else
+                 iep0ij=iep0i
+              endif
               do j=1,nbin
-                ubar(j,i)=ubar(j,iep0+i)
+                ubar(j,i)=ubar(j,iep0ij)
               enddo
             enddo
 c
@@ -868,7 +903,7 @@ c
             y(3)=0.0d0
             do i=1,nep
               do j=1,nbin
-                ubar(j,i)=1.0d0
+                ubar(j,i)=0.0d0
               enddo
             enddo
             sigs=0.0d0
@@ -889,8 +924,9 @@ c
             e0=e
             sigs0=sigs
             uu0=uu
+            sigerr=1.0d100
             call thrload(lst,je,e,sigs,nep,nbin,x,y,ubar,nmix,
-     &        imon,itie,itix0,itxe0,itnep0,ixss,nemax)
+     &        imon,itie,itix0,itxe0,itnep0,ixss,nemax,method)
             ke=0
           else
             if (ke.eq.1) then
@@ -910,40 +946,27 @@ c
               ke=2
               kk=0
             else
-              if (e.le.e0.or.e.ge.e1) then
-                dsige=0.0d0
-                duu=0.0d0
-                slope0=1.0d0
-                slope1=1.0d0
-                slopu0=1.0d0
-                slopu1=1.0d0
-                tests=1.0d0
-                testu=1.0d0
-              else
-                sigsm=0.5d0*(sigs0+sigs1)
-                uum=0.5d0*(uu0+uu1)
-                dsige=abs(sigsm-sigs)
-                duu=abs(uum-uu)
-                de0=e-e0
-                de1=e1-e
-                slope0=(sigs-sigs0)/de0
-                slope1=(sigs1-sigs)/de1
-                slopu0=(uu-uu0)/de0
-                slopu1=(uu1-uu)/de1
-                tests=tole*abs(sigs)+1.0d-12
-                testu=tolu*abs(uu)+1.0d-6
-              endif
-              if (((dsige.lt.tests.and.duu.lt.testu).and.
-     &          (slope0*slope1.gt.0.0d0.and.slopu0*slopu1.gt.0.0d0)).or.
-     &          ((e1-e0).le.tolde*e1).or.(kk.ge.nkks)) then
+              is_accepted=accept_interval(e,sigs,uu,
+     &            e0,sigs0,uu0,e1,sigs1,uu1,tole,tolu,sigerr,kk,nkks)
+              if (is_accepted.gt.0) then
+c
+c               convergence achieved (load data to xss array)
+c
+                n_accept(is_accepted)=n_accept(is_accepted)+1
                 e0=e1
                 sigs0=sigs1
                 uu0=uu1
                 call thrload(lst,je,e1,sigs1,nep1,nbin,xs1,ys1,ubar1,
-     &            nmix,imon,itie,itix0,itxe0,itnep0,ixss,nemax)
+     &            nmix,imon,itie,itix0,itxe0,itnep0,ixss,nemax,method)
                 if (kk.eq.0) then
+c
+c                 stack empty (subinterval is done)
+c
                   ke=0
                 else
+c
+c                 get data from stack and decrease it (LIFO)
+c
                   e1=es(kk)
                   sigs1=sigss(kk)
                   uu1=uus(kk)
@@ -960,6 +983,9 @@ c
                   e=fix8dig(e,0)
                 endif
               else
+c
+c               no convergence (increase stack)
+c
                 kk=kk+1
                 es(kk)=e1
                 sigss(kk)=sigs1
@@ -1052,6 +1078,8 @@ c
       write(lst,*)
       write(lst,'(a,2i10)')' Length of inelastic data and XSS array: ',
      &  ixss,ixss
+      write(lst,'(a,8i6)')' Convergence criteria summary: ',
+     &  (n_accept(i),i=1,8)
       deallocate (beta,alpha,sab)
       deallocate (sigb,xat,aws,isl,teff)
       deallocate(x,y,ubar)
@@ -1066,7 +1094,7 @@ C======================================================================
      &  tz,tz0,lasym,liq,na,alpha,nb,beta,sab,nsa,isl,sigb,aws,teff,
      &  arglim,tol)
       implicit real*8 (a-h, o-z)
-      parameter (ns=22, azero=1.0d-10, xszero=1.0d-12, uzero=1.0d-6)
+      parameter (ns=20, azero=1.0d-6, xszero=1.0d-12, uzero=1.0d-6)
       dimension alpha(*),beta(*),sab(na,*),isl(*),sigb(*),aws(*),teff(*)
       dimension w0(*),w1(*),x(*),y(*),ubar(nbin,*)
       dimension wm(nbin)
@@ -1148,7 +1176,7 @@ C======================================================================
       implicit real*8 (a-h, o-z)
       real*16 fbin,fbinlo,sf0,sf1,sf0i,sf1i,u1,v1,u2,v2,v0,du,dv,slope
       real*16 dsf0,p1,pm,sd,d2,one,one3
-      parameter(nmumax=6000,nmu00=4,one=1.0d0,one3=1.0d0/3.0d0)
+      parameter(nmumax=7000,nmu00=4,one=1.0d0,one3=1.0d0/3.0d0)
       parameter(tolmu=1.0d-5, rtolmu=1.0d-8, d2min=1.0d-9)
       parameter(vtol=1.0d-6, vtol2=vtol/(0.5d0+vtol))
       parameter(f0min=1.0d-30, tollow=0.999999999d0)
@@ -1382,7 +1410,7 @@ c
 c       Checking equi-probable cosines
 c
         call chkcos(ubar,nmu,ineg,ipos,uneg,upos)
-        tolwrt=1.0d0+0.5*tol
+        tolwrt=1.0d0+0.5d0*tol
         if (ineg.gt.1.and.uneg.le.-tolwrt) then
           write(*,'(a,1pe14.7,a,e14.7,a,i4,a,0pf7.4,a)')
      &      '   Warning: ein=',ein,' eou=',eou,' nn=',
@@ -1456,7 +1484,7 @@ C======================================================================
       real*8 function sigtsl(ein,eou,u,temp,tz,tz0,lasym,liq,
      &       na,alpha,nb,beta,sab,nsa,isl,sigb,aws,teff,arglim)
       implicit real*8 (a-h, o-z)
-      parameter (amin0=1.0d-6, smin0=1.0d-16)
+      parameter (amin0=1.0d-6, smin0=1.0d-30)
       dimension alpha(*),beta(*),sab(na,*),isl(*),sigb(*),aws(*),teff(*)
       aws0=aws(1)
       b=(eou-ein)/tz0
@@ -1669,27 +1697,257 @@ C======================================================================
       endif
       return
       end
+C=====================================================================
+      integer function accept_interval(
+     &  e,sig,u,
+     &  e0,sig0,u0,e1,sig1,u1,
+     &  tole,tolu,sigerr,k,nkmax)
+c
+c       Decide whether the interval [e0,e1] can be accepted as
+c       linearly interpolable.
+c
+c       Included criteria:
+c
+c        1) Relative error at midpoint (value-based criterion)
+c        2) Sign change of slopes (local extrema detection)
+c        3) Relative difference between left/right slopes
+c        4) Relative curvature (more robust than slopes)
+c        5) Minimum interval size (hard stop)
+c        6) Disable derivative-based criteria when signal is small
+c        7) Forced acceptance for small intervals
+c        8) Hysteresis in slope criterion
+c        9) Stagnation detection vs parent interval
+c
+c       Returns:
+c         accept_interval > 0  -> accept interval
+c         accept_interval = 0  -> subdivide interval
+c
+      implicit real*8(a-h, o-z)
+      integer use_slope, near_extremum
+      integer bad_slope, bad_curv, stall_found
+      parameter(sig_min=1.0d-14)
+      parameter(u_min=1.0d-6)
+      parameter(slo_min=1.0d-3)
+      parameter(tol_de=1.0d-5)
+      parameter(tol_stall=2.0d-2)
+      parameter(de_min_fact0=5.0d2)
+      parameter(sig_act0=1.0d-4)
+      parameter(tol_slo_high0=5.5d-1)
+      parameter(tol_curv0=2.5d-1)
+      parameter(force_fact0=4.0d0)
+c
+c     No adaptively reconstruction (tole<=0.0d0)
+c
+      if (tole.le.0.0d0) then
+        accept_interval=8
+        sigerr=1.0d100
+        return
+      endif
+c
+c     Maximum depth reached (nkmax)
+c
+      if (k.ge.nkmax) then
+        accept_interval=7
+        sigerr=1.0d100
+        return
+      endif
+c
+c     Stop reconstruction if energy resolution limit is reached
+c
+      de=e1-e0
+      de0=e-e0
+      de1=e1-e
+      de_min=tol_de*max(e1,1.0d-9)
+      if (de.le.de_min.or.de0.le.0.0d0.or.de1.le.0.0d0) then
+        accept_interval=6
+        sigerr=1.0d100
+        return
+      endif
+c
+c     Linear interpolation and relative error calculation
+c
+      sigm=0.5d0*(sig0+sig1)
+      um=0.5d0*(u0+u1)
+      densig=max(abs(sigm),abs(sig),sig_min)
+      denu=max(abs(um),abs(u),u_min)
+      sig_rel_err=abs(sigm-sig)/densig
+      u_rel_err=(um-u)/denu
+c
+c     Maximum local amplitud calculation
+c
+      sig_max=max(abs(sig),abs(sig0),abs(sig1))
+c
+c     Local slopes estimation:
+c
+c      slo0=left  slope
+c      slo1=right slope
+c      slo2=chord slope
+c
+      slo0=(sig-sig0)/de0
+      slo1=(sig1-sig)/de1
+      slo2=(sig1-sig0)/de
+c
+c     Detect local extremum via slope sign change
+c
+      if (slo0*slo1.lt.0.0d0) then
+        near_extremum=1
+      else
+        near_extremum=0
+      endif
+c
+c     Relative slope difference calculation
+c
+      denslo=max(abs(slo0),abs(slo1),abs(slo2),slo_min)
+      slo_rel_err=abs(slo1-slo0)/denslo
+c
+c     Relative curvature estimation
+c
+      dencurv=max(sig_max,sig_min)
+      curv_rel=abs(de1*sig0-de*sig+de0*sig1)/abs(de*dencurv)
+c
+c     Stagnation detection for stoping refinement
+c
+      preverr=abs(sigerr)
+      den=max(preverr,1.0d-2*tole)
+      err=abs(preverr-sig_rel_err)/den
+      if (err.lt.tol_stall) then
+        stall_found=1
+      else
+        stall_found=0
+      endif
+      sigerr=abs(sig_rel_err)
+c
+c     Assign adjustable parameters
+c
+      de_min_fact=de_min_fact0
+      tol_slo_high=tol_slo_high0
+      tol_curv=tol_curv0
+      force_fact=force_fact0
+      sig_act=sig_act0
+c
+c     Adaptive rule 1: tighten near local extrema
+c
+      if (near_extremum.eq.1) then
+        de_min_fact=0.5d0*de_min_fact
+        tol_slo_high=0.75d0*tol_slo_high
+        tol_curv=0.5d0*tol_curv
+        force_fact=max(1.5d0,0.75d0*force_fact)
+        sig_act=0.5*sig_act
+      endif
+c
+c     Adaptive rule 2: relax at large recursion depth
+c
+      if (dble(k)/dble(nkmax).gt.0.70d0) then
+        de_min_fact=1.5d0*de_min_fact
+        tol_slo_high=1.5d0*tol_slo_high
+        tol_curv=2.0d0*tol_curv
+        force_fact=1.5d0*force_fact
+        sig_act=2.0d0*sig_act
+      endif
+c
+c     Adaptive rule 3: relax further under stagnation
+c
+      if (stall_found.eq.1) then
+        de_min_fact=1.5d0*de_min_fact
+        tol_slo_high=1.5d0*tol_slo_high
+        tol_curv=2.0d0*tol_curv
+        force_fact=1.5d0*force_fact
+        sig_act=2.0d0*sig_act
+      endif
+c
+c     Adaptive rule 4: Disable slope-based checks for small values
+c
+      if (sig_max.gt.sig_act) then
+        use_slope=1
+      else
+        use_slope=0
+      endif
+c
+c     Potential hysteresis on slope criterion
+c
+      bad_slope=0
+      if (use_slope.eq.1) then
+        if (near_extremum.eq.1) then
+          bad_slope=1
+        elseif (slo_rel_err.gt.tol_slo_high) then
+          bad_slope=1
+        endif
+      endif
+c
+c     Curvature condition
+c
+      if (curv_rel.gt.tol_curv) then
+        bad_curv=1
+      else
+        bad_curv=0
+      endif
+c
+c     Final acceptance logic
+c
+c     Set accept_interval false as default
+      de_tol=de_min_fact*de_min
+      accept_interval=0
+      if (sig_rel_err.le.tole.and.u_rel_err.le.tolu) then
+c       Basic condition achieved, but check others conditions
+        if (use_slope.eq.0) then
+c         Slope criterion is not active
+          if (bad_curv.eq.0) then
+c           Curvature criterion is ok
+            accept_interval=3
+            sigerr=1.0d100
+            return
+          endif
+          if (de.lt.de_tol) then
+c           Accept if interval is rather small
+            accept_interval=2
+            sigerr=1.0d100
+            return
+          endif
+        else
+c         Normal case: combine value + slope + curvature
+          if ((bad_slope.eq.0) .and. (bad_curv.eq.0)) then
+            accept_interval=1
+            sigerr=1.0d100
+            return
+          endif
+c         Force acceptance for small intervals
+          if ((de.le.de_tol).and.(sig_rel_err.le.force_fact*tole)) then
+            accept_interval=4
+            sigerr=1.0d100
+            return
+          endif
+c         Stagnation-based acceptance
+          if (stall_found.eq.1) then
+            if ((sig_rel_err.le.force_fact*tole).or.de.le.de_tol) then
+              accept_interval=5
+              sigerr=1.0d100
+              return
+            endif
+          endif
+        endif
+      endif
+      return
+      end
 C======================================================================
       subroutine thrload(lst,je,es1,sigs1,nep1,nbin,xs1,ys1,us1,nmix,
-     &  imon,itie,itix,itxe,itnep,ixss,nemax)
+     &  imon,itie,itix,itxe,itnep,ixss,nemax,method)
 c
 c     load thermal XSS data for incident energy Ein=es1
 c
       implicit real*8(a-h, o-z)
-      parameter (cdfstp=1.0d-6, ustp=0.00500d0, epstp=2.5d-7)
       parameter (ev2mev=1.0d-6)
       character*1 lin130(130)
-      allocatable cdf(:),icdf(:)
+      allocatable cdf(:)
       dimension xs1(*),ys1(*),us1(nbin,*)
-      common/acexss/xss(50000000),nxss
+      common/acexss/xss(100000000),nxss
       data lin130/130*'='/
       if (je.ge.nemax) then
         write(lst,*)
         write(lst,*)' Fatal error: Too many incident energy points'
-        write(lst,*)' Current nemax for inelastc:',nemax
+        write(lst,*)' Current nemax for inelastic:',nemax
         stop
       endif
-      allocate(cdf(nep1),icdf(nep1))
+      allocate(cdf(nep1))
       if (sigs1.gt.0.0d0) then
 c
 c       correcting angle distribution at edge energies
@@ -1720,61 +1978,25 @@ c
           x0=x1
           y0=y1
         enddo
-        cdf(nep1)=1.0d0
 c
 c       thinning cdf(Ein,Eou)
 c
-        i0=3
-        do i=3,nep1
-          if (cdf(i).gt.cdfstp) then
-            i0=i
-            exit
-          endif
-        enddo
-        icdf(1)=i0-2
-        icdf(2)=i0-1
-        icdf(3)=i0
-        ep0=xs1(i0)
-        cdf0=cdf(i0)
-        u0=avecos(us1(1,i0),nbin)
-        i0=i0+1
-        j=3
-        ncdf1=nep1-1
-        do i=i0,nep1
-          ep1=xs1(i)
-          cdf1=cdf(i)
-          ys1i=ys1(i)
-          im=i-1
-          xs1m=xs1(im)
-          ys1m=ys1(im)
-          ip=i+1
-          xs1p=xs1(ip)
-          ys1p=ys1(ip)
-          slopm=(ys1i-ys1m)/(ep1-xs1m)
-          slopp=(ys1p-ys1i)/(xs1p-ep1)
-          u1=avecos(us1(1,i),nbin)
-          if ((((cdf1-cdf0).ge.cdfstp.or.(abs(u1-u0).ge.ustp.and.
-     &       (ep1-ep0).gt.epstp*ep0)).and.i.lt.ncdf1).or.
-     &       (slopm*slopp.le.0.0d0.and.(xs1p-xs1m).gt.epstp*xs1m).or.
-     &       i.eq.nep1) then
-            j=j+1
-            icdf(j)=i
-            ep0=ep1
-            cdf0=cdf1
-            u0=u1
-          endif
-        enddo
-        mcdf=j
+        if(method.eq.3) then
+          call thin_cdf_meth_3(xs1,ys1,cdf,us1,nep1,nbin,nnep,nneg,dif)
+        else
+          call thin_cdf(method,xs1,ys1,cdf,us1,nep1,nbin,nnep,nneg,dif)
+        endif
       else
-        mcdf=3
-        icdf(1)=0
-        icdf(2)=2
-        icdf(3)=3
+c
+c     Null cross section
+c
+        nnep=2
+        nneg=0
+        fact=1.0d0
         cdf(1)=0.0d0
-        cdf(2)=0.0d0
-        cdf(3)=1.0d0
+        cdf(2)=1.0d0
       endif
-      nnep=mcdf-1
+
       je=je+1
       sigs=sigs1/dble(nmix)
 c
@@ -1785,9 +2007,10 @@ c
       write(lst,*)
       write(lst,'(a,i5,a,1p,e15.8,a,e15.8)')' ie=',je,
      &  ' incident energy=',es1*ev2mev,' inelastic scattering=',sigs
-      write(lst,'(a,i5,a,i5,a)')
+      write(lst,'(a,i5,a,i5,a,i5,a,1pe11.4,a)')
      &  ' cumulative probability distribution (cdf) given at ',nnep,
-     &  ' points from ',nep1,' initial outgoing energies'
+     &  ' points from ',nep1,' initial outgoing energies (nn=',nneg,
+     &  ', difm=',dif,')'
       if (imon.gt.0) then
         write(lst,'(5a)')' iep ',' outgoing energy',
      &    '      pdf      ','       cdf     ',
@@ -1795,7 +2018,7 @@ c
         write(lst,'(130a1)')lin130
       endif
 c
-c      Inelastic itie block (incident energy/cross section)
+c      Inelastic itie block (incident energy/cross-section)
 c
       xss(itie)=je
       xss(itie+je)=es1*ev2mev
@@ -1803,43 +2026,356 @@ c
 c
 c      Inelastic itxe block (energy/angle distribution)
 c
+      if ((ixss+(3+nbin)*nnep).gt.nxss) then
+        write(*,*)' Fatal error in thrload: increase xss dimension'
+        write(*,*)' xss array dimension: ',nxss
+        write(*,*)' min.  required size: ',(ixss+3+nbin)*nnep
+        write(*,*)' je=',je,' e=',es1,' sigs=',sigs
+        write(lst,*)' Fatal error in thrload: increase xss dimension'
+        write(lst,*)' xss array dimension: ',nxss
+        write(lst,*)' min.  required size: ',(ixss+3+nbin)*nnep
+        write(lst,*)' je=',je,' e=',es1,' sigs=',sigs
+        stop
+      endif
       xss(itxe+je-1)=ixss
       xss(itnep+je-1)=nnep
-      do i=2,mcdf
-        j=icdf(i)
-        epx=xs1(j)*ev2mev
-        pdfx=ys1(j)/ev2mev
-        cdfx=cdf(j)
+      do i=1,nnep
+        epx=xs1(i)*ev2mev
+        pdfx=ys1(i)/ev2mev
+        cdfx=cdf(i)
         xss(ixss+1)=epx
         xss(ixss+2)=pdfx
         xss(ixss+3)=cdfx
         do l=1,nbin
-          xss(ixss+3+l)=us1(l,j)
+          xss(ixss+3+l)=us1(l,i)
         enddo
         ixss=ixss+3+nbin
         if (imon.gt.0) then
-          call printine(lst,i-1,j,epx,pdfx,cdfx,us1,nbin)
+          call printine(lst,i,i,epx,pdfx,cdfx,us1,nbin)
         endif
       enddo
-      deallocate(cdf,icdf)
+      deallocate(cdf)
+      return
+      end
+C======================================================================
+      subroutine thin_cdf(method,x,y,c,u,n,nbin,nk,nneg,dif)
+      implicit real*8(a-h, o-z)
+      dimension x(*),y(*),c(*),u(nbin,*)
+      parameter (nx=128)
+      parameter (epsc=1.0d-6)
+      parameter (cmax=1.0d0-epsc)
+      parameter (ymin=1.0d-32)
+      parameter (smin=1.0d-2)
+      parameter (stol=5.0d-1)
+      allocatable x2(:),y2(:),c2(:),u2(:,:),yori(:)
+      allocatable avg(:),alpha(:),beta(:)
+c
+c     Basic validation for warning
+c
+      do i=2,n
+        if (x(i).lt.x(i-1)) then
+          write(*,*)' Warning/Error: x not in ascending order'
+        endif
+        if (y(i).lt.0.0d0) then
+          write(*,*)' Warning/Error: pdf negative'
+        endif
+        if (c(i).lt.c(i-1)) then
+          write(*,*)' Warning/Error: not valid cdf'
+        endif
+      enddo
+c
+c     Remove leading low cdf steps
+c
+      imin=n
+      do i=1,n
+        if (c(i).ge.epsc) then
+          imin=i
+          exit
+        endif
+      enddo
+      if (imin.gt.1) imin=imin-1
+c
+c     Removing trailing low cdf steps
+c
+      imax=n-1
+      if (imin.lt.imax) then
+        i0=imin+1
+        do i=i0,n-1
+          if (c(i).ge.cmax) then
+            imax=i
+            exit
+          endif
+        enddo
+      endif
+      nk=imax-imin+2
+      if (nk.le.nx) then
+c
+c       No further thinning
+c
+        j=0
+        do i=imin,imax
+          j=j+1
+          x(j)=x(i)
+          y(j)=y(i)
+          c(j)=c(i)
+          do k=1,nbin
+             u(k,j)=u(k,i)
+          enddo
+        enddo
+        x(nk)=x(n)
+        y(nk)=0.0d0
+        c(nk)=1.0d0
+      else
+c
+c       Additional thinning
+c
+        allocate(x2(nk),y2(nk),c2(nk),u2(nbin,nk),yori(nk))
+        allocate(avg(nk),alpha(nk),beta(nk))
+        x2(1)=x(imin)
+        y2(1)=y(imin)
+        c2(1)=c(imin)
+        yori(1)=y2(1)
+        do k=1,nbin
+          u2(k,1)=u(k,imin)
+        enddo
+        clast=c2(1)
+        j=1
+        i0=imin+1
+        do i=i0,imax
+          dc=c(i)-clast
+          sl=(c(i)-c(i-1))/(x(i)-x(i-1))
+          sr=(c(i+1)-c(i))/(x(i+1)-x(i))
+          sden=max(abs(sl),abs(sr),smin)
+          sdif=abs(sr-sl)/sden
+          if (dc.ge.epsc.or.
+     &        sl*sr.lt.0.0d0.or.
+     &        sdif.gt.stol.or.
+     &        i.eq.imax) then
+            j=j+1
+            x2(j)=x(i)
+            y2(j)=y(i)
+            c2(j)=c(i)
+            clast=c2(j)
+            yori(j)=y2(j)
+            do k=1,nbin
+              u2(k,j)=u(k,i)
+            enddo
+          endif
+        enddo
+        nk=j+1
+        x2(nk)=x(n)
+        y2(nk)=y(n)
+        c2(nk)=c(n)
+        yori(nk)=y2(nk)
+        do k=1,nbin
+          u2(k,nk)=u(k,n)
+        enddo
+        alpha(1)=1.0d0
+        beta(1)=0.0d0
+        do j=1,nk-1
+          avg(j)= (c2(j+1)-c2(j))/(x2(j+1)-x2(j))
+          alpha(j+1)=-alpha(j)
+          beta(j+1)=2.0d0*avg(j)-beta(j)
+        enddo
+        pden=0.0d0
+        if (method.eq.2) then
+          pnum=0.0d0
+          do j=1,nk
+            pnum=pnum+alpha(j)*(yori(j)-beta(j))
+            pden=pden+alpha(j)*alpha(j)
+          enddo
+        endif
+        if (method.eq.1) then
+c         case A: y2(1)=yori(1)
+          p1=yori(1)
+        elseif(method.eq.2.and.pden.gt.0.0d0) then
+c         case B: p1 least squared method
+          p1=pnum/pden
+        else
+c         case C: y2(nk)=0.0 (default)
+          p1=-beta(nk)/alpha(nk)
+        endif
+        do j=1,nk
+          y2(j)=alpha(j)*p1+beta(j)
+          if (y2(j).lt.0.0d0) y2(j)=ymin
+          x(j)=x2(j)
+          y(j)=y2(j)
+          c(j)=c2(j)
+          do k=1,nbin
+            u(k,j)=u2(k,j)
+          enddo
+        enddo
+        deallocate (x2,y2,c2,u2,yori)
+        deallocate (avg,alpha,beta)
+      endif
+c
+c     Final renormalization
+c
+      sum=c(1)
+      do j=2,nk
+        sum=sum+c(j)-c(j-1)
+      enddo
+      fnorm=1.0d0/sum
+      do j=1,nk
+        y(j)=y(j)*fnorm
+        c(j)=c(j)*fnorm
+      enddo
+      nneg=0
+      dif=0.0d0
+      do j=2,nk
+        dc=c(j)-c(j-1)
+        area=0.5d0*(x(j)-x(j-1))*(y(j)+y(j-1))
+        difj=abs(dc-area)
+        if (difj.gt.epsc) then
+          nneg=nneg+1
+          if (difj.gt.dif) dif=difj
+        endif
+      enddo
+      return
+      end
+C======================================================================
+      subroutine thin_cdf_meth_3(x,y,c,u,n,nbin,nk,nneg,dif)
+      implicit real*8(a-h, o-z)
+      dimension x(*),y(*),c(*),u(nbin,*)
+      parameter (epsc=1.0d-6)
+      parameter (ymin=1.0d-32)
+      parameter (tol4=1.0d-4)
+      parameter (tol5=1.0d-5)
+      allocatable x2(:),y2(:),c2(:),u2(:,:)
+
+      allocate(x2(n),y2(n),c2(n),u2(nbin,n))
+      nk=0
+      j=0
+      xl=x(1)
+      yl=y(1)
+      sum=0.0d0
+      fract=1.0d0
+      do i=1,n
+        xh=x(i)
+        yh=y(i)
+        do while (xl.lt.xh)
+          add=0.5d0*(xh-xl)*(yh+yl)
+          if (i.eq.n) then
+            xn=xh
+            fract=sum+add
+            j=j+1
+          else
+            if ((sum+add).gt.epsc) then
+              fract=sum+add
+            endif
+            if ((sum+add).lt.fract*(1.0d0-tol4)) then
+               sum=sum+add
+               exit
+            endif
+            j=j+1
+            if ((sum+add).lt.fract*(1.0d0+tol4)) then
+              xn=xh
+            elseif (abs(yh-yl).gt.tol5*(yh+yl)) then
+              f=(yh-yl)/(xh-xl)
+              disc=(yl/f)**2+2.0d0*(fract-sum)/f
+              if (disc.lt.0.0d0) then
+                disc=abs(disc)
+              endif
+              if (f.lt.0.0d0) then
+                sgn=-1.0d0
+              else
+                sgn=1.0d0
+              endif
+              xn=xl-(yl/f)+sgn*sqrt(disc)
+              if (xn.le.xl.or.xn.gt.xh) then
+                write(*,*)' Thinning warning: xn out of range 1'
+                if (xn.le.xl) then
+                  xn=xl*(1.0d0+tol5)
+                else
+                  xn=xh
+                endif
+              endif
+            else
+              xn=xl+(fract-sum)/yl
+              if (xn.le.xl.or.xn.gt.xh) then
+                write(*,*)' Thinning warning: xn out of range 2'
+                if (xn.le.xl) then
+                  xn=xl*(1.0d0+tol5)
+                else
+                  xn=xh
+                endif
+              endif
+            endif
+          endif
+          yn=yl+(yh-yl)*(xn-xl)/(xh-xl)
+          if(j.le.n) then
+            x2(j)=xn
+            y2(j)=yn
+            c2(j)=fract
+            do k=1,nbin
+              if (abs(xh-xn).le.tol5) then
+                u2(k,j)=u(k,i)
+              elseif (abs(xn-x(i-1)).le.tol5) then
+                u2(k,j)=u(k,i-1)
+              else
+                u2(k,j)=u(k,i)+(u(k,i-1)-u(k,i))/(xh-x(i-1))*(xh-xn)
+              endif
+            enddo
+            nk=j
+          else
+            write(*,*)' Fatal error: Too many points nmax=',n
+            stop
+          endif
+          xl=xn
+          yl=yn
+          sum=0.0d0
+          fract=1.0d0
+          if (xl.gt.xh) exit
+        enddo
+        xl=xh
+        yl=yh
+      enddo
+      do j=2,nk
+        c2(j)=c2(j)+c2(j-1)
+        if (y(j).lt.0.0d0) y(j)=ymin
+      enddo
+      fnorm=1.0d0/c2(nk)
+      do j=1,nk
+        x(j)=x2(j)
+        y(j)=y2(j)*fnorm
+        c(j)=c2(j)*fnorm
+        do k=1,nbin
+          u(k,j)=u2(k,j)
+        enddo
+      enddo
+      deallocate(x2,y2,c2,u2)
+      nneg=0
+      dif=0.0d0
+      do j=2,nk
+        dc=c(j)-c(j-1)
+        area=0.5d0*(x(j)-x(j-1))*(y(j)+y(j-1))
+        difj=abs(dc-area)
+        if (difj.gt.epsc) then
+          nneg=nneg+1
+          if (difj.gt.dif) dif=difj
+        endif
+      enddo
       return
       end
 C======================================================================
       subroutine sigela(in2,lst,matsl,temp,nmix,nbin,tole,ei,nei,
      &  xnatom,imon)
       implicit real*8 (a-h, o-z)
-      parameter (nemax=1000, nkks=20)
-      parameter (tolbrg=5.0d-7, tolde=1.0d-6, tolwrt=1.0005d0)
+      integer is_accepted, accept_interval
+      parameter (nemax=2000, nkks=20)
+      parameter (tolbrg=5.0d-7, tolde=5.0d-5, tolwrt=1.0005d0)
       parameter (ev2mev=1.0d-6)
       character*1 line115(115)
       dimension ei(*)
+      dimension n_accept(8)
       common/acepnt/nxs(16),jxs(32)
-      common/acexss/xss(50000000),nxss
+      common/acexss/xss(100000000),nxss
       dimension nbt(20),ibt(20)
       allocatable eb(:),s(:),w(:),t(:)
       allocatable ee(:),xse(:),uus(:),ue(:,:)
       allocatable uei(:),ue2(:),ees(:),xses(:),ues(:,:)
       data line115/115*'='/
+      data n_accept/0,0,0,0,0,0,0,0/
 c
 c     searching for thermal elastic scattering data
 c
@@ -2009,14 +2545,21 @@ c       Loading XSS array
 c
         j0=itcx-1
         xss(itce)=np
-        do j=1,np
-          xss(itce+j)=t(j)
-          xss(j0+j)=w(j)
-          xscoh=w(j)/t(j)
-          write(lst,'(i5,1p3e15.8)')j,t(j),w(j),xscoh
-          write(*,'(a,i5,1p,2(a,e15.8))')' ie=',j,' incident energy=',
+        if (np.gt.0) then
+          do j=1,np
+            xss(itce+j)=t(j)
+            xss(j0+j)=w(j)
+            xscoh=w(j)/t(j)
+            write(lst,'(i5,1p3e15.8)')j,t(j),w(j),xscoh
+            write(*,'(a,i5,1p,2(a,e15.8))')' ie=',j,' incident energy=',
      &      t(j)/ev2mev,' coherent elastic xs=',xscoh
-        enddo
+          enddo
+        else
+          write(lst,*)' ethmax less than the first Bragg edge. (np=0)'
+          write(lst,*)' warning: potencial error, increase ethmax'
+          write(*,*)' ethmax less than the first Bragg edge. (np=0)'
+          write(*,*)' warning: potential error, increase ethmax'
+        endif
         ixss=2*np+1
         nxs(1)=nxs(1)+ixss
         write(lst,*)
@@ -2052,11 +2595,11 @@ c
         allocate(ee(nemax),xse(nemax),ue(nbin,nemax))
         allocate(ees(nkks),xses(nkks),uus(nkks),ues(nbin,nkks))
         allocate(uei(nbin),ue2(nbin))
-        sb2=0.5d0*sb/(dnmix*xnatom)
+        sb2=0.5d0*sb/(xnatom*dnmix)
         w2=2.0d0*wp
         dbin=dble(nbin)
         j=0
-        tolu=2.0d0*tole
+        tolu=2.0d0*(tole+1.0d-6)
         do i=1,nei
           e=ei(i)
           ke=1
@@ -2094,6 +2637,7 @@ c
               do k=1,nbin
                 ue(k,j)=uei(k)
               enddo
+              sigerr=1.0d100
               ke=0
             elseif (ke.eq.1) then
               ee2=e
@@ -2107,21 +2651,13 @@ c
               ke=2
               kk=0
             else
-              if (e.le.ee1.or.e.ge.ee2) then
-                dsige=0.0d0
-                duu=0.0d0
-                tests=1.0d0
-                testu=1.0d0
-              else
-                xsem=0.5d0*(xse1+xse2)
-                uum=0.5d0*(uu1+uu2)
-                dsige=abs(xsem-xsei)
-                duu=abs(uum-uui)
-                tests=tole*abs(xsei)+1.0d-12
-                testu=tolu*abs(uui)+1.0d-6
-              endif
-              if ((dsige.lt.tests.and.duu.lt.testu).or.
-     &          ((ee2-ee1).le.tolde*ee2).or.(kk.ge.nkks)) then
+              is_accepted=accept_interval(e,xsei,uui,ee1,xse1,uu1,
+     &           ee2,xse2,uu2,tole,tolu,sigerr,kk,nkks)
+              if (is_accepted.gt.0) then
+c
+c               Data accepted (check and decrease stack)
+c
+                n_accept(is_accepted)=n_accept(is_accepted)+1
                 ee1=ee2
                 xse1=xse2
                 uu1=uu2
@@ -2152,6 +2688,9 @@ c
                   e=fix8dig(e,0)
                 endif
               else
+c
+c               Increase stack
+c
                 kk=kk+1
                 ees(kk)=ee2
                 xses(kk)=xse2
@@ -2219,6 +2758,8 @@ c
         write(lst,*)
         write(lst,'(a,a,2i10)')' Length of incoherent elastic data and',
      &    ' XSS array: ',ixss,nxs(1)
+        write(lst,'(a,8i6)')' Convergence criteria summary: ',
+     &    (n_accept(i),i=1,8)
         deallocate (ee,xse,ue,uei,ue2)
         deallocate (ees,xses,uus,ues)
       endif
@@ -2771,7 +3312,7 @@ c
       common/acetxt/hz,hd,hm,hk
       common/acecte/awrth,tmev,awm(16),izam(16)
       common/acepnt/nxs(16),jxs(32)
-      common/acexss/xss(50000000),nxss
+      common/acexss/xss(100000000),nxss
       allocatable uave(:), eu1(:), eu2(:)
       data nplt/40/,ncur/41/
 c
@@ -3389,14 +3930,14 @@ c
 c      Adapted by D. Lopez Aldama for ACEMAKER
 c
       implicit real*8 (a-h, o-z)
-      character*10 hd,hm
+      character*10 hd,hm,hz10
       character*13 hz
       character*70 hk
       character*72 fout,fdir
       common/acetxt/hz,hd,hm,hk
       common/acecte/awrth,tmev,awm(16),izam(16)
       common/acepnt/nxs(16),jxs(32)
-      common/acexss/xss(50000000),nxss
+      common/acexss/xss(100000000),nxss
       data nout/30/,ndir/31/
 c
 c       open output ACE-formatted file
@@ -3409,8 +3950,9 @@ c
         write(nout,'(a13,f12.6,1x,1p,e11.4,1x,a10/a70,a10)')
      &    hz(1:13),awrth,tmev,hd,hk,hm
       else
+        hz10=hz(1:10)
         write(nout,'(a10,f12.6,1x,1p,e11.4,1x,a10/a70,a10)')
-     &    hz(1:10),awrth,tmev,hd,hk,hm
+     &    hz10,awrth,tmev,hd,hk,hm
       endif
       write(nout,'(4(i7,f11.0))') (izam(i),awm(i),i=1,16)
 c
@@ -3452,13 +3994,21 @@ c       itxe block (inelastic energy/angle distribution)
 c
       l=itxe
       n=2*ne
+      do i=1,n
+         call typen(l,nout,1)
+         l=l+1
+      enddo
+      n=0
       do i=1,ne
-        n=n+nint(xss(l+ne+i-1))*(nil+2)
+        n=n+nint(xss(itxe+ne+i-1))*(nil+2)
       enddo
       do i=1,n
         call typen(l,nout,2)
         l=l+1
       enddo
+c
+c       elastic data
+c
       if (idpnc.ne.0) then
 c
 c       itce block (elastic)
@@ -3563,7 +4113,7 @@ c
       implicit real*8 (a-h, o-z)
       parameter (epsn=1.0d-12)
       character*20 hl(4)
-      common/acexss/xss(50000000),nxss
+      common/acexss/xss(100000000),nxss
       save hl,i
       if (iflag.eq.3.and.nout.gt.1.and.i.lt.4) then
         write(nout,'(4a20)') (hl(j),j=1,i)
