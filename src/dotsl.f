@@ -409,16 +409,26 @@ c
 c      processing of inelastic thermal scattering
 c
       implicit real*8(a-h, o-z)
+<<<<<<< HEAD
       integer is_accepted, accept_interval
       parameter (nemax=2000, nmax=7000, nkks=20)
       parameter (slgmin=-230.26d0, ymin=1.0d-30)
       parameter (epmin=0.0d0)
+=======
+      parameter (nemax=2000,nmax=7000, nkks=20)
+      parameter (slgmin=-228.0d0)
+      parameter (epmin=0.0d0, tolde=1.0d-6)
+>>>>>>> 9c69482dd24f5f8db79395f9da1aaa077ad1dcf5
       parameter (tzref=0.0253d0, bk=8.6173303d-5)
       dimension ei(*)
       common/acecte/awrth,tmev,awm(16),izam(16)
       common/acepnt/nxs(16),jxs(32)
       common/acexss/xss(100000000),nxss
+<<<<<<< HEAD
       dimension nbt(20),ibt(20),n_accept(8)
+=======
+      dimension nbt(20),ibt(20)
+>>>>>>> 9c69482dd24f5f8db79395f9da1aaa077ad1dcf5
       character*1 lin130(130)
       allocatable sigb(:),xat(:),aws(:),isl(:),teff(:)
       allocatable alpha(:),beta(:),sab(:,:)
@@ -508,7 +518,11 @@ c
             sigb(i)=sigb(i)/xnatom
           else
             sigb(i)=sigb(i)/xat(i)
+<<<<<<< HEAD
           endif
+=======
+          endif          
+>>>>>>> 9c69482dd24f5f8db79395f9da1aaa077ad1dcf5
         enddo
       endif
       if (isl(1).lt.0) then
@@ -2026,6 +2040,7 @@ c
 c
 c      Inelastic itxe block (energy/angle distribution)
 c
+<<<<<<< HEAD
       if ((ixss+(3+nbin)*nnep).gt.nxss) then
         write(*,*)' Fatal error in thrload: increase xss dimension'
         write(*,*)' xss array dimension: ',nxss
@@ -2035,6 +2050,17 @@ c
         write(lst,*)' xss array dimension: ',nxss
         write(lst,*)' min.  required size: ',(ixss+3+nbin)*nnep
         write(lst,*)' je=',je,' e=',es1,' sigs=',sigs
+=======
+      if ((ixss+(3+nbin)*mcdf).gt.nxss) then
+        write(*,*)' Fatal error in thrload: increase xss dimension'
+        write(*,*)' xss array dimension: ',nxss
+        write(*,*)' min.  required size: ',(ixss+3+nbin)*mcdf
+        write(*,*)' je=',je,' e=',es1,' sigs=',sigs
+        write(lst,*)' Fatal error in thrload: increase xss dimension'
+        write(lst,*)' xss array dimension: ',nxss
+        write(lst,*)' min.  required size: ',(ixss+3+nbin)*mcdf
+        write(lst,*)' je=',je,' e=',es1,' sigs=',sigs        
+>>>>>>> 9c69482dd24f5f8db79395f9da1aaa077ad1dcf5
         stop
       endif
       xss(itxe+je-1)=ixss
@@ -2361,9 +2387,14 @@ C======================================================================
       subroutine sigela(in2,lst,matsl,temp,nmix,nbin,tole,ei,nei,
      &  xnatom,imon)
       implicit real*8 (a-h, o-z)
+<<<<<<< HEAD
       integer is_accepted, accept_interval
       parameter (nemax=2000, nkks=20)
       parameter (tolbrg=5.0d-7, tolde=5.0d-5, tolwrt=1.0005d0)
+=======
+      parameter (nemax=2000, nkks=20)
+      parameter (tolbrg=5.0d-7, tolde=1.0d-6, tolwrt=1.0005d0)
+>>>>>>> 9c69482dd24f5f8db79395f9da1aaa077ad1dcf5
       parameter (ev2mev=1.0d-6)
       character*1 line115(115)
       dimension ei(*)
