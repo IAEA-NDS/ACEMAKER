@@ -8,7 +8,7 @@ The ACEMAKER driver relies on specific versions of LINEAR, RECENT, LEGEND, SPECT
 The modules SIXLIN, GAMLIN, DOACE, DODOS, DOTSL and DOPHN prepare the required ACE-formatted files.
 Please consult the [installation instructions](#installation) for guidance on how to set up this package including its dependencies.
 
-The user should be aware that the comment lines within the source codes should always be considered as the most recent documentation and may supersede any earlier published report.
+The user should be aware that the comment lines within the source codes should always be considered as the most recent documentation and may supersede any earlier published report. (Last Update: 12/04/2026)
 
 [PREPRO]: https://github.com/iaea-nds/prepro
 
