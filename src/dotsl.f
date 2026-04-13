@@ -921,6 +921,7 @@ c
 c         Checking incident energy grid adaptively reconstruction
 c
           if (ie.eq.1) then
+            n_accept(1)=n_accept(1)+1
             e0=e
             sigs0=sigs
             uu0=uu
@@ -2628,6 +2629,7 @@ c
             endif
             uui=avecos(uei,nbin)
             if (i.eq.1) then
+              n_accept(1)=n_accept(1)+1
               ee1=e
               xse1=xsei
               uu1=uui
