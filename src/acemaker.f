@@ -176,15 +176,12 @@ c
 c     thin      METHOD           Method for thinning the secondary
 c     THIN                       energy-angle cummulative distribution
 c                                CDF.
-c               METHOD=0 : thinned PDF -> PDF(NNEP)=0.0
-c               METHOD=1 : thinned PDF -> PDF(1)=pdf(1)
-c               METHOD=2 : Least Squares -> sum((PDF(I)-pdf(i))**2)=min
-c               METHOD=3 : NJOY-like thinning -> PDF(I)=pdf(i)
+c               METHOD: Thinning method for secondary CDF (0/1/2/3)
+c                METHOD=0 : Criteria -> (cdf, 1st & 2nd pdf derivatives)
+c                METHOD=1 : Criteria -> (cdf, 1st pdf derivative)
+c                METHOD=2 : Criteria -> (cdf)
+c                METHOD=3 : NJOY-like thinned CDF
 c               (Default = 0)
-c               Note: methods 0-2 try to conserve the average PDF by
-c                     thinned interval
-c                     method 3 keeps pointwise values at thinned
-c                     boundaries, but not the average PDF by interval
 c
 c     eps       EPS              Fractional tolerance for incident
 c     EPS                        energy grid adaptively build-up
