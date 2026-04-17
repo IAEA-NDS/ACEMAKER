@@ -43,15 +43,10 @@ c               (Default = 0.003 = 0.3%)
 c               Note: tole<0.0d0 -> no adaptive reconstruction
 c               of the incident energy grid
 c       METHOD: Thinning method for secondary CDF (0/1/2/3)
-c                METHOD=0 : thinned PDF -> PDF(NNEP)=0.0
-c                METHOD=1 : thinned PDF -> PDF(1)=pdf(1)
-c                METHOD=2 : Least Squares -> sum((PDF(I)-pdf(i))**2)=min
-c                METHOD=3 : NJOY-like thinning -> PDF(I)=pdf(i)
-c               (Default = 0)
-c                Note: methods 0-2 try to conserve the average PDF by
-c                      thinned interval
-c                      method 3 keeps pointwise values at thinned
-c                      boundaries, but not the average PDF by interval
+c                METHOD=0 : Criteria -> (cdf, 1st & 2nd pdf derivatives)
+c                METHOD=1 : Criteria -> (cdf, 1st pdf derivative)
+c                METHOD=2 : Criteria -> (cdf)
+c                METHOD=3 : NJOY-like thinned CDF
 c       THZAID: Thermal ZAID name on the ACE-formatted file
 c               (Default = ZA number)
 c         SUFF: Thermal suffix for THID (thsuff)
@@ -2065,11 +2060,13 @@ C======================================================================
       parameter (nx=128)
       parameter (epsc=1.0d-6)
       parameter (cmax=1.0d0-epsc)
+      parameter (clow=0.05d0)
+      parameter (chigh=1.0d0-clow)
       parameter (ymin=1.0d-32)
       parameter (smin=1.0d-2)
-      parameter (stol=5.0d-1)
-      allocatable x2(:),y2(:),c2(:),u2(:,:),yori(:)
-      allocatable avg(:),alpha(:),beta(:)
+      parameter (stol=5.5d-1)
+      parameter (curtol=2.5d-1)
+      allocatable xth(:),yth(:),cth(:),uth(:,:)
 c
 c     Basic validation for warning
 c
@@ -2124,90 +2121,75 @@ c
           enddo
         enddo
         x(nk)=x(n)
-        y(nk)=0.0d0
-        c(nk)=1.0d0
+        y(nk)=y(n)
+        c(nk)=c(n)
       else
 c
 c       Additional thinning
 c
-        allocate(x2(nk),y2(nk),c2(nk),u2(nbin,nk),yori(nk))
-        allocate(avg(nk),alpha(nk),beta(nk))
-        x2(1)=x(imin)
-        y2(1)=y(imin)
-        c2(1)=c(imin)
-        yori(1)=y2(1)
+        allocate(xth(nk),yth(nk),cth(nk),uth(nbin,nk))
+        xth(1)=x(imin)
+        yth(1)=y(imin)
+        cth(1)=c(imin)
         do k=1,nbin
-          u2(k,1)=u(k,imin)
+          uth(k,1)=u(k,imin)
         enddo
-        clast=c2(1)
+        clast=cth(1)
         j=1
         i0=imin+1
         do i=i0,imax
-          dc=c(i)-clast
-          sl=(c(i)-c(i-1))/(x(i)-x(i-1))
-          sr=(c(i+1)-c(i))/(x(i+1)-x(i))
-          sden=max(abs(sl),abs(sr),smin)
-          sdif=abs(sr-sl)/sden
-          if (dc.ge.epsc.or.
-     &        sl*sr.lt.0.0d0.or.
-     &        sdif.gt.stol.or.
-     &        i.eq.imax) then
+          ci=c(i)
+          dc=ci-clast
+          x0=x(i-1)
+          x1=x(i)
+          x2=x(i+1)
+          y0=y(i-1)
+          y1=y(i)
+          y2=y(i+1)
+          dx=x2-x0
+          dx1=x1-x0
+          dx2=x2-x1
+          s1=(y1-y0)/dx1
+          s2=(y2-y1)/dx2
+          sc=(y2-y0)/dx
+          sden=max(abs(s1),abs(s2),sc,smin)
+          sdif=abs(s1-s2)/sden
+          curvden=max(abs(y0),abs(y1),abs(y2),ymin)
+          curvdif=abs(dx2*y0-dx*y1+dx1*y2)/abs(dx*curvden)
+          keep=0
+          if (dc.ge.epsc.or.s1*s2.lt.0.0d0) keep=1
+          if (method.lt.1.and.ci.ge.clow.and.ci.le.chigh) then
+            if (keep.eq.0.and.sdif.ge.stol) keep=1
+            if (keep.eq.0.and.method.eq.0.and.curvdif.ge.curtol) keep=1
+          endif
+          if (keep.gt.0.or.i.eq.imax) then
             j=j+1
-            x2(j)=x(i)
-            y2(j)=y(i)
-            c2(j)=c(i)
-            clast=c2(j)
-            yori(j)=y2(j)
+            xth(j)=x1
+            yth(j)=y1
+            cth(j)=ci
+            clast=ci
             do k=1,nbin
-              u2(k,j)=u(k,i)
+              uth(k,j)=u(k,i)
             enddo
           endif
         enddo
         nk=j+1
-        x2(nk)=x(n)
-        y2(nk)=y(n)
-        c2(nk)=c(n)
-        yori(nk)=y2(nk)
+        xth(nk)=x(n)
+        yth(nk)=y(n)
+        cth(nk)=c(n)
         do k=1,nbin
-          u2(k,nk)=u(k,n)
+          uth(k,nk)=u(k,n)
         enddo
-        alpha(1)=1.0d0
-        beta(1)=0.0d0
-        do j=1,nk-1
-          avg(j)= (c2(j+1)-c2(j))/(x2(j+1)-x2(j))
-          alpha(j+1)=-alpha(j)
-          beta(j+1)=2.0d0*avg(j)-beta(j)
-        enddo
-        pden=0.0d0
-        if (method.eq.2) then
-          pnum=0.0d0
-          do j=1,nk
-            pnum=pnum+alpha(j)*(yori(j)-beta(j))
-            pden=pden+alpha(j)*alpha(j)
-          enddo
-        endif
-        if (method.eq.1) then
-c         case A: y2(1)=yori(1)
-          p1=yori(1)
-        elseif(method.eq.2.and.pden.gt.0.0d0) then
-c         case B: p1 least squared method
-          p1=pnum/pden
-        else
-c         case C: y2(nk)=0.0 (default)
-          p1=-beta(nk)/alpha(nk)
-        endif
         do j=1,nk
-          y2(j)=alpha(j)*p1+beta(j)
-          if (y2(j).lt.0.0d0) y2(j)=ymin
-          x(j)=x2(j)
-          y(j)=y2(j)
-          c(j)=c2(j)
+          if (yth(j).lt.0.0d0) yth(j)=ymin
+          x(j)=xth(j)
+          y(j)=yth(j)
+          c(j)=cth(j)
           do k=1,nbin
-            u(k,j)=u2(k,j)
+            u(k,j)=uth(k,j)
           enddo
         enddo
-        deallocate (x2,y2,c2,u2,yori)
-        deallocate (avg,alpha,beta)
+        deallocate (xth,yth,cth,uth)
       endif
 c
 c     Final renormalization
